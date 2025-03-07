@@ -10,6 +10,7 @@ const sequelize = new Sequelize(database.DB, database.USER, database.PASSWORD, {
     min: database.pool.min,
     acquire: database.pool.acquire,
     idle: database.pool.idle,
+    charset: "utf9mb4",
   },
 });
 

@@ -2,11 +2,12 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import db from "../models/index.js";
 import { regiterService } from "../services/authService.js";
+import bcrypt from "bcrypt";
 dotenv.config();
 
 const User = db.users;
 let refreshTokens = [];
-
+const saltRounds = 10;
 // Đăng nhập, tạo token
 
 const generateAccessToken = (user) => {
@@ -83,10 +84,12 @@ const regiter = async (req, res) => {
     const user = {
       username: req.body.username,
       password: req.body.password,
-      fullname: req.body.fullname,
+      full_name: req.body.fullname,
       email: req.body.email,
       datetime_joined: Date.now(),
     };
+    const hashPassword = await bcrypt.hash(user.password, saltRounds);
+    user.password = hashPassword;
     regiterService(user).then((response) => {
       res.status(200).json(response);
     });

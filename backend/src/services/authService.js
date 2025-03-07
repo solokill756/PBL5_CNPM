@@ -1,5 +1,4 @@
-import db from "../models";
-import bcrypt from "bcryptjs";
+import db from "../models/index.js";
 
 const User = db.users;
 const saltRounds = 10;
