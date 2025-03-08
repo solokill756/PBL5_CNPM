@@ -2,7 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import userRoutes from "../routes/userRoute.js";
-import authRoutes from "../routes/authenticationRoute.js";
+import cookieParser from "cookie-parser";
 dotenv.config();
 
 const app = express();
@@ -16,7 +16,7 @@ var corOptions = {
 app.use(cors(corOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+app.use(cookieParser());
 //routes
 app.use("/api/users", userRoutes);
 app.listen(port, hostname, () => {
