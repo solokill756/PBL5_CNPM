@@ -2,9 +2,12 @@ import MailImg from "@/assets/images/mail.png";
 import BlueButton from "@/components/BlueButton";
 import InputBox from "@/components/InputBox";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 function EmailVerification() {
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const email = queryParams.get("email");
   const [code, setCode] = useState("");
   const handleInputChange = (e) => {
     setCode(e.target.value);
@@ -20,8 +23,8 @@ function EmailVerification() {
         </div>
         <span className="font-semibold mb-2">Nhập mã xác nhận</span>
         <span className="text-sm px-6 text-center text-gray-500">
-          Nhập mã xác nhận mà chúng tôi đã gửi đến địa chỉ
-          huyho.24062004@gmail.com.
+          Nhập mã xác nhận mà chúng tôi đã gửi đến địa chỉ { }
+          {email}.
         </span>
         <div className="my-1">
           <InputBox
@@ -44,7 +47,7 @@ function EmailVerification() {
           />
           <BlueButton
             name="Quay lại"
-            size={`w-72 h-10 rounded-lg bg-white !text-sky-500`}
+            size={`w-72 h-10 rounded-lg`}
             path={"/accounts/register"}
           />
         </div>
@@ -54,7 +57,7 @@ function EmailVerification() {
           <span>
             Bạn đã có tài khoản?{" "}
             <Link to="/login">
-              <button className="text-sky-500 font-semibold">Đăng nhập</button>
+              <button className="text-red-800 font-semibold">Đăng nhập</button>
             </Link>
           </span>
         </div>

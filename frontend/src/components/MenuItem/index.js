@@ -12,10 +12,10 @@ const MenuItem = ({ icon, title, path }) => {
             }
             to={path || '#'}
         >
-            <div className={`text ${isActive ? 'fill-black' : 'text-gray-700'}`}>
+            <div className={`${isActive ? 'fill-gray-800' : 'text-gray-600'}`}>
                 {icon}
             </div>
-            <span className={`${isActive ? 'font-bold' : 'text-gray-700'}`}>
+            <span className={`${isActive ? 'font-bold' : 'text-gray-600 font-semibold'}`}>
                 {title}
             </span>
         </Link>

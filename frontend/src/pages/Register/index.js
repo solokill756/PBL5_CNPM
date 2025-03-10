@@ -221,7 +221,7 @@ function Register() {
                     <BlueButton
                         name="Đăng ký"
                         isActive={'login'}
-                        path={`/accounts/emailverification/${email}`}
+                        path={`/accounts/emailverification?email=${email}`}
                         size={`w-72 h-10 ${
                             isRegisterDisabled
                                 ? 'opacity-60'

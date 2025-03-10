@@ -31,12 +31,17 @@ function EmailVerificationRoute({ children }) {
 const router = createBrowserRouter([
     {
         path: '/',
+        // element: (
+        //     // <PrivateRoute>
+        //         {/* <EmailVerificationRoute> */}
+        //             <DefaultLayout />
+        //         {/* </EmailVerificationRoute> */}
+        //     // </PrivateRoute>
+        // ),
         element: (
-            <PrivateRoute>
-                {/* <EmailVerificationRoute> */}
+            // <PrivateRoute>
                     <DefaultLayout />
-                {/* </EmailVerificationRoute> */}
-            </PrivateRoute>
+            // </PrivateRoute>
         ),
         children: [
             {

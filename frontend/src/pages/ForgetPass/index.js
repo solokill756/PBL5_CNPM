@@ -18,12 +18,12 @@ function ForgetPass() {
         </div>
         <span className="font-semibold mb-2">Bạn gặp sự số khi đăng nhập?</span>
         <span className="text-sm px-8 text-center text-gray-500">
-          Nhập email, số điện thoại hoặc tên người dùng của bạn và chúng tôi sẽ
+          Nhập email hoặc tên người dùng của bạn và chúng tôi sẽ
           gửi cho bạn một liên kết để truy cập lại vào tài khoản.
         </span>
         <div className="my-1">
           <InputBox
-            value="Email, điện thoại hoặc tên người dùng"
+            value="Email hoặc tên người dùng"
             type="text"
             size="w-72 h-10 rounded-lg"
             onChange={handleInputChange}
