@@ -5,6 +5,7 @@ import FlashCardList from "@/components/FlashCard/FlashCardList";
 import AuthorList from "@/components/Author/AuthorList";
 import { Link } from "react-router-dom";
 import VocabList from "@/components/Vocabulary/VocabList";
+import BlueButton from "@/components/BlueButton";
 
 const Home = () => {
   const classes = [
@@ -41,18 +42,26 @@ const Home = () => {
         </div>
         <div className="flex-1 flex flex-col items-center">
           <div className="flex mb-6 w-full justify-between items-center">
-            <span className="text-gray-600 text-lg font-semibold">Gợi ý</span>
+            <div className="w-[10%]"></div>
+            <span className="flex-1 text-gray-600 text-lg font-semibold">
+              Gợi ý
+            </span>
           </div>
           <VocabList />
+          <div className="my-8 flex !justify-end !items-end">
+            <BlueButton
+              name={"Xem tất cả"}
+              isActive={"login"}
+              size={"w-32 h-8"}
+            />
+          </div>
         </div>
       </div>
       <div className="flex my-6 w-full items-center">
         <div className="w-1/12"></div>
         <div className="flex-1 space-x-4 text-[.875rem]">
-            <Link className="text-gray-700 font-semibold">
-              Quyền riêng tư
-            </Link>
-            <Link className="text-gray-700 font-semibold">Điều khoản</Link>
+          <Link className="text-gray-700 font-semibold">Quyền riêng tư</Link>
+          <Link className="text-gray-700 font-semibold">Điều khoản</Link>
         </div>
       </div>
     </main>
