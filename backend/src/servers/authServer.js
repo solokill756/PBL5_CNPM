@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import userRoutes from "../routes/userRoute.js";
 import authRoutes from "../routes/authenticationRoute.js";
+import cookieParser from "cookie-parser";
 dotenv.config();
 
 const app = express();
@@ -15,6 +16,7 @@ var corOptions = {
 //Middleaware
 app.use(cors(corOptions));
 app.use(express.json());
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
 //routes
