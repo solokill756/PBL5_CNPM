@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   database-mysql:
     image: mysql:8.0
@@ -11,24 +10,36 @@ services:
       - '3307:3306'
     volumes:
       - db_data:/var/lib/mysql
+      - ./my.cnf:/etc/mysql/conf.d/my.cnf 
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "database-mysql"]
       interval: 5s
       timeout: 10s
       retries: 10
     expose:
-      - 3306
-
+      - '3306'
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    restart: unless-stopped
+    # restart: unless-stopped
     depends_on:
       database-mysql:
         condition: service_healthy
     environment:
       - DB_HOST=database-mysql
       - DB_PORT=3306
+      - DB_NAME=elearning
+      - DB_PASSWORD=123456
+      - DB_USERNAME=root
+      - ACCESS_TOKEN_SECRET=b7abed762362d429aa528a1f1b554289ce099e32de62effa60868d58dbe4e5c2c79ccced8c552646f0c031bd2df8d654f297da940c8bd72d0f8089a68513c816
+      - REFRESH_TOKEN_SECRET=86c6048e052e4980f3d60e0b8e262301e0cbb5ac6eb44a8fa65b8fa456d95e4242bb455815f6212b4fa320d2357b1694f60b2f3f0830b636f7fbe78315e6a797
+      - DB_DIALECT=mysql
+      - PORT=9000
+      - HOST_NAME=0.0.0.0
     ports:
       - "9000:9000"
+    
+volumes:
+  db_data:
+  

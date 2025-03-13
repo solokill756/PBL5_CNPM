@@ -21,6 +21,4 @@ COPY --from=builder /elearning/backend/dist ./dist
 
 RUN npm install --omit=dev
 
-EXPOSE 9000
-
 CMD ["npm", "start"]

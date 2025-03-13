@@ -1,9 +1,9 @@
 import dotenv from "dotenv";
 import db from "../models/index.js";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import { Request, Response } from "express";
 
+import { deleteToken , generateAccessToken ,generateRefreshToken } from "../helpers/tokenHelper.js";
 dotenv.config();
 
 const User = db.users;
@@ -15,43 +15,12 @@ interface UserPayload {
   tokenVersion?: number;
 }
 
-const generateAccessToken = (user: UserPayload): string => {
-  const { ...newPayload } = user;
-  return jwt.sign(newPayload, process.env.ACCESS_TOKEN_SECRET as string, {
-    expiresIn: "30m",
-  });
-};
 
-const generateRefreshToken = (user: UserPayload): string => {
-  return jwt.sign(user, process.env.REFRESH_TOKEN_SECRET as string, {
-    expiresIn: "7d",
-  });
-};
 
-const refreshAccessToken = (refreshToken: string): Promise<string | null> => {
-  return new Promise((resolve) => {
-    jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET as string, async (err, decoded) => {
-      if (err || !decoded) return resolve(null);
 
-      const user = await User.findOne({ where: { id: (decoded as UserPayload).id } });
-      if (!user || user.tokenVersion !== (decoded as UserPayload).tokenVersion) {
-        return resolve(null);
-      }
-
-      const accessToken = generateAccessToken(decoded as UserPayload);
-      resolve(accessToken);
-    });
-  });
-};
-
-const deleteToken = (_req: Request, res: Response): void => {
-  res.clearCookie("refreshToken");
-  res.sendStatus(204);
-};
 
 const registerService = async (user: any): Promise<{ message: string }> => {
   try {
-    user.password = await bcrypt.hash(user.password, 10);
     const newUser = await User.create({ ...user, tokenVersion: 0 });
     console.log(newUser);
     return {
@@ -73,38 +42,39 @@ const logOutService = async (req: Request, res: Response): Promise<{ message: st
   }
 };
 
-const loginService = async (user: { email?: string; username?: string; password: string }): Promise<any> => {
+const loginService = async (user: { email: string; password: string }): Promise<any> => {
   try {
     const findUser = await User.findOne({
-      where: {
-        [db.Sequelize.Op.or]: [{ email: user.email }, { username: user.username }],
-      },
+      where: { email: user.email },
     });
 
-    if (!findUser || !bcrypt.compareSync(user.password, findUser.password)) {
+    if (!findUser) {
+      return { error: "Tài khoản hoặc mật khẩu không đúng" };
+    }
+
+    const userData = findUser.toJSON(); // Chuyển về object JSON
+
+    if (!bcrypt.compareSync(user.password, userData.password)) {
       return { error: "Tài khoản hoặc mật khẩu không đúng" };
     }
 
     const payLoad: UserPayload = {
-      username: findUser.username,
-      email: findUser.email,
-      id: findUser.id,
-      tokenVersion: findUser.tokenVersion,
+      username: userData.username,
+      email: userData.email,
+      id: userData.id,
+      tokenVersion: userData.tokenVersion,
     };
 
-    const accessToken = generateAccessToken(payLoad);
-    const refreshToken = generateRefreshToken(payLoad);
-
     return {
-      accessToken,
-      refreshToken,
+      accessToken: generateAccessToken(payLoad),
+      refreshToken: generateRefreshToken(payLoad),
       user: {
-        id: findUser.id,
-        username: findUser.username,
-        email: findUser.email,
-        full_name: findUser.full_name,
-        datetime_joined: findUser.datetime_joined,
-        role: findUser.role,
+        id: userData.id,
+        username: userData.username,
+        email: userData.email,
+        full_name: userData.full_name,
+        datetime_joined: userData.datetime_joined,
+        role: userData.role,
       },
     };
   } catch (error) {
@@ -112,4 +82,5 @@ const loginService = async (user: { email?: string; username?: string; password:
   }
 };
 
-export { registerService, loginService, refreshAccessToken, logOutService };
+
+export { registerService, loginService,  logOutService };

@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { Request, Response, NextFunction } from "express";
-import { refreshAccessToken } from "../services/authService.js";
+import { refreshAccessToken } from "../helpers/tokenHelper.js";
 
 dotenv.config();
 
