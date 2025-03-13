@@ -1,5 +1,7 @@
 import { Sequelize, Dialect } from "sequelize";
 import database from "../configs/database.js";
+import dotenv from "dotenv";
+dotenv.config();
 // import mysql from "mysql2/promise";
 
 // (async () => {
@@ -17,7 +19,6 @@ import database from "../configs/database.js";
 //     console.error("Lỗi khi tạo database:", error);
 //   }
 // })();
-
 const sequelize = new Sequelize(database.DB, database.USER, database.PASSWORD, {
   port: database.port,
   host: database.HOST,

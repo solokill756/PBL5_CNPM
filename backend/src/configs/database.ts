@@ -1,8 +1,6 @@
+
 import dotenv from "dotenv";
-// import mysql from "mysql2/promise";
-
 dotenv.config();
-
 // const connection = await mysql.createConnection({
 //   host: process.env.DB_HOST as string,
 //   port: parseInt(process.env.DB_PORT as string, 10),
@@ -23,9 +21,9 @@ dotenv.config();
 // });
 
 // export default connection;
-
+console.log("process.env.DB_NAME : " + process.env.DB_HOST);
 export default {
-  HOST: process.env.HOST as string,
+  HOST: process.env.DB_HOST as string,
   USER: "root",
   PASSWORD: process.env.DB_PASSWORD as string,
   DB: process.env.DB_NAME as string,
