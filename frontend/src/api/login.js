@@ -1,24 +1,29 @@
+import { axiosPrivate } from "./axios";
+import Cookies from "js-cookie";
+
 // src/api/login.js
-export const fetchLogin = async (usernameOrEmail, password) => {
+export const fetchLogin = async (email, password) => {
     try {
-        // setError(''); // Reset error trước khi gửi request
-        const response = await axios.post('/login', 
-            { usernameOrEmail, password }, 
-            { withCredentials: true } // Gửi cookie nếu có
-        );
+        const response = await axiosPrivate.post("/api/auth/login", { email, password });
         
-        const { accessToken, user } = response.data;
+        const data = response.data;
+        console.log('====================================');
+        console.log(data);
+        console.log('====================================');
 
-        setAuth({ user, accessToken }); // Lưu vào context
-        navigate('/'); // Chuyển hướng về trang chính sau khi đăng nhập
-
-    } catch (err) {
-        if (!err.response) {
-            setError('Lỗi mạng, vui lòng thử lại.');
-        } else if (err.response.status === 401) {
-            setError('Tên đăng nhập hoặc mật khẩu không đúng.');
-        } else {
-            setError('Đăng nhập thất bại, thử lại sau.');
-        }
+        // Lưu accessToken vào cookie
+        Cookies.set("accessToken", data.accessToken, { 
+            expires: 1, // Lưu 1 ngày
+            secure: true, 
+            sameSite: "Strict", 
+            path: "/"  // Quan trọng: Đảm bảo Cookies có thể truy cập trên tất cả các trang
+        });
+        
+        Cookies.set("refreshToken", data.refreshToken, { expires: 7, secure: true, sameSite: "Strict" });
+        
+        return data.user;
+    } catch (error) {
+        console.error("Error during login:", error);
+        throw error;
     }
 };

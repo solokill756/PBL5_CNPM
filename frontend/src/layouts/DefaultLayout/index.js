@@ -1,16 +1,19 @@
 import { Outlet } from 'react-router-dom';
 import LeftSideBar from '../LeftSideBar';
+import { useState } from 'react';
 
 function DefaultLayout() {
+    const [isCollapsed, setIsCollapsed] = useState(false);
+
     return (
-        <div className="flex h-screen">
+        <div className="flex h-screen overflow-auto">
             {/* Left Sidebar */}
-            <div className="w-64 h-full fixed">
-                <LeftSideBar />
+            <div className={`${isCollapsed ? "w-20" : "w-64"} h-full sticky top-0 transition-all duration-300`}>
+                <LeftSideBar onToggle={setIsCollapsed} />
             </div>
 
             {/* Main Content */}
-            <div className="ml-64 flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col transition-all duration-300">
                 <Outlet />
             </div>
         </div>

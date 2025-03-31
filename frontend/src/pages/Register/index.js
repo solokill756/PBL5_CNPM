@@ -5,8 +5,7 @@ import BlueButton from "@/components/BlueButton";
 import { ReactComponent as FBIcon } from "@/assets/icons/fb.svg";
 import { Link } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
-import { checkExist } from "@/api/checkExist";
-import { fetchRegister } from "@/api/register";
+import { fetchLogin } from "@/api/login";
 
 function Register() {
   const [fullname, setFullname] = useState("");
@@ -19,11 +18,31 @@ function Register() {
     password: "",
     username: "",
   });
+  
   const [apiErrors, setApiErrors] = useState({
     emailExists: false,
     usernameExists: false,
   });
 
+  // Regex kiểm tra email hợp lệ
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const handleEmailBlur = async () => {
+    if (!emailRegex.test(email)) {
+      setError((prev) => ({
+        ...prev,
+        email: "Vui lòng nhập email hợp lệ.",
+      }));
+    } else {
+      // const exists = await checkExist('email', email);
+      // if (exists) {
+      //     setApiErrors((prev) => ({ ...prev, emailExists: true }));
+      //     setError((prev) => ({ ...prev, email: 'Email đã tồn tại.' }));
+      // } else {
+      //     setApiErrors((prev) => ({ ...prev, emailExists: false }));
+      //     setError((prev) => ({ ...prev, email: '' }));
+      // }
+    }
+  };
   // Regex kiểm tra email hợp lệ
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const handleEmailBlur = async () => {
@@ -54,7 +73,27 @@ function Register() {
       setError((prev) => ({ ...prev, fullname: "" }));
     }
   };
+  const handleFullnameBlur = () => {
+    if (fullname.length === 0) {
+      setError((prev) => ({
+        ...prev,
+        fullname: "Vui lòng nhập tên đầy đủ.",
+      }));
+    } else {
+      setError((prev) => ({ ...prev, fullname: "" }));
+    }
+  };
 
+  const handlePasswordBlur = () => {
+    if (password.length < 8) {
+      setError((prev) => ({
+        ...prev,
+        password: "Mật khẩu phải có ít nhất 8 ký tự.",
+      }));
+    } else {
+      setError((prev) => ({ ...prev, password: "" }));
+    }
+  };
   const handlePasswordBlur = () => {
     if (password.length < 8) {
       setError((prev) => ({
@@ -86,29 +125,55 @@ function Register() {
       // }
     }
   };
+  const handleUsernameBlur = async () => {
+    if (!username.trim()) {
+      setError((prev) => ({
+        ...prev,
+        username: "Vui lòng nhập tên người dùng.",
+      }));
+    } else {
+      // const exists = await checkExist('username', username);
+      // if (exists) {
+      //     setApiErrors((prev) => ({ ...prev, usernameExists: true }));
+      //     setError((prev) => ({
+      //         ...prev,
+      //         username: 'Tên người dùng đã tồn tại.',
+      //     }));
+      // } else {
+      //     setApiErrors((prev) => ({ ...prev, usernameExists: false }));
+      //     setError((prev) => ({ ...prev, username: '' }));
+      // }
+    }
+  };
 
   const handleInputFocus = (field) => {
     setError((prev) => ({ ...prev, [field]: "" }));
   };
+  const handleInputFocus = (field) => {
+    setError((prev) => ({ ...prev, [field]: "" }));
+  };
 
-  // const handleRegister = async () => {
-  //     setLoading(true);
-  //     try {
-  //         const user = await fetchRegister(
-  //             fullname,
-  //             email,
-  //             username,
-  //             password
-  //         ); // Gọi hàm login từ API
-  //         login(user); // Đăng nhập người dùng
-  //     } catch (error) {
-  //         console.error('Login failed:', error);
-  //         setError(error.message);
-  //     } finally {
-  //         setLoading(false);
-  //     }
-  // };
+  const handleRegister = async () => {
+    setLoading(true);
+    try {
+      const user = await fetchLogin(email, password, fullname, username);
+      // login(user); // Đăng nhập người dùng
+    } catch (error) {
+      console.error("Login failed:", error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const isRegisterDisabled =
+    fullname.trim() === "" ||
+    email.trim() === "" ||
+    username.trim() === "" ||
+    password.length < 8 ||
+    Object.values(error).some((e) => e !== "") ||
+    apiErrors.emailExists ||
+    apiErrors.usernameExists;
   const isRegisterDisabled =
     fullname.trim() === "" ||
     email.trim() === "" ||
@@ -128,12 +193,12 @@ function Register() {
           Đăng ký để xem ảnh và video từ bạn bè.
         </span>
         {/* <div className="my-2">
-                    <BlueButton
-                        name="Đăng nhập bằng facebook"
-                        icon={<FBIcon />}
-                        size="w-72 h-9 bg-sky-500 text-white"
-                    />
-                </div> */}
+                        <BlueButton
+                            name="Đăng nhập bằng facebook"
+                            icon={<FBIcon />}
+                            size="w-72 h-9 bg-sky-500 text-white"
+                        />
+                    </div> */}
         <div className="my-2">
           <BlueButton
             name="Đăng nhập bằng google"
@@ -205,15 +270,17 @@ function Register() {
         </span>
         <div className="my-2">
           <BlueButton
-            name="Đăng ký"
+            name={`${loading ? "" : "Đăng ký"}`}
             isActive={"login"}
             path={`/accounts/emailverification?email=${email}`}
-            size={`w-72 h-10 ${
-              isRegisterDisabled ? "opacity-60" : "opacity-100 hover:bg-red-900"
+            size={`w-72 h-10 flex items-center justify-center ${
+                isRegisterDisabled || loading
+                ? "opacity-60 cursor-auto"
+                : "opacity-100 hover:bg-red-900"
             }`}
-            // onClick={handleRegister}
+            onClick={handleRegister}
             // loading={loading}
-            disabled={isRegisterDisabled}
+            disabled={isRegisterDisabled || loading}
           />
         </div>
       </div>
