@@ -8,14 +8,14 @@ const MenuItem = ({ icon, title, path }) => {
     return (
         <Link
             className={
-                'flex items-center text-base gap-4 my-2 p-3 rounded-md cursor-pointer hover:bg-slate-200'
+                `${isActive ? 'bg-red-50' : ''} flex items-center text-base gap-4 my-2 p-3 active:bg-red-200 rounded-md cursor-pointer hover:bg-red-50 transition-all duration-300`
             }
             to={path || '#'}
         >
-            <div className={`text ${isActive ? 'fill-black' : 'text-gray-700'}`}>
+            <div className={`${isActive ? 'text-red-900' : 'text-gray-600'}`}>
                 {icon}
             </div>
-            <span className={`${isActive ? 'font-bold' : 'text-gray-700'}`}>
+            <span className={`font-semibold transition-all duration-300 ${isActive ? ' text-red-900' : 'text-gray-600'}`}>
                 {title}
             </span>
         </Link>

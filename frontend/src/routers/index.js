@@ -8,6 +8,9 @@ import DefaultGuest from '@/layouts/DefaultGuest';
 import Home from '@/pages/Home';
 import EmailVerification from '@/pages/EmailVerification';
 import useAuth from '@/hooks/useAuth';
+import Library from '@/pages/Library';
+import Forum from '@/pages/Forum';
+import Quiz from '@/pages/Quiz';
 // import StoryModal from '@/components/Story/StoryModal';
 
 // Component bảo vệ route yêu cầu xác thực
@@ -48,8 +51,16 @@ const router = createBrowserRouter([
                 element: <Profile />,
             },
             {
-                path: '/direct',
-                // element: <Direct />,
+                path: '/library',
+                element: <Library />,
+            },
+            {
+                path: '/forum',
+                element: <Forum />,
+            },
+            {
+                path: '/quiz',
+                element: <Quiz />,
             },
         ],
     },

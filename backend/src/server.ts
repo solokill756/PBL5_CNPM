@@ -10,7 +10,8 @@ const app: Application = express();
 const port: number = parseInt(process.env.PORT as string, 10) || 8888;
 const hostname: string = process.env.HOST_NAME as string;
 const corOptions: cors.CorsOptions = {
-  origin: "*",
+  origin: "http://localhost:3000", // Chỉ định frontend được phép truy cập
+  credentials: true // Cho phép gửi cookie/token qua request
 };
 
 // Middleware
