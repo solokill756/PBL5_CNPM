@@ -1,7 +1,9 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
 
-const MenuItem = ({ icon, title, path, textSize = "text-base", height, onClick }) => {
+const MenuItem = ({ icon, title, path, textSize = "text-base", height }) => {
   const location = useLocation();
   const isActive = location.pathname === path;
 
@@ -11,7 +13,6 @@ const MenuItem = ({ icon, title, path, textSize = "text-base", height, onClick }
         isActive ? "bg-red-50" : ""
       } flex items-center text-base gap-4 my-2 p-3 active:bg-red-200 rounded-md cursor-pointer hover:bg-red-50 transition-all duration-300`}
       to={path || "#"}
-      onClick={onClick}
     >
       <div className={`${isActive ? "text-red-900" : "text-gray-600"}`}>
         {icon}
