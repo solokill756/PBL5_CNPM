@@ -1,13 +1,21 @@
+
 import dotenv from "dotenv";
 import db from "../models/index.js";
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 
 import { deleteToken , generateAccessToken ,generateRefreshToken } from "../helpers/tokenHelper.js";
+import { filterUserData } from "../helpers/fillData.js";
+
+
+
+
+
 dotenv.config();
 
 const User = db.users;
-
+const Authentication = db.authentication;
+const sequelize = db.sequelize;
 interface UserPayload {
   username: string;
   email: string;
@@ -15,18 +23,48 @@ interface UserPayload {
   tokenVersion?: number;
 }
 
+interface UserClientData {
+  full_name: string,
+  email : string,
+  profile_picture : string,
+  usename :string,
+  datatime_joined : string,
+  user_id : string,
+}
 
 
 
 
-const registerService = async (user: any): Promise<{ message: string }> => {
-  try {
-    const newUser = await User.create({ ...user, tokenVersion: 0 });
-    console.log(newUser);
-    return {
-      message: "Tạo tài khoản thành công!",
-    };
+const checkEmailService = async (email : string): Promise<any> => {
+  try { 
+    const findUser = await User.findOne({
+      where: { email: email },
+    });
+  if (findUser) {
+      return { error: "Email này đã có người đăng ký" };
+  }
+  return { message : "Email này chưa có người đăng ký"}
+    
   } catch (error) {
+    throw error;
+  }
+ 
+};
+
+
+const registerService = async (user: any): Promise<any> => {
+  const transaction = await sequelize.transaction();
+  try {
+    const checkEmail = await checkEmailService(user.email);
+    if(checkEmail.error) {
+        return checkEmail;
+    }
+  const newUser =  await User.create({ ...user, tokenVersion: 0 } , {transaction});
+   await Authentication.create({user_id : newUser.user_id , verified : 0} , {transaction});
+   await transaction.commit();
+    return filterUserData(newUser);
+  } catch (error) {
+    transaction.rollback();
     throw error;
   }
 };
@@ -46,6 +84,9 @@ const loginService = async (user: { email: string; password: string }): Promise<
   try {
     const findUser = await User.findOne({
       where: { email: user.email },
+      include : {
+        model : Authentication,
+      }
     });
 
     if (!findUser) {
@@ -57,7 +98,9 @@ const loginService = async (user: { email: string; password: string }): Promise<
     if (!bcrypt.compareSync(user.password, userData.password)) {
       return { error: "Tài khoản hoặc mật khẩu không đúng" };
     }
-
+    if(findUser.Authentication.verified == 0) {
+      return {error : "Tài khoản của bạn chưa được xác thực"};
+    }
     const payLoad: UserPayload = {
       username: userData.username,
       email: userData.email,
@@ -74,7 +117,6 @@ const loginService = async (user: { email: string; password: string }): Promise<
         email: userData.email,
         full_name: userData.full_name,
         datetime_joined: userData.datetime_joined,
-        role: userData.role,
       },
     };
   } catch (error) {
@@ -82,5 +124,54 @@ const loginService = async (user: { email: string; password: string }): Promise<
   }
 };
 
+const resetPasswordService= async(email : string , newPassword : string) : Promise<any> => {
+  try {
+    const findUser = await User.findOne({
+      where: { email: email },
+    });
+    if(!findUser) {
+      return { error : "User not found"};
+    }
+    else {
+        findUser.password = newPassword;
+        await findUser.save();
+        return {message : "Reset Password Successfully"};
+    }
+  } catch (error) {
+    throw error;
+  }
+}
 
-export { registerService, loginService,  logOutService };
+const sendOtpService = async(user_id : string , otp : string) : Promise<void> => {
+  try {
+    const dayNow = new Date();
+  const [updatedCount] = await  Authentication.update({
+       otp_code : otp,
+       created_at : dayNow,
+       otp_expiry : dayNow.setMinutes(dayNow.getMinutes() + 5),
+    } , {where : {user_id : user_id}})
+  if(updatedCount == 0) {
+    throw new Error("Không tìm thấy người dùng với user_id: " + user_id);
+  } 
+  } catch (error) {
+    throw error;
+  }
+}
+
+const  verifyOtpService = async(otp : string) : Promise<any> => {
+  const authRecord =  await Authentication.findOne({where : {otp_code : otp}});
+  if (!authRecord) {
+      return { error: "Invalid OTP" };
+    }
+  if (authRecord.otp_expiry && authRecord.otp_expiry < new Date()) {
+     return { error: 'OTP has expired' };
+    }
+  authRecord.verified = 1;
+  await authRecord.save();
+  return { message: "OTP verified successfully!" };
+}
+
+
+
+
+export { registerService, loginService,  logOutService , checkEmailService , UserClientData , UserPayload , resetPasswordService , verifyOtpService , sendOtpService };

@@ -2,32 +2,24 @@ import { Sequelize, DataTypes, Model, Optional } from 'sequelize';
 
 interface UserAttributes {
   user_id: string;
-  username: string;
+  full_name: string;
   email: string;
   password: string;
-  bio?: string;
   profile_picture?: string;
-  is_verified: boolean;
-  full_name: string;
   datetime_joined: Date;
-  role: number;
-  tokenVersion?: number;
+  username: string;
 }
 
-interface UserCreationAttributes extends Optional<UserAttributes, 'user_id' | 'bio' | 'profile_picture' | 'is_verified' | 'datetime_joined' | 'tokenVersion'> {}
+interface UserCreationAttributes extends Optional<UserAttributes, 'user_id' | 'profile_picture' | 'datetime_joined'> {}
 
 class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
-  public user_id!: string;
-  public username!: string;
-  public email!: string;
-  public password!: string;
-  public bio?: string;
-  public profile_picture?: string;
-  public is_verified!: boolean;
-  public full_name!: string;
-  public datetime_joined!: Date;
-  public role!: number;
-  public tokenVersion?: number;
+  declare user_id: string;
+  declare full_name: string;
+  declare email: string;
+  declare password: string;
+  declare profile_picture?: string;
+  declare datetime_joined: Date;
+  declare username: string;
 }
 
 export default (sequelize: Sequelize) => {
@@ -38,35 +30,34 @@ export default (sequelize: Sequelize) => {
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
-      username: { type: DataTypes.STRING, allowNull: false, unique: true },
-      email: { type: DataTypes.STRING, allowNull: false, unique: true },
-      password: { type: DataTypes.STRING, allowNull: false },
-      bio: { type: DataTypes.STRING, allowNull: true },
-      profile_picture: { type: DataTypes.STRING, allowNull: true },
-      is_verified: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue: false,
-      },
       full_name: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(100),
         allowNull: false,
+      },
+      email: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+        unique: true,
+      },
+      password: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+      },
+      profile_picture: {
+        type: DataTypes.STRING,
+        allowNull: true,
       },
       datetime_joined: {
         type: DataTypes.DATE,
         allowNull: false,
         defaultValue: DataTypes.NOW,
       },
-      role: {
-        type: DataTypes.INTEGER,
+      username: {
+        type: DataTypes.STRING(100),
         allowNull: false,
-        defaultValue: 1,
+        unique: false,
       },
-      tokenVersion: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        defaultValue: 0,
-      },
+      
     },
     {
       sequelize,
