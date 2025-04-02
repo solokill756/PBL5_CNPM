@@ -4,10 +4,12 @@ import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 
 import { deleteToken , generateAccessToken ,generateRefreshToken } from "../helpers/tokenHelper.js";
+
+
+
 dotenv.config();
 
 const User = db.users;
-
 interface UserPayload {
   username: string;
   email: string;
@@ -15,14 +17,42 @@ interface UserPayload {
   tokenVersion?: number;
 }
 
+interface UserClientData {
+  full_name: string,
+  email : string,
+  profile_picture : string,
+  usename :string,
+  datatime_joined : string,
+  user_id : string,
+}
 
 
 
 
-const registerService = async (user: any): Promise<{ message: string }> => {
+const checkEmailService = async (email : string): Promise<any> => {
+  try { 
+    const findUser = await User.findOne({
+      where: { email: email },
+    });
+  if (findUser) {
+      return { error: "Email này đã có người đăng ký" };
+  }
+  return { message : "Email này chưa có người đăng ký"}
+    
+  } catch (error) {
+    throw error;
+  }
+ 
+};
+
+
+const registerService = async (user: any): Promise<any> => {
   try {
-    const newUser = await User.create({ ...user, tokenVersion: 0 });
-    console.log(newUser);
+    const checkEmail = await checkEmailService(user.email);
+    if(checkEmail.error) {
+        return checkEmail;
+    }
+   await User.create({ ...user, tokenVersion: 0 });
     return {
       message: "Tạo tài khoản thành công!",
     };
@@ -74,7 +104,6 @@ const loginService = async (user: { email: string; password: string }): Promise<
         email: userData.email,
         full_name: userData.full_name,
         datetime_joined: userData.datetime_joined,
-        role: userData.role,
       },
     };
   } catch (error) {
@@ -82,5 +111,24 @@ const loginService = async (user: { email: string; password: string }): Promise<
   }
 };
 
+const resetPasswordService= async(email : string , newPassword : string) : Promise<any> => {
+  try {
+    const findUser = await User.findOne({
+      where: { email: email },
+    });
+    if(!findUser) {
+      return { error : "User not found"};
+    }
+    else {
+        findUser.password = newPassword;
+        await findUser.save();
+        return {message : "Reset Password Successfully"};
+    }
+  } catch (error) {
+    throw error;
+  }
+}
 
-export { registerService, loginService,  logOutService };
+
+
+export { registerService, loginService,  logOutService , checkEmailService , UserClientData , UserPayload , resetPasswordService};
