@@ -1,24 +1,11 @@
 import { Sequelize, Dialect } from "sequelize";
-import database from "../configs/database.js";
+import database from "../config/database.js";
 import dotenv from "dotenv";
+import roleModel from "./roleModel.js";
+import userRoleModel from "./userRoleModel.js";
+import authenticationModel from "./authenticationModel.js";
 dotenv.config();
-// import mysql from "mysql2/promise";
 
-// (async () => {
-//   try {
-//     const connection = await mysql.createConnection({
-//       host: database.HOST,
-//       user: database.USER,
-//       password: database.PASSWORD,
-//     });
-
-//     await connection.query(`CREATE DATABASE IF NOT EXISTS \`${database.DB}\`;`);
-//     console.log(`Database '${database.DB}' đã được tạo hoặc đã tồn tại.`);
-//     await connection.end();
-//   } catch (error) {
-//     console.error("Lỗi khi tạo database:", error);
-//   }
-// })();
 const sequelize = new Sequelize(database.DB, database.USER, database.PASSWORD, {
   port: database.port,
   host: database.HOST,
@@ -48,7 +35,15 @@ db.sequelize = sequelize;
 // import model
 const { default: userModel } = await import("./userModel.js");
 db.users = userModel(sequelize);
+db.roles = roleModel(sequelize);
+db.userRoles = userRoleModel(sequelize);
+db.authentication = authenticationModel(sequelize);
 
+// Xét quan hệ giữa các bảng
+db.users.belongsToMany(db.roles, { through: db.userRoles, foreignKey: "user_id" });
+db.roles.belongsToMany(db.users, { through: db.userRoles, foreignKey: "role_id" });
+db.users.hasOne(db.authentication , {foreginKey : "user_id"});
+db.authentication.belongsTo(db.users , {foreginKey : "user_id"});
 db.sequelize.sync({ force: false }).then(() => {
   console.log("Success to sync");
 });
