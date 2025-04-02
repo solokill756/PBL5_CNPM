@@ -1,39 +1,25 @@
 import dotenv from "dotenv";
-import { loginService, registerService , logOutService, checkEmailService, resetPasswordService,  } from "../services/authService.js";
+import { loginService, registerService , logOutService, checkEmailService, resetPasswordService, verifyOtpService, sendOtpService,  } from "../services/authService.js";
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import removeNullProperties from "../helpers/removeNullProperties.js";
 import { saltRounds } from "../helpers/tokenHelper.js";
 import { generateOtp } from "../utils/generateOtp.js";
-import db from "../models/index.js";
 import { sendOtpEmail } from "../utils/sendOtp.js";
 import generateRandomPassword from "../utils/generatePassword.js";
 import {sendNewPasswordEmail } from "../utils/sendNewPassword.js";
 
 dotenv.config();
 
-const Authentication = db.authentication;
 
 const sendOtp = async (req :Request, res : Response) : Promise<void> => {
   try {
-    const { email, user_id } = req.body;
-
+    const {email , user_id} = req.body;
     // Tạo mã OTP
     const otp = generateOtp();
-
-    // Lưu OTP vào database
-    await Authentication.create({
-      auth_id: crypto.randomUUID(),
-      user_id,
-      provider: email,
-      verified: false,
-      otp_code: otp,
-      otp_expiry : Date.now() 
-    });
-
+    await sendOtpService(user_id , otp);
     // Gửi OTP đến email
     await sendOtpEmail(email, otp);
-
     res.status(200).json({ message: "OTP sent successfully!" });
   } catch (error) {
     console.error(error);
@@ -43,28 +29,18 @@ const sendOtp = async (req :Request, res : Response) : Promise<void> => {
 
 const verifyOtp = async (req : Request, res : Response) : Promise<void> => {
   try {
-    const { email, otp } = req.body;
-    // Kiểm tra mã OTP trong database
-    const authRecord = await Authentication.findOne({
-      where: { otp_code: otp, provider: email },
-    });
-
-
-
-    if (!authRecord) {
-      res.status(400).json({ error: "Invalid OTP" });
+  const otp = req.query.otp as string;
+  if (!otp) {
+      res.status(400).json({ error: "OTP is required" });
+  }
+   const data =  await verifyOtpService(otp);
+   if(data.error) {
+      res.status(409).json(data);
+   }
+   else {
+      res.status(200).json(data); 
     }
-
-    if (authRecord.otp_expiry && authRecord.otp_expiry < new Date()) {
-      res.status(400).json({ error: 'OTP has expired' });
-    }
-    
-    await Authentication.update();
-
-
-    // Cập nhật trạng thái xác thực
-    await authRecord.update({ verified: true , otp_code : null , otp_expiry : null });
-    res.status(200).json({ message: "OTP verified successfully!" });
+   
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to verify OTP" });
@@ -164,3 +140,5 @@ const resetPassword = async(req : Request , res : Response) : Promise<void> => {
 
 
 export { login, register , logout , checkEmailSignUp , sendOtp , verifyOtp , resetPassword };
+ 
+

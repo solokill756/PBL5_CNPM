@@ -22,8 +22,6 @@ authRoutes.get("/google/callback" , passport.authenticate("google") , (req : Req
   }
 });
 authRoutes.get("/resetPassword" , (req : Request , res : Response) => resetPassword(req, res));
-authRoutes.get("/", (_req: Request, res: Response): void => {
-  res.send("<a href='http://localhost:9000/api/auth/google'>Đăng nhập bằng Google</a>");
-});
+
 
 export default authRoutes;

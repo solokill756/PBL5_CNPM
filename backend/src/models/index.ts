@@ -42,8 +42,8 @@ db.authentication = authenticationModel(sequelize);
 // Xét quan hệ giữa các bảng
 db.users.belongsToMany(db.roles, { through: db.userRoles, foreignKey: "user_id" });
 db.roles.belongsToMany(db.users, { through: db.userRoles, foreignKey: "role_id" });
-db.users.hasOne(db.authentication , {foreginKey : "user_id"});
-db.authentication.belongsTo(db.users , {foreginKey : "user_id"});
+db.users.hasOne(db.authentication , { foreignKey: "user_id" });
+db.authentication.belongsTo(db.users , { foreignKey: "user_id" });
 db.sequelize.sync({ force: false }).then(() => {
   console.log("Success to sync");
 });

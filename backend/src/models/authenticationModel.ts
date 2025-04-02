@@ -3,7 +3,7 @@ import { Sequelize, DataTypes, Model } from 'sequelize';
 class Authentication extends Model {
   declare auth_id: string;
   declare user_id: string;
-  declare provider: string;
+  // declare provider: string;
   declare verified: boolean;
   declare otp_code?: string;
   declare created_at: Date;
@@ -23,10 +23,10 @@ export default (sequelize: Sequelize) => {
         type: DataTypes.UUID,
         allowNull: false,
       },
-      provider: {
-        type: DataTypes.STRING(255),
-        allowNull: false,
-      },
+      // provider: {
+      //   type: DataTypes.STRING(255),
+      //   allowNull: false,
+      // },
       verified: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
