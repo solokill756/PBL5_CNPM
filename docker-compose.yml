@@ -36,6 +36,10 @@ services:
       - REFRESH_TOKEN_SECRET=86c6048e052e4980f3d60e0b8e262301e0cbb5ac6eb44a8fa65b8fa456d95e4242bb455815f6212b4fa320d2357b1694f60b2f3f0830b636f7fbe78315e6a797
       - DB_DIALECT=mysql
       - PORT=9000
+      - GOOGLE_CLIENT_ID=947153887279-oohcm8jt3r249qvo6fcunjibp2bh7103.apps.googleusercontent.com
+      - GOOGLE_CLIENT_SECRET=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
+      - GOOGLE_REDIRECT_URI=http://localhost:9000/api/auth/google/callback
+      - SESSION_SECRET=mySuperSecretKey123!
       - HOST_NAME=0.0.0.0
     ports:
       - "9000:9000"
