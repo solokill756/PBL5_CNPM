@@ -8,16 +8,11 @@ module.exports = {
      *
      * Example:
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
-     *
      */
-
-    // await queryInterface.addColumn("authentication", "otp_expiry", {
-    //   type: Sequelize.DATE,
-    //   allowNull: true,
-    // });
-    await queryInterface.changeColumn("authentication", "provider", {
-      type: Sequelize.STRING(255),
+    await queryInterface.addColumn("authentication", "email_send", {
+      unique: true,
       allowNull: false,
+      type: Sequelize.STRING,
     });
   },
 
@@ -28,6 +23,6 @@ module.exports = {
      * Example:
      * await queryInterface.dropTable('users');
      */
-    await queryInterface.removeColumn("authentication", "otp_expiry");
+    await queryInterface.removeColumn("authentication", "email_send");
   },
 };

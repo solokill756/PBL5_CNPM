@@ -60,7 +60,7 @@ const registerService = async (user: any): Promise<any> => {
         return checkEmail;
     }
   const newUser =  await User.create({ ...user, tokenVersion: 0 } , {transaction});
-   await Authentication.create({user_id : newUser.user_id , verified : 0} , {transaction});
+   await Authentication.create({user_id : newUser.user_id , verified : 0 ,email_send : newUser.email} , {transaction});
    await transaction.commit();
     return filterUserData(newUser);
   } catch (error) {
@@ -149,7 +149,7 @@ const sendOtpService = async(email : string , otp : string) : Promise<void> => {
        otp_code : otp,
        created_at : dayNow,
        otp_expiry : dayNow.setMinutes(dayNow.getMinutes() + 5),
-    } , {where : {user_id : email}})
+    } , {where : {email_send : email}})
   if(updatedCount == 0) {
     throw new Error("Không tìm thấy người dùng với email +  " + email);
   } 

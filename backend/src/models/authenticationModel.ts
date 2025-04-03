@@ -8,6 +8,7 @@ class Authentication extends Model {
   declare otp_code?: string;
   declare created_at: Date;
   declare otp_expiry : Date;
+  declare email_send : string;
   
 }
 
@@ -23,10 +24,11 @@ export default (sequelize: Sequelize) => {
         type: DataTypes.UUID,
         allowNull: false,
       },
-      // provider: {
-      //   type: DataTypes.STRING(255),
-      //   allowNull: false,
-      // },
+      email_send: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+        unique:  true,
+      },
       verified: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
