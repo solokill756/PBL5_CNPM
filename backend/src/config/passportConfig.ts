@@ -5,7 +5,9 @@ import removeNullProperties from "../helpers/removeNullProperties.js";
 import { generateAccessToken, generateRefreshToken  } from "../helpers/tokenHelper.js";
 import {  UserPayload } from "../services/authService.js";
 import { filterUserData } from "../helpers/fillData.js";
+import dotenv from "dotenv";
 const User =db.users;
+dotenv.config();
 passport.use(
   new GoogleStrategy(
     {
