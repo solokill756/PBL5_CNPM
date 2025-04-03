@@ -14,10 +14,10 @@ dotenv.config();
 
 const sendOtp = async (req :Request, res : Response) : Promise<void> => {
   try {
-    const {email , user_id} = req.body;
+    const {email} = req.body;
     // Tạo mã OTP
     const otp = generateOtp();
-    await sendOtpService(user_id , otp);
+    await sendOtpService(email , otp);
     // Gửi OTP đến email
     await sendOtpEmail(email, otp);
     res.status(200).json({ message: "OTP sent successfully!" });
@@ -30,10 +30,11 @@ const sendOtp = async (req :Request, res : Response) : Promise<void> => {
 const verifyOtp = async (req : Request, res : Response) : Promise<void> => {
   try {
   const otp = req.query.otp as string;
+  const user_id = req.query.id as string;
   if (!otp) {
       res.status(400).json({ error: "OTP is required" });
   }
-   const data =  await verifyOtpService(otp);
+   const data =  await verifyOtpService(otp , user_id);
    if(data.error) {
       res.status(409).json(data);
    }

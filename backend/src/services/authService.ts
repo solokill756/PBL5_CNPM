@@ -142,24 +142,24 @@ const resetPasswordService= async(email : string , newPassword : string) : Promi
   }
 }
 
-const sendOtpService = async(user_id : string , otp : string) : Promise<void> => {
-  try {
-    const dayNow = new Date();
+const sendOtpService = async(email : string , otp : string) : Promise<void> => {
+  try { 
+  const dayNow = new Date();
   const [updatedCount] = await  Authentication.update({
        otp_code : otp,
        created_at : dayNow,
        otp_expiry : dayNow.setMinutes(dayNow.getMinutes() + 5),
-    } , {where : {user_id : user_id}})
+    } , {where : {user_id : email}})
   if(updatedCount == 0) {
-    throw new Error("Không tìm thấy người dùng với user_id: " + user_id);
+    throw new Error("Không tìm thấy người dùng với email +  " + email);
   } 
   } catch (error) {
     throw error;
   }
 }
 
-const  verifyOtpService = async(otp : string) : Promise<any> => {
-  const authRecord =  await Authentication.findOne({where : {otp_code : otp}});
+const  verifyOtpService = async(otp : string , user_id : string) : Promise<any> => {
+  const authRecord =  await Authentication.findOne({where : {otp_code : otp , user_id : user_id}});
   if (!authRecord) {
       return { error: "Invalid OTP" };
     }
