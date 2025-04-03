@@ -24,7 +24,6 @@
   },
   "homepage": "https://github.com/solokill756/PBL5_CNPM#readme",
   "dependencies": {
-    "@types/node": "^20.4.0",
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -38,8 +37,7 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "pbl5-backend": "file:",
-    "sequelize": "^6.37.5",
-    "sequelize-cli": "^6.6.2"
+    "sequelize": "^6.37.5"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
@@ -53,6 +51,8 @@
     "@types/passport": "^1.0.17",
     "@types/passport-google-oauth20": "^2.0.16",
     "nodemon": "^3.1.9",
-    "tsx": "^4.7.0"
+    "sequelize-cli": "^6.6.2",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.5"
   }
 }
