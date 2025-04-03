@@ -45,4 +45,3 @@ app.*.map.json
 /backend/node_modules
 /.vscode
 # /backend/.env
-.qodo
