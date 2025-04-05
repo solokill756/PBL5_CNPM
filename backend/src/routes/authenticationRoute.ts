@@ -7,7 +7,7 @@ const authRoutes = Router();
 authRoutes.post("/login", (req: Request, res: Response) => login(req, res));
 authRoutes.post("/register", (req: Request, res: Response) => register(req, res));
 
-authRoutes.get("/logout", (req: Request, res: Response) => logout(req, res));
+authRoutes.post("/logout", (req: Request, res: Response) => logout(req, res));
 authRoutes.post("/checkEmail" , (req : Request , res : Response) => checkEmailSignUp(req , res));
 authRoutes.post('/sendOtp' , (req : Request , res : Response) => sendOtp(req , res));
 authRoutes.post("/verifyOtp" , (req : Request , res : Response) => verifyOtp(req , res));
@@ -21,7 +21,7 @@ authRoutes.get("/google/callback" , passport.authenticate("google") , (req : Req
     res.status(200).json(req.user);
   }
 });
-authRoutes.get("/resetPassword" , (req : Request , res : Response) => resetPassword(req, res));
+authRoutes.post("/resetPassword" , (req : Request , res : Response) => resetPassword(req, res));
 
 
 export default authRoutes;
