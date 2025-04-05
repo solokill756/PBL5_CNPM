@@ -117,6 +117,7 @@ const loginService = async (user: { email: string; password: string }): Promise<
         email: userData.email,
         full_name: userData.full_name,
         datetime_joined: userData.datetime_joined,
+        profile_picture: userData.profile_picture,
       },
     };
   } catch (error) {
@@ -158,8 +159,8 @@ const sendOtpService = async(email : string , otp : string) : Promise<void> => {
   }
 }
 
-const  verifyOtpService = async(otp : string , user_id : string) : Promise<any> => {
-  const authRecord =  await Authentication.findOne({where : {otp_code : otp , user_id : user_id}});
+const  verifyOtpService = async(otp : string , email : string) : Promise<any> => {
+  const authRecord =  await Authentication.findOne({where : {otp_code : otp , email_send : email}});
   if (!authRecord) {
       return { error: "Invalid OTP" };
     }
@@ -168,7 +169,29 @@ const  verifyOtpService = async(otp : string , user_id : string) : Promise<any> 
     }
   authRecord.verified = 1;
   await authRecord.save();
-  return { message: "OTP verified successfully!" };
+  const findUser = await User.findOne({where : {email : email}});
+  if(!findUser) {
+    return { error: "User not found" };
+  }
+  const userData = findUser.toJSON();
+  const payLoad: UserPayload = {
+    username: userData.username,
+    email: userData.email,
+    id: userData.id,
+    tokenVersion: userData.tokenVersion,
+  };
+  return {
+    accessToken: generateAccessToken(payLoad),
+    refreshToken: generateRefreshToken(payLoad),
+    user: {
+      id: userData.id,
+      username: userData.username,
+      email: userData.email,
+      full_name: userData.full_name,
+      datetime_joined: userData.datetime_joined,
+      profile_picture: userData.profile_picture,
+    },
+  };
 }
 
 
