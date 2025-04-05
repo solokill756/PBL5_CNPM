@@ -29,12 +29,15 @@ const sendOtp = async (req :Request, res : Response) : Promise<void> => {
 
 const verifyOtp = async (req : Request, res : Response) : Promise<void> => {
   try {
-  const otp = req.query.otp as string;
-  const user_id = req.query.id as string;
+  const { otp , email } = req.body;
+  // Kiểm tra xem OTP và email có được cung cấp hay không
+  if (!email) {
+    res.status(400).json({ error: "Email is required" });
+  }
   if (!otp) {
       res.status(400).json({ error: "OTP is required" });
   }
-   const data =  await verifyOtpService(otp , user_id);
+   const data =  await verifyOtpService(otp , email);
    if(data.error) {
       res.status(409).json(data);
    }
