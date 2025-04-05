@@ -2,16 +2,17 @@ import React, { useContext, useState } from "react";
 import InputBox from "@/components/InputBox";
 import LogoIcon from "@/assets/images/LogoIcon.png";
 import BlueButton from "@/components/BlueButton";
-// import { ReactComponent as FBIcon } from '@/assets/icons/fb.svg';
 import { Link, useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import AuthContext from "@/context/AuthProvider";
 import { fetchLogin } from "@/api/login";
 import Cookies from "js-cookie";
-import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { getOTP } from "@/api/getOTP";
+import { getTokens } from "@/helper/tokenService";
+import { loginGoogle } from "@/api/loginGoogle";
 
 function Login() {
-  const { setAuth } = useContext(AuthContext); // Lấy context để lưu token
+  const { login } = useContext(AuthContext); // Lấy context để lưu token
   const navigate = useNavigate();
   const [email, setemail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,41 +23,65 @@ function Login() {
 
   const handleLogin = async () => {
     setLoading(true);
-    try {
-      setError(""); // Reset error trước khi gửi request
-      const user = await fetchLogin(email, password);
-      const accessToken = Cookies.get("accessToken");
+    setError("");
 
-      if (!accessToken) {
+    try {
+      const { user, error } = await fetchLogin(email, password);
+
+      if (error === "unverified") {
+        // Điều hướng trước, gửi OTP sau (tránh delay)
+        navigate(`/accounts/emailverification?email=${email}`);
+        try {
+          const response = await getOTP(email);
+          if (!response) setError("Email chưa được đăng ký!");
+        } catch (otpError) {
+          setError("Lỗi xảy ra khi gửi OTP. Vui lòng thử lại.");
+        }
+        return;
+      }
+
+      const { accessToken, refreshToken } = getTokens();
+      console.log(accessToken, refreshToken);
+      if (!accessToken || !refreshToken) {
         setError("Không nhận được token hợp lệ. Vui lòng thử lại.");
         return;
       }
 
-      const authData = { user, accessToken };
-      Cookies.set("auth", JSON.stringify(authData), {
-        expires: 1,
-        secure: true,
-        sameSite: "Strict",
-      });
-      setAuth(authData); // Cập nhật Context
-      navigate("/"); // Chuyển hướng về trang chính sau khi đăng nhập
+      login(accessToken, refreshToken, user);
+      navigate("/");
     } catch (err) {
-      if (!err.response) {
+      const status = err.response?.status;
+
+      if (!status) {
         setError("Lỗi mạng, vui lòng thử lại.");
+      } else if (status === 403) {
+        setError("Tên đăng nhập hoặc mật khẩu không đúng.");
       } else {
-        const status = err.response.status;
-        switch (status) {
-          case 403:
-            setError("Tên đăng nhập hoặc mật khẩu không đúng.");
-            break;
-          default:
-            setError("Có lỗi xảy ra, vui lòng thử lại.");
-            break;
-        }
+        setError("Có lỗi xảy ra, vui lòng thử lại.");
       }
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      const user = await loginGoogle();
+      console.log('====================================');
+      console.log(user);
+      console.log('====================================');
+      if (user) {
+        const { accessToken, refreshToken } = getTokens();
+        console.log(accessToken, refreshToken);
+        if (!accessToken || !refreshToken) {
+          setError("Không nhận được token hợp lệ. Vui lòng thử lại.");
+          return;
+        }
+
+        login(accessToken, refreshToken, user);
+        navigate("/");
+      }
+    } catch (error) {}
   };
 
   return (
@@ -95,11 +120,7 @@ function Login() {
             }`}
             onClick={handleLogin}
             disabled={isLoginDisabled || loading} // Vô hiệu hóa khi đang loading
-            icon={
-              loading ? (
-                <AiOutlineLoading3Quarters className="animate-spin size-5" />
-              ) : null
-            }
+            loading={loading}
           />
         </div>
         {error && (
@@ -123,10 +144,11 @@ function Login() {
             name="Đăng nhập bằng google"
             icon={<FcGoogle className="size-6 !text-blue-500" />}
             size="w-72 !bg-white !text-gray-600"
+            onClick={handleGoogleLogin}
           />
         </div>
         <div className="my-2 pb-3 text-sm cursor-pointer text-gray-600">
-          <Link to="/accounts/forgetpass">Quên mật khẩu?</Link>
+          <Link to={`/accounts/forgetpass?email=${email}`}>Quên mật khẩu?</Link>
         </div>
       </div>
       <div className="w-96 h-16 my-2 items-center justify-center flex-col flex border">

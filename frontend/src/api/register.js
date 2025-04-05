@@ -1,20 +1,14 @@
 import axios, { axiosPrivate } from "./axios";
-import Cookies from "js-cookie";
 
 // src/api/login.js
-export const fetchRegister = async (email, password, fullname, username) => {
+export const fetchRegister = async (username, email, password, fullname) => {
     try {
-        const response = await axiosPrivate.post("/api/auth/register", { email, password, fullname, username});
-        
+        const response = await axiosPrivate.post("/api/auth/register", { username, email, password, fullname});
         const data = response.data;
         
-        // Lưu accessToken vào cookie
-        Cookies.set("accessToken", data.accessToken, { expires: 1, secure: true, sameSite: "Strict" });
-        Cookies.set("refreshToken", data.refreshToken, { expires: 7, secure: true, sameSite: "Strict" });
-        
-        return data.user;
+        return { success: true, email };
     } catch (error) {
-        console.error("Error during login:", error);
-        throw error;
+        console.error("Error during register:", error);
+        return { success: false, message: error.response?.data?.message || "Lỗi đăng ký" };
     }
 };
