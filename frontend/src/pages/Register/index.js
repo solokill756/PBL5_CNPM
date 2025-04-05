@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import InputBox from "@/components/InputBox";
 import LogoIcon from "@/assets/images/LogoIcon.png";
 import BlueButton from "@/components/BlueButton";
-import { ReactComponent as FBIcon } from "@/assets/icons/fb.svg";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
-import { fetchLogin } from "@/api/login";
+import { checkExist } from "@/api/checkExist";
+import { fetchRegister } from "@/api/register";
+import { getOTP } from "@/api/getOTP";
 
 function Register() {
   const [fullname, setFullname] = useState("");
@@ -13,16 +14,12 @@ function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   const [error, setError] = useState({
     email: "",
     password: "",
     username: "",
   });
-  
-  const [apiErrors, setApiErrors] = useState({
-    emailExists: false,
-    usernameExists: false,
-  });
 
   // Regex kiểm tra email hợp lệ
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -33,46 +30,15 @@ function Register() {
         email: "Vui lòng nhập email hợp lệ.",
       }));
     } else {
-      // const exists = await checkExist('email', email);
-      // if (exists) {
-      //     setApiErrors((prev) => ({ ...prev, emailExists: true }));
-      //     setError((prev) => ({ ...prev, email: 'Email đã tồn tại.' }));
-      // } else {
-      //     setApiErrors((prev) => ({ ...prev, emailExists: false }));
-      //     setError((prev) => ({ ...prev, email: '' }));
-      // }
-    }
-  };
-  // Regex kiểm tra email hợp lệ
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const handleEmailBlur = async () => {
-    if (!emailRegex.test(email)) {
-      setError((prev) => ({
-        ...prev,
-        email: "Vui lòng nhập email hợp lệ.",
-      }));
-    } else {
-      // const exists = await checkExist('email', email);
-      // if (exists) {
-      //     setApiErrors((prev) => ({ ...prev, emailExists: true }));
-      //     setError((prev) => ({ ...prev, email: 'Email đã tồn tại.' }));
-      // } else {
-      //     setApiErrors((prev) => ({ ...prev, emailExists: false }));
-      //     setError((prev) => ({ ...prev, email: '' }));
-      // }
+      const exists = await checkExist(email);
+      if (exists) {
+        setError((prev) => ({ ...prev, email: "Email đã tồn tại." }));
+      } else {
+        setError((prev) => ({ ...prev, email: "" }));
+      }
     }
   };
 
-  const handleFullnameBlur = () => {
-    if (fullname.length === 0) {
-      setError((prev) => ({
-        ...prev,
-        fullname: "Vui lòng nhập tên đầy đủ.",
-      }));
-    } else {
-      setError((prev) => ({ ...prev, fullname: "" }));
-    }
-  };
   const handleFullnameBlur = () => {
     if (fullname.length === 0) {
       setError((prev) => ({
@@ -156,8 +122,14 @@ function Register() {
   const handleRegister = async () => {
     setLoading(true);
     try {
-      const user = await fetchLogin(email, password, fullname, username);
-      // login(user); // Đăng nhập người dùng
+      const user = await fetchRegister(username, email, password, fullname);
+      navigate(`/accounts/emailverification?email=${email}`);
+      try {
+        const response = await getOTP(email);
+        if (!response) setError("Email chưa được đăng ký!");
+      } catch (error) {
+        setError("Lỗi xảy ra khi gửi OTP. Vui lòng thử lại.");
+      }
     } catch (error) {
       console.error("Login failed:", error);
       setError(error.message);
@@ -171,17 +143,7 @@ function Register() {
     email.trim() === "" ||
     username.trim() === "" ||
     password.length < 8 ||
-    Object.values(error).some((e) => e !== "") ||
-    apiErrors.emailExists ||
-    apiErrors.usernameExists;
-  const isRegisterDisabled =
-    fullname.trim() === "" ||
-    email.trim() === "" ||
-    username.trim() === "" ||
-    password.length < 8 ||
-    Object.values(error).some((e) => e !== "") ||
-    apiErrors.emailExists ||
-    apiErrors.usernameExists;
+    Object.values(error).some((e) => e !== "");
 
   return (
     <div className="flex flex-col items-center justify-center">
@@ -274,12 +236,12 @@ function Register() {
             isActive={"login"}
             path={`/accounts/emailverification?email=${email}`}
             size={`w-72 h-10 flex items-center justify-center ${
-                isRegisterDisabled || loading
+              isRegisterDisabled || loading
                 ? "opacity-60 cursor-auto"
                 : "opacity-100 hover:bg-red-900"
             }`}
             onClick={handleRegister}
-            // loading={loading}
+            loading={loading}
             disabled={isRegisterDisabled || loading}
           />
         </div>
