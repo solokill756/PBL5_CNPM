@@ -6,6 +6,7 @@ import { generateAccessToken, generateRefreshToken  } from "../helpers/tokenHelp
 import {  UserPayload } from "../services/authService.js";
 import { filterUserData } from "../helpers/fillData.js";
 import dotenv from "dotenv";
+import generateRandomPassword from "../utils/generatePassword.js";
 const User =db.users;
 dotenv.config();
 passport.use(
@@ -17,21 +18,23 @@ passport.use(
     },
     async (_accessToken, _refreshToken, profile, done) => {
       try {
-        let user = await User.findOne({email : profile.emails?.[0]?.value});
-        let userData = user.toJSON();
-        console.log(filterUserData(userData));
-        if(!userData) {
-            userData = removeNullProperties ({
-            username: profile.username,
+        let user = await User.findOne({ where : {email : profile.emails?.[0]?.value}});
+      
+        if(!user) {
+           const  userData = removeNullProperties ({
+            username: profile.name?.familyName ?? "" + profile.name?.givenName,
             full_name: profile.displayName,
             email: profile.emails?.[0]?.value || "",
             profile_picture : profile.photos?.[0]?.value || "",
             datetime_joined: Date.now(),
+            password : generateRandomPassword(),
           });
-          await User.create({ ...user, tokenVersion: 0 });
+          await User.create({ ...userData, tokenVersion: 0 });
           return done(null , {accessToken : generateAccessToken({...userData , tokenVersion: 0} as UserPayload) , refreshToken : generateRefreshToken({...userData , tokenVersion: 0} as UserPayload) , user : filterUserData(userData)});
         }
         else {
+        let userData = user.toJSON();
+        console.log(filterUserData(userData));
           return done(null , {accessToken : generateAccessToken({...userData , tokenVersion: 0} as UserPayload) , refreshToken : generateRefreshToken({...userData , tokenVersion: 0} as UserPayload) , user :filterUserData(userData)});
         }
         
