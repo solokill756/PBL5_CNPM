@@ -17,7 +17,6 @@ authRoutes.get("/google/callback" , passport.authenticate("google") , (req : Req
     res.status(401).json({ message: "Unauthorized" });
   }
   else {
-    
     res.status(200).json(req.user);
   }
 });

@@ -31,8 +31,7 @@ const authenticateToken = (req: Request, res: Response, next: NextFunction): voi
         if (!refreshToken) {
           res.status(401).json({ error: "Thiếu refresh token" });
           return;
-        }
-        
+        }        
         // Gọi service để tạo access token mới từ refresh token
         const newAccessToken = await refreshAccessToken(refreshToken);
 
