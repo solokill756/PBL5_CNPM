@@ -23,14 +23,7 @@ interface UserPayload {
   tokenVersion?: number;
 }
 
-interface UserClientData {
-  full_name: string,
-  email : string,
-  profile_picture : string,
-  usename :string,
-  datatime_joined : string,
-  user_id : string,
-}
+
 
 
 
@@ -98,7 +91,7 @@ const loginService = async (user: { email: string; password: string }): Promise<
     if (!bcrypt.compareSync(user.password, userData.password)) {
       return { error: "Tài khoản hoặc mật khẩu không đúng" };
     }
-    if(findUser.Authentication.verified == 0) {
+    if(findUser.Authentications[0].verified == 0) {
       return {error : "Tài khoản của bạn chưa được xác thực"};
     }
     const payLoad: UserPayload = {
@@ -197,4 +190,4 @@ const  verifyOtpService = async(otp : string , email : string) : Promise<any> =>
 
 
 
-export { registerService, loginService,  logOutService , checkEmailService , UserClientData , UserPayload , resetPasswordService , verifyOtpService , sendOtpService };
+export { registerService, loginService,  logOutService , checkEmailService ,  UserPayload , resetPasswordService , verifyOtpService , sendOtpService };
