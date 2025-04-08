@@ -30,11 +30,11 @@ db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
 // Import các model
-const { default: UserModel } = await import("./UserModel.js");
-const { default: RoleModel } = await import("./RoleModel.js");
-const { default: UserRoleModel } = await import("./UserRoleModel.js");
-const { default: AuthenticationModel } = await import("./AuthenticationModel.js");
-const { default: ClassModel } = await import("./ClassModel.js");
+const { default: UserModel } = await import("./userModel.js");
+const { default: RoleModel } = await import("./roleModel.js");
+const { default: UserRoleModel } = await import("./userRoleModel.js");
+const { default: AuthenticationModel } = await import("./authenticationModel.js");
+const { default: ClassModel } = await import("./classModel.js");
 const { default: ClassMemberModel } = await import("./ClassMemberModel.js");
 const { default: LessonModel } = await import("./LessonsModel.js");
 const { default: VocabularyModel } = await import("./VocabulariesModel.js");
