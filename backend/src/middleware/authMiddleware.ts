@@ -39,10 +39,8 @@ const authenticateToken = (req: Request, res: Response, next: NextFunction): voi
           res.status(403).json({ error: "Refresh token không hợp lệ hoặc đã hết hạn" });
           return;
         }
-
         // Gửi access token mới về client
         res.setHeader("Authorization", `Bearer ${newAccessToken}`);
-
         req.body.user = user as UserPayload;
         next();
         return;

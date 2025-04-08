@@ -14,13 +14,21 @@ authRoutes.post("/verifyOtp" , (req : Request , res : Response) => verifyOtp(req
 authRoutes.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 authRoutes.get("/google/callback" , passport.authenticate("google") , (req : Request, res : Response) => {
    if (!req.user) {
+    
     res.status(401).json({ message: "Unauthorized" });
   }
   else {
-    res.status(200).json(req.user);
+    res.redirect("http://localhost:3000/auth-success");
   }
 });
 authRoutes.post("/resetPassword" , (req : Request , res : Response) => resetPassword(req, res));
 
-
+authRoutes.get("/user" , (req: Request, res: Response) => {
+  const user = req.body.user;
+  if (!user) {
+    res.status(401).json({ message: "Unauthorized" });
+  } else {
+    res.status(200).json({ user });
+  }
+});
 export default authRoutes;
