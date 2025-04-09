@@ -13,18 +13,22 @@ authRoutes.post('/sendOtp' , (req : Request , res : Response) => sendOtp(req , r
 authRoutes.post("/verifyOtp" , (req : Request , res : Response) => verifyOtp(req , res));
 authRoutes.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 authRoutes.get("/google/callback" , passport.authenticate("google") , (req : Request, res : Response) => {
-   if (!req.user) {
-    
+  try {
+     if (!req.user) {
     res.status(401).json({ message: "Unauthorized" });
   }
   else {
-    res.redirect("http://localhost:3000/auth-success");
+     res.redirect("http://localhost:3000/auth-success");
+  } 
+  } catch (error) {
+    console.error("Error during Google authentication callback:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 authRoutes.post("/resetPassword" , (req : Request , res : Response) => resetPassword(req, res));
 
 authRoutes.get("/user" , (req: Request, res: Response) => {
-  const user = req.body.user;
+  const user = req.user;
   if (!user) {
     res.status(401).json({ message: "Unauthorized" });
   } else {
