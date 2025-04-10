@@ -23,6 +23,10 @@ function EmailVerification() {
     setCode(e.target.value);
   };
 
+  const handleInputFocus = () => {
+    setError("");
+  }
+
   useEffect(() => {
     const emailFromParam = queryParams.get("email");
     if (emailFromParam) {
@@ -97,6 +101,7 @@ function EmailVerification() {
             reSend={handleResend}
             disabled={disabled}
             onChange={handleInputChange}
+            onFocus={handleInputFocus}
           />
         </div>
         <div className="my-1">

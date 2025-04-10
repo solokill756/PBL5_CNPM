@@ -11,7 +11,7 @@ import useAuth from "@/hooks/useAuth";
 import Library from "@/pages/Library";
 import Forum from "@/pages/Forum";
 import Quiz from "@/pages/Quiz";
-// import StoryModal from '@/components/Story/StoryModal';
+import AuthSuccess from "@/components/AuthSuccess";
 
 // Component bảo vệ route yêu cầu xác thực
 function PrivateRoute({ children }) {
@@ -90,6 +90,10 @@ const router = createBrowserRouter([
       },
     ],
   },
+  {
+    path: "/auth-success",
+    element: <AuthSuccess />
+  }
 ]);
 
 export default router;

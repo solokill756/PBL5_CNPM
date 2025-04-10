@@ -26,6 +26,10 @@ function ForgetPass() {
     setEmail(e.target.value);
   };
 
+  const handleInputFocus = () => {
+    setError("");
+  }
+
   const handleSubmit = async () => {
     setLoading(true);
     setError("");
@@ -61,6 +65,7 @@ function ForgetPass() {
             size="w-72 h-10 rounded-lg"
             content={email}
             onChange={handleInputChange}
+            onFocus={handleInputFocus}
           />
         </div>
         <div className="my-1">
