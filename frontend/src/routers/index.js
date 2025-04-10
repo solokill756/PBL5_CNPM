@@ -21,18 +21,10 @@ function PrivateRoute({ children }) {
   ) : (
     <Navigate to="/accounts/login" replace />
   );
-  const { auth } = useAuth();
-  return auth?.accessToken ? (
-    children
-  ) : (
-    <Navigate to="/accounts/login" replace />
-  );
 }
 
 // Component bảo vệ route dành cho khách
 function GuestRoute({ children }) {
-  const { auth } = useAuth();
-  return !auth?.accessToken ? children : <Navigate to="/" replace />;
   const { auth } = useAuth();
   return !auth?.accessToken ? children : <Navigate to="/" replace />;
 }
