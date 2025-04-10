@@ -1,13 +1,50 @@
 import { ReactComponent as LockIcon } from "@/assets/icons/lock.svg";
 import BlueButton from "@/components/BlueButton";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import InputBox from "@/components/InputBox";
+import { resetPass } from "@/api/resetPass";
 
 function ForgetPass() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+
+  const disabledInput = email.length === 0;
+
+  useEffect(() => {
+    const emailFromParam = queryParams.get("email");
+    if (emailFromParam) {
+      setEmail(emailFromParam);
+    } 
+  }, []);
+
   const handleInputChange = (e) => {
-    setUsername(e.target.value);
+    setEmail(e.target.value);
+  };
+
+  const handleInputFocus = () => {
+    setError("");
+  }
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const success = await resetPass(email);
+      if (success) {
+        setError("Mật khẩu mới đã được gửi đến email của bạn!");
+      } else {
+        setError("Không thể gửi mật khẩu mới, vui lòng kiểm tra lại email.");
+      } 
+    } catch (error) {
+      setError("Email không tồn tại hoặc gặp sự cố khi gửi yêu cầu!");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -16,30 +53,36 @@ function ForgetPass() {
         <div className="my-4">
           <LockIcon />
         </div>
-        <span className="font-semibold mb-2">Bạn gặp sự số khi đăng nhập?</span>
+        <span className="font-semibold mt-2">Bạn gặp sự số khi đăng nhập?</span>
         <span className="text-sm px-8 text-center text-gray-500">
-          Nhập email hoặc tên người dùng của bạn và chúng tôi sẽ
-          gửi cho bạn một liên kết để truy cập lại vào tài khoản.
+          Nhập email của bạn và chúng tôi sẽ
+          gửi mật khẩu mới để đăng nhập lại vào tài khoản.
         </span>
         <div className="my-1">
           <InputBox
-            value="Email hoặc tên người dùng"
+            value="Email"
             type="text"
             size="w-72 h-10 rounded-lg"
+            content={email}
             onChange={handleInputChange}
+            onFocus={handleInputFocus}
           />
         </div>
         <div className="my-1">
           <BlueButton
-            name="Gửi mật khẩu mới"
+            name={loading ? '' : 'Gửi mật khẩu mới'}
             isActive={'login'}
-            size={`w-72 h-10 rounded-lg ${
-              username.length === 0
-                ? "opacity-60 cursor-auto"
-                : "opacity-100 hover:bg-red-900"
-            }`}
+            disable={disabledInput}
+            size={`w-72 h-10 rounded-lg ${disabledInput || loading ? "opacity-60 cursor-auto" : "opacity-100 hover:bg-red-900"}`}
+            onClick={handleSubmit}
+            loading={loading}
           />
         </div>
+        {error && (
+          <span className="px-8 my-2 text-sm font-medium text-red-600 text-center">
+            {error} {/* Hiển thị lỗi */}
+          </span>
+        )}
         <div className="flex-row flex my-4 text-sm text-gray-500 font-semibold">
           <div>HOẶC</div>
         </div>
@@ -53,7 +96,7 @@ function ForgetPass() {
         <div>
           <BlueButton
             name="Quay lại đăng nhập"
-            size={`w-96 h-10 text-sm border rounded-none !bg-gray-50 text-gray-600 hover:opacity-70`}
+            size="w-96 h-10 text-sm border rounded-none !bg-gray-50 text-gray-600 hover:opacity-70"
             path="/accounts/login"
           />
         </div>
