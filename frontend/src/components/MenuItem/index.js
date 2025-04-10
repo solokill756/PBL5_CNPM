@@ -1,7 +1,5 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
 
 const MenuItem = ({ icon, title, path, textSize = "text-base", height }) => {
   const location = useLocation();
