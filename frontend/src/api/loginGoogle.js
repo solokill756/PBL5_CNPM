@@ -3,12 +3,15 @@ import { axiosPrivate } from "./axios";
 
 export const loginGoogle = async () => {
   try {
-    const response = axiosPrivate.get("/api/auth/google");
-    // Chuyển hướng trình duyệt đến URL OAuth
-    window.location.href = 'http://localhost:9000/api/auth/google'
+    // window.location.href = 'http://9000/api/auth/google'
+    const response = await axiosPrivate.get("/api/auth/google");
     const { accessToken, refreshToken, user } = response.data;
+    console.log("====================================");
+    console.log(accessToken, refreshToken, user);
+    console.log("====================================");
 
     setTokens(accessToken, refreshToken);
+
     return { user, error: null };
   } catch (error) {
     console.log(error);

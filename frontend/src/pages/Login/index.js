@@ -8,7 +8,7 @@ import AuthContext from "@/context/AuthProvider";
 import { fetchLogin } from "@/api/login";
 import Cookies from "js-cookie";
 import { getOTP } from "@/api/getOTP";
-import { getTokens } from "@/helper/tokenService";
+import { getTokens, setTokens } from "@/helper/tokenService";
 import { loginGoogle } from "@/api/loginGoogle";
 
 function Login() {
@@ -65,24 +65,10 @@ function Login() {
   };
 
   const handleGoogleLogin = async () => {
-    try {
-      const user = await loginGoogle();
-      console.log('====================================');
-      console.log(user);
-      console.log('====================================');
-      if (user) {
-        const { accessToken, refreshToken } = getTokens();
-        console.log(accessToken, refreshToken);
-        if (!accessToken || !refreshToken) {
-          setError("Không nhận được token hợp lệ. Vui lòng thử lại.");
-          return;
-        }
-
-        login(accessToken, refreshToken, user);
-        navigate("/");
-      }
-    } catch (error) {}
+      window.location.href = "http://localhost:9000/api/auth/google";
   };
+  
+  
 
   return (
     <div className="flex flex-col items-center justify-center">
@@ -124,7 +110,7 @@ function Login() {
           />
         </div>
         {error && (
-          <span className="px-8 my-2 text-xs text-red-500 text-center">
+          <span className="px-8 my-2 text-sm font-medium text-red-600 text-center">
             {error} {/* Hiển thị lỗi */}
           </span>
         )}
