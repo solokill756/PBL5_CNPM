@@ -29,35 +29,7 @@ function Register() {
     password: "",
     username: "",
   });
-  const [fullname, setFullname] = useState("");
-  const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const [error, setError] = useState({
-    email: "",
-    password: "",
-    username: "",
-  });
 
-  // Regex kiểm tra email hợp lệ
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const handleEmailBlur = async () => {
-    if (!emailRegex.test(email)) {
-      setError((prev) => ({
-        ...prev,
-        email: "Vui lòng nhập email hợp lệ.",
-      }));
-    } else {
-      const exists = await checkExist(email);
-      if (exists) {
-        setError((prev) => ({ ...prev, email: "Email đã tồn tại." }));
-      } else {
-        setError((prev) => ({ ...prev, email: "" }));
-      }
-    }
-  };
   // Regex kiểm tra email hợp lệ
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const handleEmailBlur = async () => {
@@ -86,37 +58,7 @@ function Register() {
       setError((prev) => ({ ...prev, fullname: "" }));
     }
   };
-  const handleFullnameBlur = () => {
-    if (fullname.length === 0) {
-      setError((prev) => ({
-        ...prev,
-        fullname: "Vui lòng nhập tên đầy đủ.",
-      }));
-    } else {
-      setError((prev) => ({ ...prev, fullname: "" }));
-    }
-  };
 
-  const handlePasswordBlur = () => {
-    if (password.length < 8) {
-      setError((prev) => ({
-        ...prev,
-        password: "Mật khẩu phải có ít nhất 8 ký tự.",
-      }));
-    } else {
-      setError((prev) => ({ ...prev, password: "" }));
-    }
-  };
-  const handlePasswordBlur = () => {
-    if (password.length < 8) {
-      setError((prev) => ({
-        ...prev,
-        password: "Mật khẩu phải có ít nhất 8 ký tự.",
-      }));
-    } else {
-      setError((prev) => ({ ...prev, password: "" }));
-    }
-  };
   const handlePasswordBlur = () => {
     if (password.length < 8) {
       setError((prev) => ({
@@ -148,50 +90,7 @@ function Register() {
       // }
     }
   };
-  const handleUsernameBlur = async () => {
-    if (!username.trim()) {
-      setError((prev) => ({
-        ...prev,
-        username: "Vui lòng nhập tên người dùng.",
-      }));
-    } else {
-      // const exists = await checkExist('username', username);
-      // if (exists) {
-      //     setApiErrors((prev) => ({ ...prev, usernameExists: true }));
-      //     setError((prev) => ({
-      //         ...prev,
-      //         username: 'Tên người dùng đã tồn tại.',
-      //     }));
-      // } else {
-      //     setApiErrors((prev) => ({ ...prev, usernameExists: false }));
-      //     setError((prev) => ({ ...prev, username: '' }));
-      // }
-    }
-  };
-  const handleUsernameBlur = async () => {
-    if (!username.trim()) {
-      setError((prev) => ({
-        ...prev,
-        username: "Vui lòng nhập tên người dùng.",
-      }));
-    } else {
-      // const exists = await checkExist('username', username);
-      // if (exists) {
-      //     setApiErrors((prev) => ({ ...prev, usernameExists: true }));
-      //     setError((prev) => ({
-      //         ...prev,
-      //         username: 'Tên người dùng đã tồn tại.',
-      //     }));
-      // } else {
-      //     setApiErrors((prev) => ({ ...prev, usernameExists: false }));
-      //     setError((prev) => ({ ...prev, username: '' }));
-      // }
-    }
-  };
 
-  const handleInputFocus = (field) => {
-    setError((prev) => ({ ...prev, [field]: "" }));
-  };
   const handleInputFocus = (field) => {
     setError((prev) => ({ ...prev, [field]: "" }));
   };
@@ -215,12 +114,6 @@ function Register() {
     }
   };
 
-  const isRegisterDisabled =
-    fullname.trim() === "" ||
-    email.trim() === "" ||
-    username.trim() === "" ||
-    password.length < 8 ||
-    Object.values(error).some((e) => e !== "");
   const isRegisterDisabled =
     fullname.trim() === "" ||
     email.trim() === "" ||
