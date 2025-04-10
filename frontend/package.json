@@ -13,8 +13,6 @@
     "axios": "^1.8.2",
     "frontend": "file:",
     "js-cookie": "^3.0.5",
-    "frontend": "file:",
-    "js-cookie": "^3.0.5",
     "json-server-auth": "^2.1.0",
     "jsonwebtoken": "^9.0.2",
     "miragejs": "^0.1.48",

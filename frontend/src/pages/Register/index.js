@@ -7,15 +7,6 @@ import { FcGoogle } from "react-icons/fc";
 import { checkExist } from "@/api/checkExist";
 import { fetchRegister } from "@/api/register";
 import { getOTP } from "@/api/getOTP";
-import React, { useState } from "react";
-import InputBox from "@/components/InputBox";
-import LogoIcon from "@/assets/images/LogoIcon.png";
-import BlueButton from "@/components/BlueButton";
-import { Link, useNavigate } from "react-router-dom";
-import { FcGoogle } from "react-icons/fc";
-import { checkExist } from "@/api/checkExist";
-import { fetchRegister } from "@/api/register";
-import { getOTP } from "@/api/getOTP";
 
 function Register() {
   const [fullname, setFullname] = useState("");
