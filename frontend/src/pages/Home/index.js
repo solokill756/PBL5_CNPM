@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import DefaultHeader from "@/layouts/DefaultHeader";
 import ClassList from "@/components/Class/ClassList";
 import FlashCardList from "@/components/FlashCard/FlashCardList";
@@ -6,8 +6,25 @@ import AuthorList from "@/components/Author/AuthorList";
 import { Link } from "react-router-dom";
 import VocabList from "@/components/Vocabulary/VocabList";
 import BlueButton from "@/components/BlueButton";
+import { Button } from "@chakra-ui/react";
+import AuthContext from "@/context/AuthProvider";
+import Cookies from "js-cookie";
 
 const Home = () => {
+  const { setAuth } = useContext(AuthContext);
+
+  const handleLogout = () => {
+    try {
+      // Lưu accessToken vào cookie
+      Cookies.remove("accessToken");
+      Cookies.remove("refreshToken");
+      setAuth(null);
+    } catch (error) {
+      console.error("Error during logout:", error);
+      throw error;
+    }
+  };
+
   const classes = [
     { name: "Nihongo Classdddddddddddđdd", author: "Thanh Huy", member: "5" },
     { name: "Nihongo Class", author: "Thanh Huy", member: "5" },

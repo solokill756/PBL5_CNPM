@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function InputBox({ value, type, size = '', onChange, ...props }) {
+function InputBox({ value, type, content, size = '', reSend, disabled ,onChange, ...props }) {
     const [showPassword, setShowPassword] = useState(false);
     const [inputValue, setInputValue] = useState('');
 
@@ -26,6 +26,7 @@ function InputBox({ value, type, size = '', onChange, ...props }) {
                 id={value}
                 className={`${size} text-xs block rounded-sm px-2.5 pb-1.5 pt-4 text-gray-900 bg-gray-50 dark:bg-gray-700 border border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer`}
                 placeholder=" "
+                value={content}
                 onChange={handleChange} 
                 {...props} 
             />
@@ -35,6 +36,16 @@ function InputBox({ value, type, size = '', onChange, ...props }) {
             >
                 {value}
             </label>
+            {reSend && (
+                <button
+                    type="button"
+                    onClick={reSend}
+                    disabled={disabled}
+                    className="absolute text-xs right-2.5 font-semibold top-3 text-gray-500 dark:text-gray-400 focus:outline-none"
+                >
+                    Gửi lại
+                </button>
+            )}
             {isPasswordType && inputValue && (
                 <button
                     type="button"

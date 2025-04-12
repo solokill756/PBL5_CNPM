@@ -2,44 +2,73 @@ import React, { useContext, useState } from "react";
 import InputBox from "@/components/InputBox";
 import LogoIcon from "@/assets/images/LogoIcon.png";
 import BlueButton from "@/components/BlueButton";
-// import { ReactComponent as FBIcon } from '@/assets/icons/fb.svg';
 import { Link, useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import AuthContext from "@/context/AuthProvider";
-import axios from "@/api/axios";
+import { fetchLogin } from "@/api/login";
+import Cookies from "js-cookie";
+import { getOTP } from "@/api/getOTP";
+import { getTokens, setTokens } from "@/helper/tokenService";
+import { loginGoogle } from "@/api/loginGoogle";
 
 function Login() {
-  const { setAuth } = useContext(AuthContext); // Lấy context để lưu token
+  const { login } = useContext(AuthContext); // Lấy context để lưu token
   const navigate = useNavigate();
-  const [usernameOrEmail, setUsernameOrEmail] = useState(""); // Đổi thành username hoặc email
+  const [email, setemail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const isLoginDisabled = usernameOrEmail.trim() === "" || password.length < 8;
+  const isLoginDisabled = email.trim() === "" || password.length < 8;
 
   const handleLogin = async () => {
+    setLoading(true);
+    setError("");
+
     try {
-      setError(""); // Reset error trước khi gửi request
-      const response = await axios.post(
-        "/login",
-        { usernameOrEmail, password },
-        { withCredentials: true } // Gửi cookie nếu có
-      );
+      const { user, error } = await fetchLogin(email, password);
 
-      const { accessToken, user } = response.data;
+      if (error === "unverified") {
+        // Điều hướng trước, gửi OTP sau (tránh delay)
+        navigate(`/accounts/emailverification?email=${email}`);
+        try {
+          const response = await getOTP(email);
+          if (!response) setError("Email chưa được đăng ký!");
+        } catch (otpError) {
+          setError("Lỗi xảy ra khi gửi OTP. Vui lòng thử lại.");
+        }
+        return;
+      }
 
-      setAuth({ user, accessToken }); // Lưu vào context
-      navigate("/"); // Chuyển hướng về trang chính sau khi đăng nhập
+      const { accessToken, refreshToken } = getTokens();
+      console.log(accessToken, refreshToken);
+      if (!accessToken || !refreshToken) {
+        setError("Không nhận được token hợp lệ. Vui lòng thử lại.");
+        return;
+      }
+
+      login(accessToken, refreshToken, user);
+      navigate("/");
     } catch (err) {
-      if (!err.response) {
+      const status = err.response?.status;
+
+      if (!status) {
         setError("Lỗi mạng, vui lòng thử lại.");
-      } else if (err.response.status === 401) {
+      } else if (status === 403) {
         setError("Tên đăng nhập hoặc mật khẩu không đúng.");
       } else {
-        setError("Đăng nhập thất bại, thử lại sau.");
+        setError("Có lỗi xảy ra, vui lòng thử lại.");
       }
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleGoogleLogin = async () => {
+      window.location.href = "http://localhost:9000/api/auth/google";
+  };
+  
+  
 
   return (
     <div className="flex flex-col items-center justify-center">
@@ -50,10 +79,10 @@ function Login() {
         <div>
           {/* Input cho Username hoặc Email */}
           <InputBox
-            value="Tên người dùng hoặc email"
+            value="Email"
             type="text"
             size="w-72 h-10"
-            onChange={(e) => setUsernameOrEmail(e.target.value)}
+            onChange={(e) => setemail(e.target.value)}
             onClick={() => setError("")}
           />
           {/* Input cho Password */}
@@ -68,13 +97,16 @@ function Login() {
         <div className="my-2">
           {/* Nút Đăng nhập */}
           <BlueButton
-            name="Đăng nhập"
+            name={loading ? "" : "Đăng nhập"}
             isActive={"login"}
-            size={`w-72 h-10 ${
-              isLoginDisabled ? "opacity-60" : "opacity-100 hover:bg-red-900"
+            size={`w-72 h-10 flex items-center justify-center ${
+              isLoginDisabled || loading
+                ? "opacity-60 cursor-auto"
+                : "opacity-100 hover:bg-red-900"
             }`}
-            onClick={handleLogin} // Gọi hàm đăng nhập
-            disabled={isLoginDisabled}
+            onClick={handleLogin}
+            disabled={isLoginDisabled || loading} // Vô hiệu hóa khi đang loading
+            loading={loading}
           />
         </div>
         {error && (
@@ -98,10 +130,11 @@ function Login() {
             name="Đăng nhập bằng google"
             icon={<FcGoogle className="size-6 !text-blue-500" />}
             size="w-72 !bg-white !text-gray-600"
+            onClick={handleGoogleLogin}
           />
         </div>
         <div className="my-2 pb-3 text-sm cursor-pointer text-gray-600">
-          <Link to="/accounts/forgetpass">Quên mật khẩu?</Link>
+          <Link to={`/accounts/forgetpass?email=${email}`}>Quên mật khẩu?</Link>
         </div>
       </div>
       <div className="w-96 h-16 my-2 items-center justify-center flex-col flex border">
