@@ -82,7 +82,7 @@ const AuthorList = () => {
 
   return (
     <div
-      className="relative flex items-center max-w-[620px]"
+      className="relative flex items-center max-w-[700px]"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -93,7 +93,7 @@ const AuthorList = () => {
       {/* Scrollable container */}
       <div
         ref={scrollRef}
-        className="flex space-x-4 overflow-x-hidden scroll-smooth scrollbar-hide w-full px-4"
+        className="flex scroll-smooth overflow-x-hidden scroll-snap-x snap-mandatory"
       >
         {authorList.map((card, index) => (
           <AuthorItem

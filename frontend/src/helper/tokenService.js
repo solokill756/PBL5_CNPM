@@ -23,6 +23,6 @@ export const getTokens = () => {
 }
 
 export const clearTokens = () => {
-  localStorage.removeItem("accessToken");
+  Cookies.remove("accessToken");
   Cookies.remove("refreshToken");
 };

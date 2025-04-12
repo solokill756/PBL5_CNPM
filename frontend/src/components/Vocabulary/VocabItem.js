@@ -3,7 +3,7 @@ import { FaLaptopCode } from "react-icons/fa"; // Icon đại diện (có thể 
 
 const VocabItem = ({ icon, titleJP, titleVN, description }) => {
   return (
-    <div className="flex items-center bg-white shadow-md rounded-lg p-4 w-80 hover:bg-slate-100 hover:shadow-lg transition-all cursor-pointer">
+    <div className="flex items-center bg-white shadow-md rounded-lg p-4 w-full hover:bg-slate-100 hover:shadow-lg transition-all cursor-pointer">
       {/* Icon hoặc hình ảnh */}
       <div className="p-3 border rounded-lg bg-red-50">
         {icon ? (icon) : <FaLaptopCode className="text-red-600 size-10" />}
