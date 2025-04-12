@@ -31,7 +31,7 @@ const vocabData = [
 
 const VocabList = () => {
   return (
-    <div className="rounded-lg">
+    <div className="rounded-lg w-full">
       <div className="flex flex-col gap-6">
         {vocabData.map((item, index) => (
           <VocabItem key={index} titleJP={item.titleJP} titleVN={item.titleVN} icon={item.icon} description={item.description}/>

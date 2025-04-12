@@ -3,7 +3,7 @@ import ClassItem from "./ClassItem";
 
 const ClassList = ({ classes }) => {
   return (
-    <div className="flex flex-wrap w-full justify-center gap-4">
+    <div className="grid grid-cols-2 gap-4 w-full">
       {classes.map((classData, index) => (
         <ClassItem
           key={index}
@@ -15,5 +15,6 @@ const ClassList = ({ classes }) => {
     </div>
   );
 };
+
 
 export default ClassList;

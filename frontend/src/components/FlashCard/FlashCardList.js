@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import FlashCardItem from "./FlashCardItem";
 import ScrollButton from "../ScrollButton";
-import { useNavigate } from "react-router-dom";
 
 const FlashCardList = () => {
   const scrollRef = useRef(null);
@@ -82,7 +81,7 @@ const FlashCardList = () => {
 
   return (
     <div
-      className="relative flex items-center max-w-[620px]"
+      className="relative items-center max-w-[700px]"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -93,7 +92,7 @@ const FlashCardList = () => {
       {/* Scrollable container */}
       <div
         ref={scrollRef}
-        className="flex space-x-4 overflow-x-hidden scroll-smooth scrollbar-hide w-full px-4"
+        className="flex scroll-smooth overflow-x-hidden scroll-snap-x snap-mandatory"
       >
         {flashCardList.map((card, index) => (
           <FlashCardItem
