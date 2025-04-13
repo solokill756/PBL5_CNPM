@@ -1,19 +1,20 @@
 {
   "compilerOptions": {
-    "target": "ESNext",              
-    "module": "NodeNext",             
-    "moduleResolution": "NodeNext",  
-    "strict": true,                  
-    "rootDir": "src",                
-    "outDir": "dist",          
-    "removeComments": true,
-    "noEmitOnError": true,      
-    "esModuleInterop": true,         
-    "skipLibCheck": true,            
-    "forceConsistentCasingInFileNames": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
+    "target": "ESNext", // Dịch sang ESNext để hỗ trợ các tính năng mới nhất của JavaScript
+    "module": "CommonJS", // Sử dụng CommonJS cho module system của JavaScript
+    "moduleResolution": "node", // Node.js module resolution strategy
+    "strict": true, // Bật các tùy chọn kiểm tra nghiêm ngặt
+    "rootDir": "src", // Thư mục chứa mã nguồn TypeScript
+    "outDir": "dist", // Đường dẫn đầu ra sau khi biên dịch
+    "removeComments": true, // Loại bỏ các comment trong mã biên dịch
+    "noEmitOnError": true, // Không biên dịch nếu có lỗi trong mã
+    "esModuleInterop": true, // Cho phép sử dụng import từ module CommonJS trong TypeScript
+    "skipLibCheck": true, // Bỏ qua kiểm tra thư viện
+    "forceConsistentCasingInFileNames": true, // Kiểm tra sự nhất quán tên file
+    "noUnusedParameters": true, // Kiểm tra tham số không sử dụng
+    "noImplicitReturns": true, // Kiểm tra hàm không có return
+    "noUnusedLocals": true // Kiểm tra biến không sử dụng
   },
-  "include": ["src"]
+  "include": ["src"], // Bao gồm thư mục src để biên dịch
+  "exclude": ["node_modules"] // Loại trừ node_modules khỏi quá trình biên dịch
 }

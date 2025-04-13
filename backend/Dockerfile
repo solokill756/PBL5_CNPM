@@ -1,33 +1,43 @@
-# ---- Build Stage ----
+# ---- Giai đoạn Build ----
 FROM node:20-alpine AS builder
 
 WORKDIR /elearning/backend
 
-# Cài dependency
+# Sao chép package.json và package-lock.json (nếu có)
 COPY package*.json ./
 RUN npm install
 
-# Copy toàn bộ mã nguồn
+# Sao chép toàn bộ mã nguồn
 COPY . .
 
 # Build TypeScript
 RUN npx tsc
 
-# ---- Production Stage ----
+# ---- Giai đoạn Production ----
 FROM node:20-alpine
 
 WORKDIR /elearning/backend
 
-# Cài dependency cho production
+# Cài bash và wait-for-it
+RUN apk add --no-cache bash
+ADD https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh /wait-for-it.sh
+RUN chmod +x /wait-for-it.sh
+
+# Sao chép package.json và package-lock.json từ giai đoạn builder
 COPY --from=builder /elearning/backend/package*.json ./
+# Cài đặt chỉ các dependency cho production
 RUN npm install --omit=dev
 
-# Copy build output
+# Sao chép các file JavaScript đã build
 COPY --from=builder /elearning/backend/dist ./dist
 
-# Copy .sequelizerc nếu có (nếu dùng để custom path Sequelize)
-# COPY --from=builder /elearning/backend/.sequelizerc ./.sequelizerc
+# Sao chép thư mục src/config
+COPY --from=builder /elearning/backend/src/config ./src/config
+COPY --from=builder /elearning/backend/src/seeders ./src/seeders
 
-# Chạy migration và seed trước khi khởi động server
-CMD sh -c "npx sequelize-cli db:seed:all --seeders-path dist/seeders && \
+# Sao chép file .sequelizerc
+COPY --from=builder /elearning/backend/.sequelizerc ./.sequelizerc
+
+# Chờ MySQL sẵn sàng, chạy seeders, rồi khởi động server
+CMD sh -c "/wait-for-it.sh database-mysql:3306 --timeout=60 --strict -- npx sequelize-cli db:seed:all --seeders-path src/seeders --debug && \
            node dist/server.js"
