@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "API Backend for social network",
   "main": "dist/server.js",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
     "build": "tsc",
     "dev": "nodemon --exec tsx src/server.ts",
