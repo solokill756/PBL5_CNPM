@@ -1,0 +1,262 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "username": "johndoe",
+      "email": "huyho.24062004@gmail.com",
+      "password": "12345678"
+    },
+    {
+      "id": "2",
+      "username": "yw.hnaht",
+      "email": "hothanhhuy24062004@gmail.com",
+      "password": "11111111"
+    },
+    {
+      "id": "3",
+      "username": "janesmith",
+      "email": "abcxyz@gmail.com",
+      "password": "11111111"
+    },
+    {
+      "id": "4",
+      "fullname": "huy",
+      "email": "hothanhhuy2406@gmail.com",
+      "username": "yw.hnaht11",
+      "password": "1111111111"
+    },
+    {
+      "id": "5",
+      "fullname": "huy",
+      "email": "hothqdjugd@gmail.com",
+      "username": "yw.hnaht1",
+      "password": "11111111"
+    },
+    {
+      "id": 6,
+      "fullname": "huy",
+      "email": "hothqdqqjugd@gmail.com",
+      "username": "yw.hnaht111",
+      "password": "11111111"
+    }
+  ],
+  "stories": [
+    {
+      "id": "1",
+      "avatar": "https://via.placeholder.com/150",
+      "username": "JohnDoe",
+      "status": true,
+      "images": [
+        "https://via.placeholder.com/300"
+      ]
+    },
+    {
+      "id": "2",
+      "avatar": "https://via.placeholder.com/150",
+      "username": "JaneSmith",
+      "status": false,
+      "images": [
+        "https://via.placeholder.com/500",
+        "https://via.placeholder.com/600"
+      ]
+    },
+    {
+      "id": "3",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=2680&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "username": "BobJohnson",
+      "status": true,
+      "images": [
+        "https://via.placeholder.com/700",
+        "https://via.placeholder.com/800"
+      ]
+    },
+    {
+      "id": "4",
+      "avatar": "https://plus.unsplash.com/premium_photo-1671656349218-5218444643d8?q=80&w=2574&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "username": "JohnDoe",
+      "status": true,
+      "images": [
+        "https://via.placeholder.com/900"
+      ]
+    },
+    {
+      "id": "5",
+      "avatar": "https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?q=80&w=1856&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "username": "JaneSmith",
+      "status": false,
+      "images": [
+        "https://via.placeholder.com/1000"
+      ]
+    },
+    {
+      "id": "6",
+      "avatar": "https://via.placeholder.com/150",
+      "username": "BobJohnson",
+      "status": true,
+      "images": [
+        "https://via.placeholder.com/1100",
+        "https://via.placeholder.com/1200"
+      ]
+    },
+    {
+      "id": "7",
+      "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=2574&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "username": "JohnDoe",
+      "status": true,
+      "images": [
+        "https://via.placeholder.com/1300",
+        "https://via.placeholder.com/1400"
+      ]
+    },
+    {
+      "id": "8",
+      "avatar": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "username": "JaneSmith",
+      "status": false,
+      "images": [
+        "https://via.placeholder.com/1500"
+      ]
+    },
+    {
+      "id": "9",
+      "avatar": "https://images.unsplash.com/photo-1546881963-ac8d67aee789?q=80&w=2558&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "username": "BobJohnson",
+      "status": true,
+      "images": [
+        "https://via.placeholder.com/1600"
+      ]
+    },
+    {
+      "id": "10",
+      "avatar": "https://via.placeholder.com/150",
+      "username": "JohnDoe",
+      "status": true,
+      "images": [
+        "https://via.placeholder.com/1700",
+        "https://via.placeholder.com/1800"
+      ]
+    },
+    {
+      "id": "11",
+      "avatar": "https://via.placeholder.com/150",
+      "username": "JohnDoe",
+      "status": true,
+      "images": [
+        "https://via.placeholder.com/1700",
+        "https://via.placeholder.com/1800"
+      ]
+    },
+    {
+      "id": "12",
+      "avatar": "https://via.placeholder.com/150",
+      "username": "JohnDoe",
+      "status": true,
+      "images": [
+        "https://via.placeholder.com/1700",
+        "https://via.placeholder.com/1800"
+      ]
+    },
+    {
+      "id": "13",
+      "avatar": "https://via.placeholder.com/150",
+      "username": "JohnDoe",
+      "status": true,
+      "images": [
+        "https://via.placeholder.com/1700",
+        "https://via.placeholder.com/1800"
+      ]
+    },
+    {
+      "id": "14",
+      "avatar": "https://via.placeholder.com/150",
+      "username": "JohnDoe",
+      "status": true,
+      "images": [
+        "https://via.placeholder.com/1700",
+        "https://via.placeholder.com/1800"
+      ]
+    },
+    {
+      "id": "15",
+      "avatar": "https://via.placeholder.com/150",
+      "username": "JohnDoe",
+      "status": true,
+      "images": [
+        "https://via.placeholder.com/1700",
+        "https://via.placeholder.com/1800"
+      ]
+    },
+    {
+      "id": "16",
+      "avatar": "https://via.placeholder.com/150",
+      "username": "JohnDoe",
+      "status": true,
+      "images": [
+        "https://via.placeholder.com/1700",
+        "https://via.placeholder.com/1800"
+      ]
+    },
+    {
+      "id": "17",
+      "avatar": "https://via.placeholder.com/150",
+      "username": "JohnDoe",
+      "status": true,
+      "images": [
+        "https://via.placeholder.com/1700",
+        "https://via.placeholder.com/1800"
+      ]
+    },
+    {
+      "id": "18",
+      "avatar": "https://via.placeholder.com/150",
+      "username": "JohnDoe",
+      "status": true,
+      "images": [
+        "https://via.placeholder.com/1700",
+        "https://via.placeholder.com/1800"
+      ]
+    },
+    {
+      "id": "19",
+      "avatar": "https://via.placeholder.com/150",
+      "username": "JohnDoe",
+      "status": true,
+      "images": [
+        "https://via.placeholder.com/1700",
+        "https://via.placeholder.com/1800"
+      ]
+    }
+  ],
+  "profile": [
+    {
+      "userId": 1,
+      "username": "johndoe",
+      "email": "huyho.24062004@gmail.com",
+      "bio": "I'm a photographer. I love capturing the beauty of the night sky.",
+      "location": "New York, USA",
+      "avatar": "https://example.com/avatar.jpg",
+      "followers": [
+        2
+      ],
+      "following": [
+        2
+      ],
+      "id": "105b"
+    },
+    {
+      "userId": 2,
+      "username": "janesmith",
+      "email": "hothanhhuy24062004@gmail.com",
+      "bio": "I'm a travel blogger. I've been to many amazing places.",
+      "location": "London, UK",
+      "avatar": "https://example.com/avatar_2.jpg",
+      "followers": [
+        1
+      ],
+      "following": [
+        1
+      ],
+      "id": "5c51"
+    }
+  ]
+}
