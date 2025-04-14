@@ -2,7 +2,7 @@ import React from 'react'
 import { useState } from 'react';
 import { Listbox } from '@headlessui/react'
 import { RiArrowDropDownLine } from "react-icons/ri";
-import { ChevronUpDownIcon } from '@heroicons/react/20/solid'
+
 
 const Option = ({title, options}) => {
     const [selectedOption, setSelectedOption] = useState(options[0]);
