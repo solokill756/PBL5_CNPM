@@ -26,7 +26,7 @@ function ProfileImage({ src, onAvatarUploaded }) {
     inputFileRef.current.click();
   };
 
-  const defaultAvatar = "/path/to/default/avatar.png"; 
+  const defaultAvatar = "/path/to/default/avatar.png";
 
   return (
     <div className="flex-col overflow-hidden mt-2">
@@ -37,8 +37,8 @@ function ProfileImage({ src, onAvatarUploaded }) {
         <div className="w-24 h-24 rounded-full border-4 border-blue-500 overflow-hidden shrink-0">
           <img
             src={
-              selectedAvatar && selectedAvatar.trim() !== "" 
-                ? selectedAvatar 
+              selectedAvatar && selectedAvatar.trim() !== ""
+                ? selectedAvatar
                 : defaultAvatar
             }
             alt="Ảnh đại diện"
