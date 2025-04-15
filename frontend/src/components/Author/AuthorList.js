@@ -2,12 +2,10 @@ import React, { useEffect, useRef, useState } from "react";
 import ScrollButton from "../ScrollButton";
 import { useNavigate } from "react-router-dom";
 import AuthorItem from "./AuthorItem";
+import useScrollable from "@/hooks/useScrollable";
 
 const AuthorList = () => {
   const scrollRef = useRef(null);
-
-  const [isLeftVisible, setIsLeftVisible] = useState(false);
-  const [isRightVisible, setIsRightVisible] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
 
   const authorList = [
@@ -41,44 +39,11 @@ const AuthorList = () => {
     },
   ];
 
-  const updateButtonVisibility = () => {
-    const scrollContainer = scrollRef.current;
-    if (!scrollContainer) return;
-
-    const { scrollLeft, scrollWidth, clientWidth } = scrollContainer;
-    const offset = 5; // Sai số để tránh lỗi làm tròn
-
-    setIsLeftVisible(scrollLeft > offset);
-    setIsRightVisible(scrollLeft + clientWidth < scrollWidth - offset);
-  };
-
-  const handleScroll = (direction) => {
-    const scrollContainer = scrollRef.current;
-    if (!scrollContainer) return;
-
-    const scrollAmount = 620; // Độ dài cuộn
-    const newScrollLeft =
-      direction === "left"
-        ? scrollContainer.scrollLeft - scrollAmount
-        : scrollContainer.scrollLeft + scrollAmount;
-
-    scrollContainer.scrollTo({
-      left: newScrollLeft,
-      behavior: "smooth",
-    });
-  };
-
-  useEffect(() => {
-    const scrollContainer = scrollRef.current;
-    if (!scrollContainer) return;
-
-    scrollContainer.addEventListener("scroll", updateButtonVisibility);
-    updateButtonVisibility();
-
-    return () => {
-      scrollContainer.removeEventListener("scroll", updateButtonVisibility);
-    };
-  }, []);
+  const { isLeftVisible, isRightVisible, handleScroll } = useScrollable({
+    scrollRef: scrollRef,
+    itemsToScroll: 2,
+    scrollBehavior: 'smooth',
+  })
 
   return (
     <div

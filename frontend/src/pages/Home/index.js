@@ -32,7 +32,7 @@ const Home = () => {
             <FlashCardList />
           </div>
           <div className="flex w-[80%] mt-6 justify-between items-center">
-            <span className="flex w-full text-gray-600 text-lg font-semibold">
+            <span className="px-3 flex w-full text-gray-600 text-lg font-semibold">
               Tác giả hàng đầu
             </span>
           </div>
