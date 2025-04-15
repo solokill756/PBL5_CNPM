@@ -13,7 +13,7 @@ const DropdownMenu = ({ username, email, avatar, onLogout, onToggleDarkMode }) =
       <AvatarLeft username={username} email={email} avatar={avatar} avatarSize="size-16" />
       <MenuItem icon={<GrAchievement />} title={'Thành tựu'} />
       <MenuItem icon={<IoSettingsOutline />} title={'Cài đặt'} />
-      <MenuItem icon={<FaRegMoon />} title={'Chế độ tối'} onClick={onToggleDarkMode} />
+      {/* <MenuItem icon={<FaRegMoon />} title={'Chế độ tối'} onClick={onToggleDarkMode} /> */}
       <div className="border-t my-1" />
       <MenuItem icon={<FiLogOut />} title={'Đăng xuất'} onClick={onLogout} />
       <div className="border-t my-1" />
