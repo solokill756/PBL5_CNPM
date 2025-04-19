@@ -3,6 +3,7 @@ import { Sequelize, DataTypes, Model } from "sequelize";
 interface VocabularyTopicAttributes {
   topic_id: string;
   name: string;
+  
   description?: string;
   created_at: Date;
 }
