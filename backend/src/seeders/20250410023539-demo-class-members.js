@@ -5,7 +5,7 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     // Check if the class_members table is already seeded
     const classMemberCount = await queryInterface.sequelize.query(
-      "SELECT COUNT(*) as count FROM class_members",
+      "SELECT COUNT(*) as count FROM class_member",
       { type: queryInterface.sequelize.QueryTypes.SELECT }
     );
 
@@ -14,7 +14,7 @@ module.exports = {
       return;
     }
     // Insert class members data
-    await queryInterface.bulkInsert("class_members", [
+    await queryInterface.bulkInsert("class_member", [
       {
         id: "1",
         class_id: "1",
@@ -161,7 +161,7 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.bulkDelete("class_members", null, {});
+    await queryInterface.bulkDelete("class_member", null, {});
     /**
      * Add commands to revert seed here.
      *

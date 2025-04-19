@@ -1,4 +1,4 @@
-import { Sequelize, DataTypes, Model, Optional } from 'sequelize';
+import { Sequelize, DataTypes, Model, Optional } from "sequelize";
 
 interface UserAttributes {
   user_id: string;
@@ -8,11 +8,19 @@ interface UserAttributes {
   profile_picture?: string;
   datetime_joined: Date;
   username: string;
+  tokenVersion: number;
 }
 
-interface UserCreationAttributes extends Optional<UserAttributes, 'user_id' | 'profile_picture' | 'datetime_joined'> {}
+interface UserCreationAttributes
+  extends Optional<
+    UserAttributes,
+    "user_id" | "profile_picture" | "datetime_joined"
+  > {}
 
-class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
+class User
+  extends Model<UserAttributes, UserCreationAttributes>
+  implements UserAttributes
+{
   declare user_id: string;
   declare full_name: string;
   declare email: string;
@@ -20,6 +28,7 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   declare profile_picture?: string;
   declare datetime_joined: Date;
   declare username: string;
+  declare tokenVersion: number;
 }
 
 export default (sequelize: Sequelize) => {
@@ -57,14 +66,17 @@ export default (sequelize: Sequelize) => {
         allowNull: false,
         unique: false,
       },
-      
+      tokenVersion: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
     },
     {
       sequelize,
-      tableName: 'users',
+      tableName: "user",
       timestamps: false,
     }
   );
-
   return User;
 };

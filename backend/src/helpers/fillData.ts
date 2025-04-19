@@ -4,7 +4,7 @@ interface UserClientData {
   profile_picture : string,
   usename :string,
   datatime_joined : string,
-  // user_id : string,
+  user_id : string,
 }
 const filterUserData = (user: any): UserClientData => ({
   full_name: user.full_name,
@@ -12,7 +12,7 @@ const filterUserData = (user: any): UserClientData => ({
   profile_picture : user.profile_picture,
   usename : user.username,
   datatime_joined : user.datatime_joined,
-  // user_id : user.user_id,
+  user_id : user.user_id,
 });
 
 export {filterUserData};

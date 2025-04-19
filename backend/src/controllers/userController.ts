@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import db from "../models/index.js";
 
-const User = db.users;
+const User = db.user;
 
 const getAllUsers = async (_req: Request, res: Response): Promise<void> => {
   let users = await User.findAll({});

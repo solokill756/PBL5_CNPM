@@ -1,48 +1,43 @@
 import { Sequelize, DataTypes, Model } from "sequelize";
 
-interface ClassAttributes {
-  class_id: string;
-  class_name: string;
+interface VocabularyTopicAttributes {
+  topic_id: string;
+  name: string;
   description?: string;
-  created_by: string;
   created_at: Date;
 }
 
-interface ClassCreationAttributes
+interface VocabularyTopicCreationAttributes
   extends Partial<
-    Pick<ClassAttributes, "class_id" | "description" | "created_at">
+    Pick<VocabularyTopicAttributes, "description" | "created_at">
   > {}
 
-class Class
-  extends Model<ClassAttributes, ClassCreationAttributes>
-  implements ClassAttributes
+class VocabularyTopic
+  extends Model<VocabularyTopicAttributes, VocabularyTopicCreationAttributes>
+  implements VocabularyTopicAttributes
 {
-  declare class_id: string;
-  declare class_name: string;
+  declare topic_id: string;
+  declare name: string;
   declare description?: string;
-  declare created_by: string;
   declare created_at: Date;
 }
 
 export default (sequelize: Sequelize) => {
-  Class.init(
+  VocabularyTopic.init(
     {
-      class_id: {
+      topic_id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
-      class_name: {
-        type: DataTypes.STRING(255),
+      name: {
+        type: DataTypes.STRING(100),
         allowNull: false,
+        unique: true,
       },
       description: {
         type: DataTypes.TEXT,
         allowNull: true,
-      },
-      created_by: {
-        type: DataTypes.UUID,
-        allowNull: false,
       },
       created_at: {
         type: DataTypes.DATE,
@@ -52,10 +47,10 @@ export default (sequelize: Sequelize) => {
     },
     {
       sequelize,
-      tableName: "class",
+      tableName: "vocabulary_topic",
       timestamps: false,
     }
   );
 
-  return Class;
+  return VocabularyTopic;
 };
