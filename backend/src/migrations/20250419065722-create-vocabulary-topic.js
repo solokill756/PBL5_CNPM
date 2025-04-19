@@ -1,8 +1,8 @@
-'use strict';
-
+"use strict";
+/** @type {import('sequelize-cli').Migration} */
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('vocabulary_topic', {
+    await queryInterface.createTable("vocabulary_topic", {
       topic_id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
@@ -23,9 +23,14 @@ module.exports = {
         defaultValue: Sequelize.NOW,
       },
     });
+    await queryInterface.addColumn("vocabulary_topic", "image_url", {
+      type: Sequelize.STRING(1024),
+      allowNull: true,
+    });
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('vocabulary_topic');
+    await queryInterface.dropTable("vocabulary_topic");
+    await queryInterface.removeColumn("vocabulary", "image_url");
   },
 };

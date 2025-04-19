@@ -3,14 +3,14 @@ import { Sequelize, DataTypes, Model } from "sequelize";
 interface VocabularyTopicAttributes {
   topic_id: string;
   name: string;
-  
+  image_url?: string;
   description?: string;
   created_at: Date;
 }
 
 interface VocabularyTopicCreationAttributes
   extends Partial<
-    Pick<VocabularyTopicAttributes, "description" | "created_at">
+    Pick<VocabularyTopicAttributes, "description" | "created_at" | "image_url">
   > {}
 
 class VocabularyTopic
@@ -21,6 +21,7 @@ class VocabularyTopic
   declare name: string;
   declare description?: string;
   declare created_at: Date;
+  declare image_url?: string | undefined;
 }
 
 export default (sequelize: Sequelize) => {
@@ -38,6 +39,10 @@ export default (sequelize: Sequelize) => {
       },
       description: {
         type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      image_url: {
+        type: DataTypes.STRING(1024),
         allowNull: true,
       },
       created_at: {
