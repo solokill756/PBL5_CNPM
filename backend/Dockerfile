@@ -40,12 +40,9 @@ COPY --from=builder /elearning/backend/src/seeders ./src/seeders
 # Sao chép file .sequelizerc
 COPY --from=builder /elearning/backend/.sequelizerc ./.sequelizerc
 
-# Chạy server trước, sau đó chạy seeders và cuối cùng restart server
-CMD sh -c " \
-           /wait-for-it.sh database-mysql:3306 --timeout=60 --strict -- \
-           node dist/server.js & \
-           sleep 10 && \
-           npx sequelize-cli db:seed:all --seeders-path src/seeders --debug && \
-           sleep 5 && \
-           kill $(lsof -t -i:9000) && \
-           node dist/server.js"
+# CMD để thực hiện các bước: 
+# 1. Chạy server trước
+# 2. Sau đó chờ server hoàn tất (sleep) rồi chạy seeder
+# 3. Sau khi seeder hoàn thành, khởi động lại server
+CMD ["/bin/bash", "-c", "/wait-for-it.sh database-mysql:3306 --timeout=60 --strict -- node dist/server.js & sleep 10 && npx sequelize-cli db:seed:all --seeders-path src/seeders --debug && sleep 5 && kill $(lsof -t -i:9000) && node dist/server.js"]
+
