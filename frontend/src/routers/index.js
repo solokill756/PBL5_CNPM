@@ -12,6 +12,8 @@ import Library from "@/pages/Library";
 import Forum from "@/pages/Forum";
 import Quiz from "@/pages/Quiz";
 import AuthSuccess from "@/components/AuthSuccess";
+import Achievement from "@/pages/Achievement";
+
 import FlashCard from "@/pages/Flashcard";
 
 // Component bảo vệ route yêu cầu xác thực
@@ -46,6 +48,10 @@ const router = createBrowserRouter([
       {
         path: "/accounts/:userId",
         element: <Profile />,
+      },
+      {
+        path: "/achievement/:username",
+        element: <Achievement />,
       },
       {
         path: "/library",
