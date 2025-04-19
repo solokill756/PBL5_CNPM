@@ -13,6 +13,8 @@ import Forum from "@/pages/Forum";
 import Quiz from "@/pages/Quiz";
 import AuthSuccess from "@/components/AuthSuccess";
 import FlashCard from "@/pages/Flashcard";
+import Achievement from "@/pages/Achievement";
+
 
 // Component bảo vệ route yêu cầu xác thực
 function PrivateRoute({ children }) {
@@ -46,6 +48,10 @@ const router = createBrowserRouter([
       {
         path: "/accounts/:userId",
         element: <Profile />,
+      },
+      {
+        path: "/achievement/:username",
+        element: <Achievement />,
       },
       {
         path: "/library",

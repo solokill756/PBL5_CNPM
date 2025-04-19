@@ -7,7 +7,7 @@ import NotificationCard from '@/components/Card/NotificationCard';
 
 const Profile = () => {
     return (
-        <main className='min-h-screen flex flex-col items-center'>
+        <main className='flex flex-1 flex-grow-1 flex-col items-center'>
             <DefaultHeader />
             <div className="flex flex-col items-center w-full mt-4">
                 <div className="w-full max-w-4xl px-4">

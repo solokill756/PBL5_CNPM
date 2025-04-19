@@ -12,7 +12,7 @@ const Infor = ({title, infor, operation}) => {
                 <span className='text-red-800 font-semibold'>{operation}</span>
             </button>
         </div>
-
+    
     </div>
   )
 }
