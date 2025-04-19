@@ -172,21 +172,7 @@ const getTopTopicsByUserService = async (userId: string): Promise<any> => {
           ],
         },
       ],
-      attributes: [
-        "topic_id",
-        "name",
-        // [
-        // db.sequelize.fn(
-        //   "COUNT",
-        //   db.sequelize.col(
-        //     "Vocabularies.Flashcards.ListFlashcards.FlashcardStudies.id"
-        //   )
-        // ),
-        // "StudiedCount",
-        // ],
-      ],
-      // group: ["vocabulary_topic.topic_id"],
-      // order: [[db.sequelize.literal("StudiedCount"), "DESC"]],
+      attributes: ["topic_id", "name"],
       subQuery: false,
       limit: 5,
     });

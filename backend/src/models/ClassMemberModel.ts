@@ -5,25 +5,31 @@ interface ClassMemberAttributes {
   user_id: string;
   joined_at: Date;
   last_accessed: Date;
+  id: String;
 }
 
 interface ClassMemberCreationAttributes
-  extends Partial<Pick<ClassMemberAttributes, "joined_at">> {}
+  extends Partial<Pick<ClassMemberAttributes, "joined_at" | "id">> {}
 
 class ClassMember
   extends Model<ClassMemberAttributes, ClassMemberCreationAttributes>
   implements ClassMemberAttributes
 {
+  declare id: string;
   declare class_id: string;
   declare user_id: string;
   declare joined_at: Date;
-
   declare last_accessed: Date;
 }
 
 export default (sequelize: Sequelize) => {
   ClassMember.init(
     {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
       last_accessed: {
         type: DataTypes.DATE,
         allowNull: true,
@@ -47,9 +53,8 @@ export default (sequelize: Sequelize) => {
       sequelize,
       tableName: "class_member",
       timestamps: false,
-      indexes: [{ unique: true, fields: ["class_id", "user_id"] }],
+     
     }
   );
-
   return ClassMember;
 };
