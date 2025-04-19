@@ -22,11 +22,12 @@ const getRecentClassesService = async (userId: string): Promise<any> => {
         {
           model: db.classMember,
           attributes: [],
-          as: "ClassMembers",
+          required: false,
         },
         {
           model: db.user,
           attributes: ["username"],
+          required: false,
         },
       ],
       attributes: {
@@ -37,7 +38,8 @@ const getRecentClassesService = async (userId: string): Promise<any> => {
           ],
         ],
       },
-      group: ["Class.class_id", "User.username"],
+      subQuery: false,
+      group: ["Class.class_id"],
     });
 
     return recentClasses;
@@ -68,7 +70,7 @@ const getRecentFlashcardsService = async (userId: string): Promise<any> => {
       include: [
         {
           model: db.user,
-          attributes: ["user_id", "username", "profile_picture"],
+          attributes: ["username", "profile_picture"],
         },
         {
           model: db.flashcard,
@@ -172,7 +174,7 @@ const getTopTopicsByUserService = async (userId: string): Promise<any> => {
           ],
         },
       ],
-      attributes: ["topic_id", "name"],
+      attributes: ["topic_id", "name", "image_url"],
       subQuery: false,
       limit: 5,
     });
