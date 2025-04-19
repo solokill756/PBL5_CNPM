@@ -1,4 +1,4 @@
-import { Sequelize, DataTypes, Model } from 'sequelize';
+import { Sequelize, DataTypes, Model } from "sequelize";
 
 interface QuizResultAttributes {
   result_id: string;
@@ -8,9 +8,13 @@ interface QuizResultAttributes {
   completed_at: Date;
 }
 
-interface QuizResultCreationAttributes extends Partial<Pick<QuizResultAttributes, 'result_id' | 'completed_at'>> {}
+interface QuizResultCreationAttributes
+  extends Partial<Pick<QuizResultAttributes, "result_id" | "completed_at">> {}
 
-class QuizResult extends Model<QuizResultAttributes, QuizResultCreationAttributes> implements QuizResultAttributes {
+class QuizResult
+  extends Model<QuizResultAttributes, QuizResultCreationAttributes>
+  implements QuizResultAttributes
+{
   declare result_id: string;
   declare user_id: string;
   declare quiz_id: string;
@@ -46,7 +50,7 @@ export default (sequelize: Sequelize) => {
     },
     {
       sequelize,
-      tableName: 'quiz_results',
+      tableName: "quiz_result",
       timestamps: false,
     }
   );

@@ -1,4 +1,4 @@
-import { Sequelize, DataTypes, Model } from 'sequelize';
+import { Sequelize, DataTypes, Model } from "sequelize";
 
 interface ForumPostAttributes {
   post_id: string;
@@ -9,9 +9,15 @@ interface ForumPostAttributes {
   created_at: Date;
 }
 
-interface ForumPostCreationAttributes extends Partial<Pick<ForumPostAttributes, 'post_id' | 'ai_generated_answer' | 'created_at'>> {}
+interface ForumPostCreationAttributes
+  extends Partial<
+    Pick<ForumPostAttributes, "post_id" | "ai_generated_answer" | "created_at">
+  > {}
 
-class ForumPost extends Model<ForumPostAttributes, ForumPostCreationAttributes> implements ForumPostAttributes {
+class ForumPost
+  extends Model<ForumPostAttributes, ForumPostCreationAttributes>
+  implements ForumPostAttributes
+{
   declare post_id: string;
   declare user_id: string;
   declare title: string;
@@ -52,7 +58,7 @@ export default (sequelize: Sequelize) => {
     },
     {
       sequelize,
-      tableName: 'forum_posts',
+      tableName: "forum_post",
       timestamps: false,
     }
   );

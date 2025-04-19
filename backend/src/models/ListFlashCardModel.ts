@@ -1,48 +1,48 @@
 import { Sequelize, DataTypes, Model } from "sequelize";
 
-interface ClassAttributes {
-  class_id: string;
-  class_name: string;
+interface ListFlashcardAttributes {
+  list_id: string;
+  user_id: string;
+  title: string;
   description?: string;
-  created_by: string;
   created_at: Date;
 }
 
-interface ClassCreationAttributes
+interface ListFlashcardCreationAttributes
   extends Partial<
-    Pick<ClassAttributes, "class_id" | "description" | "created_at">
+    Pick<ListFlashcardAttributes, "list_id" | "description" | "created_at">
   > {}
 
-class Class
-  extends Model<ClassAttributes, ClassCreationAttributes>
-  implements ClassAttributes
+class ListFlashcard
+  extends Model<ListFlashcardAttributes, ListFlashcardCreationAttributes>
+  implements ListFlashcardAttributes
 {
-  declare class_id: string;
-  declare class_name: string;
+  declare list_id: string;
+  declare user_id: string;
+  declare title: string;
   declare description?: string;
-  declare created_by: string;
   declare created_at: Date;
 }
 
 export default (sequelize: Sequelize) => {
-  Class.init(
+  ListFlashcard.init(
     {
-      class_id: {
+      list_id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
-      class_name: {
-        type: DataTypes.STRING(255),
+      user_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+      },
+      title: {
+        type: DataTypes.STRING,
         allowNull: false,
       },
       description: {
         type: DataTypes.TEXT,
         allowNull: true,
-      },
-      created_by: {
-        type: DataTypes.UUID,
-        allowNull: false,
       },
       created_at: {
         type: DataTypes.DATE,
@@ -52,10 +52,10 @@ export default (sequelize: Sequelize) => {
     },
     {
       sequelize,
-      tableName: "class",
+      tableName: "list_flashcard",
       timestamps: false,
     }
   );
 
-  return Class;
+  return ListFlashcard;
 };

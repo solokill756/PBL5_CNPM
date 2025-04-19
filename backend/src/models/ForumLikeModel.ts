@@ -1,4 +1,4 @@
-import { Sequelize, DataTypes, Model } from 'sequelize';
+import { Sequelize, DataTypes, Model } from "sequelize";
 
 interface ForumLikeAttributes {
   like_id: string;
@@ -8,9 +8,18 @@ interface ForumLikeAttributes {
   created_at: Date;
 }
 
-interface ForumLikeCreationAttributes extends Partial<Pick<ForumLikeAttributes, 'like_id' | 'post_id' | 'comment_id' | 'created_at'>> {}
+interface ForumLikeCreationAttributes
+  extends Partial<
+    Pick<
+      ForumLikeAttributes,
+      "like_id" | "post_id" | "comment_id" | "created_at"
+    >
+  > {}
 
-class ForumLike extends Model<ForumLikeAttributes, ForumLikeCreationAttributes> implements ForumLikeAttributes {
+class ForumLike
+  extends Model<ForumLikeAttributes, ForumLikeCreationAttributes>
+  implements ForumLikeAttributes
+{
   declare like_id: string;
   declare user_id: string;
   declare post_id?: string;
@@ -46,7 +55,7 @@ export default (sequelize: Sequelize) => {
     },
     {
       sequelize,
-      tableName: 'forum_likes',
+      tableName: "forum_like",
       timestamps: false,
     }
   );

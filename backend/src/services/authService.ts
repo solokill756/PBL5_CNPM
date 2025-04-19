@@ -1,60 +1,49 @@
-
 import dotenv from "dotenv";
-import db from "../models/index.js";
 import bcrypt from "bcrypt";
-import { Request, Response } from "express";
-
-import { deleteToken , generateAccessToken ,generateRefreshToken } from "../helpers/tokenHelper.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../helpers/tokenHelper.js";
 import { filterUserData } from "../helpers/fillData.js";
-
-
-
-
-
+import db from "../models/index.js";
 dotenv.config();
-
-const User = db.users;
-const Authentication = db.authentication;
-const sequelize = db.sequelize;
 interface UserPayload {
   username: string;
   email: string;
-  id: number;
+  user_id: string;
   tokenVersion?: number;
 }
 
-
-
-
-
-
-const checkEmailService = async (email : string): Promise<any> => {
-  try { 
-    const findUser = await User.findOne({
+const checkEmailService = async (email: string): Promise<any> => {
+  try {
+    const findUser = await db.user.findOne({
       where: { email: email },
     });
-  if (findUser) {
+    if (findUser) {
       return { error: "Email này đã có người đăng ký" };
-  }
-  return { message : "Email này chưa có người đăng ký"}
-    
+    }
+    return { message: "Email này chưa có người đăng ký" };
   } catch (error) {
     throw error;
   }
- 
 };
 
-
 const registerService = async (user: any): Promise<any> => {
-  const transaction = await sequelize.transaction();
+  const transaction = await db.sequelize.transaction();
   try {
     const checkEmail = await checkEmailService(user.email);
-    if(checkEmail.error) {
-        return checkEmail;
+    if (checkEmail.error) {
+      return checkEmail;
     }
-  const newUser =  await User.create({ ...user, tokenVersion: 0 } , {transaction});
-   await Authentication.create({user_id : newUser.user_id , verified : 0 ,email_send : newUser.email} , {transaction});
-   await transaction.commit();
+    const newUser = await db.user.create(
+      { ...user, tokenVersion: 0 },
+      { transaction }
+    );
+    await db.authentication.create(
+      { user_id: newUser.user_id, verified: 0, email_send: newUser.email },
+      { transaction }
+    );
+    await transaction.commit();
     return filterUserData(newUser);
   } catch (error) {
     transaction.rollback();
@@ -62,24 +51,28 @@ const registerService = async (user: any): Promise<any> => {
   }
 };
 
-const logOutService = async (req: Request, res: Response): Promise<{ message: string }> => {
+const logOutService = async (userID: string): Promise<{ message: string }> => {
   try {
-    const userId = (req.body.user as UserPayload).id;
-    await User.update({ tokenVersion: db.sequelize.literal("tokenVersion + 1") }, { where: { id: userId } });
-    deleteToken(req, res);
+    await db.user.update(
+      { tokenVersion: db.sequelize.literal("tokenVersion + 1") },
+      { where: { user_id: userID } }
+    );
     return { message: "Đăng xuất thành công!" };
   } catch (error) {
     throw error;
   }
 };
 
-const loginService = async (user: { email: string; password: string }): Promise<any> => {
+const loginService = async (user: {
+  email: string;
+  password: string;
+}): Promise<any> => {
   try {
-    const findUser = await User.findOne({
+    const findUser = await db.user.findOne({
       where: { email: user.email },
-      include : {
-        model : Authentication,
-      }
+      include: {
+        model: db.authentication,
+      },
     });
 
     if (!findUser) {
@@ -91,13 +84,13 @@ const loginService = async (user: { email: string; password: string }): Promise<
     if (!bcrypt.compareSync(user.password, userData.password)) {
       return { error: "Tài khoản hoặc mật khẩu không đúng" };
     }
-    if(findUser.Authentications[0].verified == 0) {
-      return {error : "Tài khoản của bạn chưa được xác thực"};
+    if (findUser.Authentications[0].verified == 0) {
+      return { error: "Tài khoản của bạn chưa được xác thực" };
     }
     const payLoad: UserPayload = {
       username: userData.username,
       email: userData.email,
-      id: userData.id,
+      user_id: userData.user_id,
       tokenVersion: userData.tokenVersion,
     };
 
@@ -105,7 +98,7 @@ const loginService = async (user: { email: string; password: string }): Promise<
       accessToken: generateAccessToken(payLoad),
       refreshToken: generateRefreshToken(payLoad),
       user: {
-        id: userData.id,
+        id: userData.user_id,
         username: userData.username,
         email: userData.email,
         full_name: userData.full_name,
@@ -118,66 +111,73 @@ const loginService = async (user: { email: string; password: string }): Promise<
   }
 };
 
-const resetPasswordService= async(email : string , newPassword : string) : Promise<any> => {
+const resetPasswordService = async (
+  email: string,
+  newPassword: string
+): Promise<any> => {
   try {
-    const findUser = await User.findOne({
+    const findUser = await db.user.findOne({
       where: { email: email },
     });
-    if(!findUser) {
-      return { error : "User not found"};
-    }
-    else {
-        findUser.password = newPassword;
-        await findUser.save();
-        return {message : "Reset Password Successfully"};
+    if (!findUser) {
+      return { error: "User not found" };
+    } else {
+      findUser.password = newPassword;
+      await findUser.save();
+      return { message: "Reset Password Successfully" };
     }
   } catch (error) {
     throw error;
   }
-}
+};
 
-const sendOtpService = async(email : string , otp : string) : Promise<void> => {
-  try { 
-  const dayNow = new Date();
-  const [updatedCount] = await  Authentication.update({
-       otp_code : otp,
-       created_at : dayNow,
-       otp_expiry : dayNow.setMinutes(dayNow.getMinutes() + 5),
-    } , {where : {email_send : email}})
-  if(updatedCount == 0) {
-    throw new Error("Không tìm thấy người dùng với email +  " + email);
-  } 
+const sendOtpService = async (email: string, otp: string): Promise<void> => {
+  try {
+    const dayNow = new Date();
+    const [updatedCount] = await db.authentication.update(
+      {
+        otp_code: otp,
+        created_at: dayNow,
+        otp_expiry: dayNow.setMinutes(dayNow.getMinutes() + 5),
+      },
+      { where: { email_send: email } }
+    );
+    if (updatedCount == 0) {
+      throw new Error("Không tìm thấy người dùng với email +  " + email);
+    }
   } catch (error) {
     throw error;
   }
-}
+};
 
-const  verifyOtpService = async(otp : string , email : string) : Promise<any> => {
-  const authRecord =  await Authentication.findOne({where : {otp_code : otp , email_send : email}});
+const verifyOtpService = async (otp: string, email: string): Promise<any> => {
+  const authRecord = await db.authentication.findOne({
+    where: { otp_code: otp, email_send: email },
+  });
   if (!authRecord) {
-      return { error: "Invalid OTP" };
-    }
+    return { error: "Invalid OTP" };
+  }
   if (authRecord.otp_expiry && authRecord.otp_expiry < new Date()) {
-     return { error: 'OTP has expired' };
-    }
+    return { error: "OTP has expired" };
+  }
   authRecord.verified = 1;
   await authRecord.save();
-  const findUser = await User.findOne({where : {email : email}});
-  if(!findUser) {
+  const findUser = await db.user.findOne({ where: { email: email } });
+  if (!findUser) {
     return { error: "User not found" };
   }
   const userData = findUser.toJSON();
   const payLoad: UserPayload = {
     username: userData.username,
     email: userData.email,
-    id: userData.id,
+    user_id: userData.user_id,
     tokenVersion: userData.tokenVersion,
   };
   return {
     accessToken: generateAccessToken(payLoad),
     refreshToken: generateRefreshToken(payLoad),
     user: {
-      id: userData.id,
+      id: userData.user_id,
       username: userData.username,
       email: userData.email,
       full_name: userData.full_name,
@@ -185,9 +185,15 @@ const  verifyOtpService = async(otp : string , email : string) : Promise<any> =>
       profile_picture: userData.profile_picture,
     },
   };
-}
+};
 
-
-
-
-export { registerService, loginService,  logOutService , checkEmailService ,  UserPayload , resetPasswordService , verifyOtpService , sendOtpService };
+export {
+  registerService,
+  loginService,
+  logOutService,
+  checkEmailService,
+  UserPayload,
+  resetPasswordService,
+  verifyOtpService,
+  sendOtpService,
+};

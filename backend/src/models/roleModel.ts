@@ -1,8 +1,8 @@
-import { Sequelize, DataTypes, Model } from 'sequelize';
+import { Sequelize, DataTypes, Model } from "sequelize";
 
 class Role extends Model {
- declare role_id: string;
- declare role_name: string;
+  declare role_id: string;
+  declare role_name: string;
 }
 
 export default (sequelize: Sequelize) => {
@@ -21,7 +21,7 @@ export default (sequelize: Sequelize) => {
     },
     {
       sequelize,
-      tableName: 'roles',
+      tableName: "role",
       timestamps: false,
     }
   );

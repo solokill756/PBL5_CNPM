@@ -45,7 +45,7 @@ export default (sequelize: Sequelize) => {
     },
     {
       sequelize,
-      tableName: "class_members",
+      tableName: "class_member",
       timestamps: false,
       indexes: [{ unique: true, fields: ["class_id", "user_id"] }],
     }

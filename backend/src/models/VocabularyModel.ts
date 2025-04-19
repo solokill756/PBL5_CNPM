@@ -1,4 +1,4 @@
-import { Sequelize, DataTypes, Model } from 'sequelize';
+import { Sequelize, DataTypes, Model } from "sequelize";
 
 interface VocabularyAttributes {
   vocab_id: string;
@@ -6,21 +6,35 @@ interface VocabularyAttributes {
   meaning?: string;
   pronunciation?: string;
   example?: string;
-  topic?: string;
+  topic_id: string;
   image_url?: string;
   ai_suggested: boolean;
   created_at: Date;
 }
 
-interface VocabularyCreationAttributes extends Partial<Pick<VocabularyAttributes, 'vocab_id' | 'meaning' | 'pronunciation' | 'example' | 'topic' | 'image_url' | 'created_at'>> {}
+interface VocabularyCreationAttributes
+  extends Partial<
+    Pick<
+      VocabularyAttributes,
+      | "vocab_id"
+      | "meaning"
+      | "pronunciation"
+      | "example"
+      | "image_url"
+      | "created_at"
+    >
+  > {}
 
-class Vocabulary extends Model<VocabularyAttributes, VocabularyCreationAttributes> implements VocabularyAttributes {
+class Vocabulary
+  extends Model<VocabularyAttributes, VocabularyCreationAttributes>
+  implements VocabularyAttributes
+{
   declare vocab_id: string;
   declare word: string;
   declare meaning?: string;
   declare pronunciation?: string;
   declare example?: string;
-  declare topic?: string;
+  declare topic_id: string;
   declare image_url?: string;
   declare ai_suggested: boolean;
   declare created_at: Date;
@@ -33,6 +47,10 @@ export default (sequelize: Sequelize) => {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
+      },
+      topic_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
       },
       word: {
         type: DataTypes.STRING(100),
@@ -49,10 +67,6 @@ export default (sequelize: Sequelize) => {
       },
       example: {
         type: DataTypes.TEXT,
-        allowNull: true,
-      },
-      topic: {
-        type: DataTypes.STRING(100),
         allowNull: true,
       },
       image_url: {
@@ -72,7 +86,7 @@ export default (sequelize: Sequelize) => {
     },
     {
       sequelize,
-      tableName: 'vocabularies',
+      tableName: "vocabulary",
       timestamps: false,
     }
   );
