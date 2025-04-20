@@ -10,7 +10,6 @@ import { UserPayload } from "../services/authService.js";
 import { filterUserData } from "../helpers/fillData.js";
 import dotenv from "dotenv";
 import generateRandomPassword from "../utils/generatePassword.js";
-const User = db.user;
 dotenv.config();
 passport.use(
   new GoogleStrategy(
@@ -21,7 +20,7 @@ passport.use(
     },
     async (_accessToken, _refreshToken, profile, done) => {
       try {
-        let user = await User.findOne({
+        let user = await db.user.findOne({
           where: { email: profile.emails?.[0]?.value },
         });
 
@@ -34,7 +33,7 @@ passport.use(
             datetime_joined: Date.now(),
             password: generateRandomPassword(),
           });
-          await User.create({ ...userData, tokenVersion: 0 });
+          await db.user.create({ ...userData, tokenVersion: 0 });
           return done(null, {
             accessToken: generateAccessToken({
               ...userData,
