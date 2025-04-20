@@ -6,10 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import AuthContext from "@/context/AuthProvider";
 import { fetchLogin } from "@/api/login";
-import Cookies from "js-cookie";
 import { getOTP } from "@/api/getOTP";
-import { getTokens, setTokens } from "@/helper/tokenService";
-import { loginGoogle } from "@/api/loginGoogle";
 
 function Login() {
   const { login } = useContext(AuthContext); // Lấy context để lưu token
@@ -26,7 +23,8 @@ function Login() {
     setError("");
 
     try {
-      const { user, error } = await fetchLogin(email, password);
+  
+      const { user, accessToken, refreshToken, error } = await fetchLogin(email, password);
 
       if (error === "unverified") {
         // Điều hướng trước, gửi OTP sau (tránh delay)
@@ -40,8 +38,6 @@ function Login() {
         return;
       }
 
-      const { accessToken, refreshToken } = getTokens();
-      console.log(accessToken, refreshToken);
       if (!accessToken || !refreshToken) {
         setError("Không nhận được token hợp lệ. Vui lòng thử lại.");
         return;

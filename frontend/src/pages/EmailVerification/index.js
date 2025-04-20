@@ -3,7 +3,6 @@ import MailImg from "@/assets/images/mail.png";
 import BlueButton from "@/components/BlueButton";
 import InputBox from "@/components/InputBox";
 import AuthContext from "@/context/AuthProvider";
-import { getTokens } from "@/helper/tokenService";
 import { useContext, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { getOTP } from "@/api/getOTP";
@@ -25,7 +24,7 @@ function EmailVerification() {
 
   const handleInputFocus = () => {
     setError("");
-  }
+  };
 
   useEffect(() => {
     const emailFromParam = queryParams.get("email");
@@ -39,25 +38,23 @@ function EmailVerification() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const { success, user, message } = await verifyOTP(code, email);
+      const { success, user, accessToken, refreshToken, message } =
+        await verifyOTP(code, email);
       if (success) {
-        const { accessToken, refreshToken} = getTokens();
-      console.log(accessToken, refreshToken);
-      if (!accessToken || !refreshToken) {
-        setError("Không nhận được token hợp lệ. Vui lòng thử lại.");
-        return;
-      }
-  
-      login(accessToken, refreshToken, user);
-      navigate("/");
+        if (!accessToken || !refreshToken) {
+          setError("Không nhận được token hợp lệ. Vui lòng thử lại.");
+          return;
+        }
+
+        login(accessToken, refreshToken, user);
+        navigate("/");
       } else {
         setError(message);
         setDisabled(false);
       }
     } catch (error) {
       setError(error);
-    }
-    finally {
+    } finally {
       setLoading(false);
     }
   };
@@ -74,8 +71,7 @@ function EmailVerification() {
       }
     } catch (error) {
       setError(error);
-    }
-    finally {
+    } finally {
       setLoading(false);
     }
   };
@@ -106,8 +102,8 @@ function EmailVerification() {
         </div>
         <div className="my-1">
           <BlueButton
-          loading={loading}
-            name={`${loading ? '' : 'Xác nhận'}`}
+            loading={loading}
+            name={`${loading ? "" : "Xác nhận"}`}
             isActive={"login"}
             size={`w-72 h-10 rounded-lg text-white ${
               code.length < 6
