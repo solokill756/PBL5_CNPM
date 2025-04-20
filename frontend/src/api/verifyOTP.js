@@ -9,9 +9,8 @@ export const verifyOTP = async (otp, email) => {
     );
 
     const data = response.data;
-    setTokens(data.accessToken, data.refreshToken);
     
-    return { success: true, user: data.user };
+    return { success: true, user: data.user, accessToken: data.accessToken, refreshToken: data.refreshToken};
   } catch (error) {
     console.error("Error verifying OTP:", error);
     return { success: false, message: error.response?.data?.message || "OTP không đúng hoặc đã hết hạn!" };

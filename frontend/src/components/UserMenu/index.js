@@ -2,16 +2,15 @@ import React, { useState, useRef, useEffect, useContext } from 'react';
 import AuthContext from '@/context/AuthProvider';
 import AvatarDisplay from '../AvatarDisplay';
 import DropdownMenu from '../DropdownMenu';
-import DefaultAvatar from '@/assets/images/avatar.jpg'
+import { fetchLogout } from '@/api/logout';
+import useAxiosPrivate from '@/hooks/useAxiosPrivate';
 
 const UserMenu = () => {
   const [active, setActive] = useState(false);
   const avatarRef = useRef(null);
   const { auth, logout } = useContext(AuthContext);
+  const axiosPrivate = useAxiosPrivate();
   const user = auth.user;
-  console.log('====================================');
-  console.log(user);
-  console.log('====================================');
 
   const handleClickOutside = (event) => {
     if (avatarRef.current && !avatarRef.current.contains(event.target)) {
@@ -24,8 +23,15 @@ const UserMenu = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
-    logout(); 
+  const handleLogout = async () => {
+    try {
+      const res = await fetchLogout(axiosPrivate);
+      if (res.message) {
+        logout();
+      }
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const handleToggleDarkMode = () => {
@@ -40,7 +46,7 @@ const UserMenu = () => {
         isActive={active}
         username={user.username}
         streak={'8'}
-        avatar={user.avatar}
+        avatar={user.profile_picture}
       />
       {active && (
         <DropdownMenu
