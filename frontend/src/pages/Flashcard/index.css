@@ -1,0 +1,15 @@
+/* flashcard-overrides.css */
+.FlashcardArrayWrapper {
+    width: 870px !important;   /* Ghi đè chiều rộng */
+  }
+
+.FlashcardArrayWrapper__CardHolder {
+    height: 400px !important;
+}
+
+.FlashcardWrapper__item--content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2rem;
+}

@@ -6,7 +6,7 @@ function DefaultLayout() {
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     return (
-        <div className="flex h-screen overflow-auto">
+        <div className="flex h-screen overflow-auto scrollbar-hide">
             {/* Left Sidebar */}
             <div className={`${isCollapsed ? "w-20" : "w-64"} h-full sticky top-0 transition-all duration-300`}>
                 <LeftSideBar onToggle={setIsCollapsed} />

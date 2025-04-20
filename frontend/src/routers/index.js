@@ -12,6 +12,7 @@ import Library from "@/pages/Library";
 import Forum from "@/pages/Forum";
 import Quiz from "@/pages/Quiz";
 import AuthSuccess from "@/components/AuthSuccess";
+import FlashCard from "@/pages/Flashcard";
 
 // Component bảo vệ route yêu cầu xác thực
 function PrivateRoute({ children }) {
@@ -43,7 +44,7 @@ const router = createBrowserRouter([
         element: <Home />,
       },
       {
-        path: "/accounts/:username",
+        path: "/accounts/:userId",
         element: <Profile />,
       },
       {
@@ -58,6 +59,10 @@ const router = createBrowserRouter([
         path: "/quiz",
         element: <Quiz />,
       },
+      {
+        path: "/flashcard/:flashcardId",
+        element: <FlashCard />
+      }
     ],
   },
   {
@@ -92,8 +97,8 @@ const router = createBrowserRouter([
   },
   {
     path: "/auth-success",
-    element: <AuthSuccess />
-  }
+    element: <AuthSuccess />,
+  },
 ]);
 
 export default router;
