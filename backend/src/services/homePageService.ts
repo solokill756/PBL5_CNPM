@@ -106,10 +106,12 @@ const getTopAuthorService = async (): Promise<any> => {
         {
           model: db.listFlashcard,
           attributes: [],
+          required: true,
         },
         {
           model: db.class,
           attributes: [],
+          required: true,
         },
       ],
       attributes: [
@@ -174,7 +176,7 @@ const getTopTopicsByUserService = async (userId: string): Promise<any> => {
           ],
         },
       ],
-      attributes: ["topic_id", "name", "image_url"],
+      attributes: ["topic_id", "name", "image_url" , "description"],
       subQuery: false,
       limit: 5,
     });

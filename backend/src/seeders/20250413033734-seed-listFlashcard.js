@@ -17,16 +17,16 @@ module.exports = {
       {
         list_id: "1a2b3c4d-0000-0000-0000-000000000001",
         user_id: "2e05b974-f0d3-4bb2-9625-bb8bc9c0c5c7",
-        title: "Từ vựng IT tiếng Nhật - Phần 1",
-        description: "Các từ cơ bản thường gặp trong lập trình và công nghệ",
+        title: "IT用語 - 基本編",
+        description: "Từ vựng IT tiếng Nhật - Phần cơ bản",
         created_at: new Date("2025-04-01T09:00:00"),
-      
+        
       },
       {
         list_id: "1a2b3c4d-0000-0000-0000-000000000002",
         user_id: "2e05b974-f0d3-4bb2-9625-bb8bc9c0c5c7",
-        title: "Từ vựng IT tiếng Nhật - Phần 2",
-        description: "Các thuật ngữ chuyên sâu hơn trong ngành phần mềm",
+        title: "IT用語 - 上級編",
+        description: "Từ vựng IT tiếng Nhật - Phần nâng cao",
         created_at: new Date("2025-04-01T10:00:00"),
        
       },
