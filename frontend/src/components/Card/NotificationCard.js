@@ -19,7 +19,7 @@ const NotificationCard = ({title, options}) => {
                     infor={"Chọn thời điểm nhận lời nhắc học tập"}
                 />
             </div>
-            <div className="p-6 border rounded-lg shadow-sm bg-white">
+            <div className="p-6">
                 <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3 text-left">Lớp học</h2>
                 <p className="text-base font-normal text-gray-600 dark:text-gray-400">
                     Thông báo cho tôi khi học phần hoặc thư mục được thêm vào lớp học
