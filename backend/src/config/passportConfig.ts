@@ -1,6 +1,5 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import db from "../models/index.js";
 import removeNullProperties from "../helpers/removeNullProperties.js";
 import {
   generateAccessToken,
@@ -10,6 +9,7 @@ import { UserPayload } from "../services/authService.js";
 import { filterUserData } from "../helpers/fillData.js";
 import dotenv from "dotenv";
 import generateRandomPassword from "../utils/generatePassword.js";
+import db from "../models/index.js";
 dotenv.config();
 passport.use(
   new GoogleStrategy(
