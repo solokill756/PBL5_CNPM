@@ -1,8 +1,7 @@
 import React from 'react';
 import { BsFire } from "react-icons/bs";
-import DefaultAvatar from '@/assets/images/avatar.jpg'
 
-const AvatarDisplay = ({ avatar = DefaultAvatar, streak, username, onClick }) => (
+const AvatarDisplay = ({ avatar, streak, username, onClick }) => (
   <div className="flex w-full items-center">
     <div className="w-2/4 flex flex-col items-start text-sm font-semibold text-gray-500">
       <span>{username}</span>

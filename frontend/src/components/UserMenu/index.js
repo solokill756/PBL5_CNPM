@@ -52,7 +52,7 @@ const UserMenu = () => {
         <DropdownMenu
           username={user.username}
           email={user.email}
-          avatar={user.avatar}
+          avatar={user.profile_picture}
           onLogout={handleLogout}
           onToggleDarkMode={handleToggleDarkMode}
         />

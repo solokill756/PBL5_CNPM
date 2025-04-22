@@ -2,41 +2,42 @@ import React, { useRef, useState } from "react";
 import FlashCardItem from "./FlashCardItem";
 import ScrollButton from "../ScrollButton";
 import useScrollable from "@/hooks/useScrollable";
+import fallbackAvatar from "@/assets/images/avatar.jpg";
 
-const FlashCardList = () => {
+const FlashCardList = ( { flashCards } ) => {
   const scrollRef = useRef(null);
   const [isHovered, setIsHovered] = useState(false);
   
-  const flashCardList = [
-    {
-      name: "まとめ1 複合動詞_N2語彙_耳から覚える",
-      author: "Thanh Huy",
-      number: "90",
-      avatar:
-        "https://i.pinimg.com/736x/82/f8/3c/82f83c07282e788a9f5c939da5d35938.jpg",
-    },
-    {
-      name: "まとめ1 複合動詞_N2語彙_耳から覚える",
-      author: "Thanh Huy",
-      number: "90",
-      avatar:
-        "https://i.pinimg.com/736x/82/f8/3c/82f83c07282e788a9f5c939da5d35938.jpg",
-    },
-    {
-      name: "まとめ2 複合動詞_N2語彙_耳から覚える",
-      author: "Thanh Huy",
-      number: "50",
-      avatar:
-        "https://i.pinimg.com/736x/82/f8/3c/82f83c07282e788a9f5c939da5d35938.jpg",
-    },
-    {
-      name: "まとめ3 複合動詞_N2語彙_耳から覚える",
-      author: "Thanh Huy",
-      number: "120",
-      avatar:
-        "https://i.pinimg.com/736x/82/f8/3c/82f83c07282e788a9f5c939da5d35938.jpg",
-    },
-  ];
+  // const flashCardList = [
+  //   {
+  //     name: "まとめ1 複合動詞_N2語彙_耳から覚える",
+  //     author: "Thanh Huy",
+  //     number: "90",
+  //     avatar:
+  //       "https://i.pinimg.com/736x/82/f8/3c/82f83c07282e788a9f5c939da5d35938.jpg",
+  //   },
+  //   {
+  //     name: "まとめ1 複合動詞_N2語彙_耳から覚える",
+  //     author: "Thanh Huy",
+  //     number: "90",
+  //     avatar:
+  //       "https://i.pinimg.com/736x/82/f8/3c/82f83c07282e788a9f5c939da5d35938.jpg",
+  //   },
+  //   {
+  //     name: "まとめ2 複合動詞_N2語彙_耳から覚える",
+  //     author: "Thanh Huy",
+  //     number: "50",
+  //     avatar:
+  //       "https://i.pinimg.com/736x/82/f8/3c/82f83c07282e788a9f5c939da5d35938.jpg",
+  //   },
+  //   {
+  //     name: "まとめ3 複合動詞_N2語彙_耳から覚える",
+  //     author: "Thanh Huy",
+  //     number: "120",
+  //     avatar:
+  //       "https://i.pinimg.com/736x/82/f8/3c/82f83c07282e788a9f5c939da5d35938.jpg",
+  //   },
+  // ];
 
   // Dùng custom hook, truyền ref và các thiết lập mong muốn
   const { isLeftVisible, isRightVisible, handleScroll } = useScrollable({
@@ -56,15 +57,15 @@ const FlashCardList = () => {
       )}
       <div
         ref={scrollRef}
-        className="flex scroll-smooth overflow-x-hidden scroll-snap-x snap-mandatory"
+        className="flex w-full scroll-smooth overflow-x-hidden scroll-snap-x snap-mandatory"
       >
-        {flashCardList.map((card, index) => (
+        {flashCards.map((card, index) => (
           <FlashCardItem
             key={index}
-            name={card.name}
-            author={card.author}
-            number={card.number}
-            avatar={card.avatar}
+            title={card.title}
+            author={card.User.username}
+            number={card.FlashcardCount}
+            avatar={card.User.profile_picture ? card.User.profile_picture : fallbackAvatar}
           />
         ))}
       </div>

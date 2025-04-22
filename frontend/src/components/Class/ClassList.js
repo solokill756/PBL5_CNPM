@@ -7,9 +7,9 @@ const ClassList = ({ classes }) => {
       {classes.map((classData, index) => (
         <ClassItem
           key={index}
-          name={classData.name}
-          author={classData.author}
-          member={classData.member}
+          name={classData.class_name}
+          author={classData.User.username}
+          member={classData.studentCount}
         />
       ))}
     </div>

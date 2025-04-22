@@ -1,7 +1,6 @@
 import React from 'react'
-import DefaultAvatar from '@/assets/images/avatar.jpg'
 
-const AvatarLeft = ({username, email, avatar = DefaultAvatar, avatarSize = '', textSize = 'text-sm', height}) => {
+const AvatarLeft = ({username, email, avatar, avatarSize = '', textSize = 'text-sm', height}) => {
   return (
     <div className={`flex p-2 justify-center items-center gap-3 ${height}`}>
         <div className={`w-auto ${avatarSize}`}>

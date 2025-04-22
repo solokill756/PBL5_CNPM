@@ -1,43 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import ScrollButton from "../ScrollButton";
-import { useNavigate } from "react-router-dom";
 import AuthorItem from "./AuthorItem";
 import useScrollable from "@/hooks/useScrollable";
+import fallbackAvatar from "@/assets/images/avatar.jpg";
 
-const AuthorList = () => {
+
+const AuthorList = ( { authors } ) => {
   const scrollRef = useRef(null);
   const [isHovered, setIsHovered] = useState(false);
-
-  const authorList = [
-    {
-      name: "Huy123aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-      numberClass: "2",
-      numberFlashcard: '100',
-      avatar:
-        "https://i.pinimg.com/736x/82/f8/3c/82f83c07282e788a9f5c939da5d35938.jpg",
-    },
-    {
-      name: "Mchien",
-      numberClass: "2",
-      numberFlashcard: '100',
-      avatar:
-        "https://i.pinimg.com/736x/82/f8/3c/82f83c07282e788a9f5c939da5d35938.jpg",
-    },
-    {
-      name: "ThanhHuy",
-      numberClass: "2",
-      numberFlashcard: '100',
-      avatar:
-        "https://i.pinimg.com/736x/82/f8/3c/82f83c07282e788a9f5c939da5d35938.jpg",
-    },
-    {
-      name: "abcXYZ",
-      numberClass: "2",
-      numberFlashcard: '100',
-      avatar:
-        "https://i.pinimg.com/736x/82/f8/3c/82f83c07282e788a9f5c939da5d35938.jpg",
-    },
-  ];
 
   const { isLeftVisible, isRightVisible, handleScroll } = useScrollable({
     scrollRef: scrollRef,
@@ -58,15 +28,15 @@ const AuthorList = () => {
       {/* Scrollable container */}
       <div
         ref={scrollRef}
-        className="flex scroll-smooth overflow-x-hidden scroll-snap-x snap-mandatory"
+        className="flex w-full scroll-smooth overflow-x-hidden scroll-snap-x snap-mandatory"
       >
-        {authorList.map((card, index) => (
+        {authors.map((card, index) => (
           <AuthorItem
             key={index}
-            name={card.name}
-            numberClass={card.numberClass}
-            numberFlashcard={card.numberFlashcard}
-            avatar={card.avatar}
+            name={card.username}
+            numberClass={card.ClassCount}
+            numberFlashcard={card.ListFlashCardCount}
+            avatar={card.profile_picture ? card.profile_picture : fallbackAvatar}
           />
         ))}
       </div>
