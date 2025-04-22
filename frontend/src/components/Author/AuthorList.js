@@ -11,7 +11,7 @@ const AuthorList = ({ authors = [], loading }) => {
   const { isLeftVisible, isRightVisible, handleScroll } = useScrollable({
     scrollRef,
     itemsToScroll: 2,
-    scrollBehavior: 'smooth',
+    scrollBehavior: "smooth",
   });
 
   const skeletons = new Array(2).fill(null);
@@ -36,7 +36,9 @@ const AuthorList = ({ authors = [], loading }) => {
             name={loading ? "" : card.username}
             numberClass={loading ? 0 : card.ClassCount}
             numberFlashcard={loading ? 0 : card.ListFlashCardCount}
-            avatar={loading ? fallbackAvatar : (card.profile_picture || fallbackAvatar)}
+            avatar={
+              loading ? fallbackAvatar : card.profile_picture || fallbackAvatar
+            }
             loading={loading}
           />
         ))}
