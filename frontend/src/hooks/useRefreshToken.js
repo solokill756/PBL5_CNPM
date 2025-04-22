@@ -1,19 +1,33 @@
-import axios, { axiosPrivate } from '../api/axios';
-import useAuth from './useAuth';
+import axios, { axiosPrivate } from "../api/axios";
+import useAuth from "./useAuth";
 
 const useRefreshToken = () => {
-    const { setAuth } = useAuth();
+  const { auth, setAuth } = useAuth();
 
-    const refresh = async () => {
-        const response = await axiosPrivate.get('/refresh');
-        setAuth(prev => {
-            console.log(JSON.stringify(prev));
-            console.log(response.data.accessToken);
-            return { ...prev, accessToken: response.data.accessToken }
-        });
-        return response.data.accessToken;
+  const refresh = async () => {
+    try {
+      const response = await axiosPrivate.get("/api/auth/generateNewToken", {
+        headers: {
+          Authorization: `Bearer ${auth.accessToken}`,
+          "x-refresh-token": auth.refreshToken,
+        },
+      });
+
+      const newAccessToken = response.data.accessToken;
+
+      const newAuth = {
+        ...auth,
+        accessToken: newAccessToken,
+      };
+
+      setAuth(newAuth);
+      return newAccessToken;
+    } catch (err) {
+      console.error("Refresh token failed", err);
+      throw err;
     }
-    return refresh;
+  };
+  return refresh;
 };
 
 export default useRefreshToken;

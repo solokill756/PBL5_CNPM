@@ -2,11 +2,12 @@ import React from 'react'
 import { BiGroup } from 'react-icons/bi'
 import { HiMiniUserGroup } from 'react-icons/hi2'
 import { PiCards } from 'react-icons/pi'
+import { Link } from 'react-router-dom'
 
 const AuthorItem = ({ name, avatar, numberClass, numberFlashcard}) => {
   return (
-    <div className='scrollable-item flex-shrink-0 overflow-hidden snap-start basis-1/2 px-2'>
-      <div className="relative p-6 space-y-4 bg-white border-2 cursor-pointer border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700 
+    <Link className='scrollable-item flex-shrink-0 overflow-hidden snap-start basis-1/2 px-2'>
+      <div className="active:border-solid active:border-2 active:border-red-300 relative p-6 space-y-4 bg-white border-2 cursor-pointer border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700 
         transition-all duration-300 hover:shadow-[inset_0px_-4px_0px_0px_rgb(252,165,165)]">
         <div className="flex items-center">
           <img className="size-16 rounded-full" src={avatar} alt="" />    
@@ -25,7 +26,7 @@ const AuthorItem = ({ name, avatar, numberClass, numberFlashcard}) => {
             </span>
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
 
