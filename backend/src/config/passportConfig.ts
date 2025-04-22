@@ -47,16 +47,15 @@ passport.use(
           });
         } else {
           let userData = user.toJSON();
-          console.log(filterUserData(userData));
+          const payLoad: UserPayload = {
+      username: userData.username,
+      email: userData.email,
+      user_id: userData.user_id,
+      tokenVersion: userData.tokenVersion,
+        };
           return done(null, {
-            accessToken: generateAccessToken({
-              ...userData,
-              tokenVersion: 0,
-            } as UserPayload),
-            refreshToken: generateRefreshToken({
-              ...userData,
-              tokenVersion: 0,
-            } as UserPayload),
+            accessToken: generateAccessToken(payLoad),
+            refreshToken: generateRefreshToken(payLoad),
             user: filterUserData(userData),
           });
         }
