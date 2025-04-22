@@ -40,7 +40,7 @@ authRoutes.get(
       if (!req.user) {
         res.status(401).json({ message: "Unauthorized" });
       } else {
-        res.redirect("http://localhost:9000/api/auth/user");
+        res.redirect("http://localhost:3000/auth-success");
       }
     } catch (error) {
       console.error("Error during Google authentication callback:", error);
