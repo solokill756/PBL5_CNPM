@@ -28,7 +28,7 @@ const AuthorList = ({ authors = [], loading }) => {
 
       <div
         ref={scrollRef}
-        className="flex w-full scroll-smooth overflow-x-hidden scroll-snap-x snap-mandatory"
+        className="flex space-x-4 overflow-x-hidden scroll-smooth scrollbar-hide w-full px-4"
       >
         {(loading ? skeletons : authors).map((card, index) => (
           <AuthorItem
