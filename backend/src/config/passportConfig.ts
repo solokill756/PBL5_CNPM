@@ -4,12 +4,14 @@ import removeNullProperties from "../helpers/removeNullProperties.js";
 import {
   generateAccessToken,
   generateRefreshToken,
+  saltRounds,
 } from "../helpers/tokenHelper.js";
-import { UserPayload } from "../services/authService.js";
+import { registerService, UserPayload } from "../services/authService.js";
 import { filterUserData } from "../helpers/fillData.js";
 import dotenv from "dotenv";
 import generateRandomPassword from "../utils/generatePassword.js";
 import db from "../models/index.js";
+import bcrypt from "bcrypt";
 dotenv.config();
 passport.use(
   new GoogleStrategy(
@@ -31,28 +33,28 @@ passport.use(
             email: profile.emails?.[0]?.value || "",
             profile_picture: profile.photos?.[0]?.value || "",
             datetime_joined: Date.now(),
-            password: generateRandomPassword(),
+            password: await bcrypt.hash(generateRandomPassword(), saltRounds),
           });
-          await db.user.create({ ...userData, tokenVersion: 0 });
+        const newUser = await registerService(userData , 1);
+          const userPayload: UserPayload = {
+            username: newUser.username,
+            email: newUser.email,
+            user_id: newUser.user_id,
+            tokenVersion: 0,
+          };
           return done(null, {
-            accessToken: generateAccessToken({
-              ...userData,
-              tokenVersion: 0,
-            } as UserPayload),
-            refreshToken: generateRefreshToken({
-              ...userData,
-              tokenVersion: 0,
-            } as UserPayload),
-            user: filterUserData(userData),
+            accessToken: generateAccessToken(userPayload),
+            refreshToken: generateRefreshToken(userPayload),
+            user: filterUserData(filterUserData(newUser)),
           });
         } else {
           let userData = user.toJSON();
           const payLoad: UserPayload = {
-      username: userData.username,
-      email: userData.email,
-      user_id: userData.user_id,
-      tokenVersion: userData.tokenVersion,
-        };
+                username: userData.username,
+                email: userData.email,
+                user_id: userData.user_id,
+                tokenVersion: userData.tokenVersion,
+          };
           return done(null, {
             accessToken: generateAccessToken(payLoad),
             refreshToken: generateRefreshToken(payLoad),

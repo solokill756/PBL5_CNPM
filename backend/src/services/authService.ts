@@ -28,7 +28,10 @@ const checkEmailService = async (email: string): Promise<any> => {
   }
 };
 
-const registerService = async (user: any): Promise<any> => {
+const registerService = async (
+  user: any,
+  verified: number = 0
+): Promise<any> => {
   const transaction = await db.sequelize.transaction();
   try {
     const checkEmail = await checkEmailService(user.email);
@@ -40,7 +43,7 @@ const registerService = async (user: any): Promise<any> => {
       { transaction }
     );
     await db.authentication.create(
-      { user_id: newUser.user_id, verified: 0, email_send: newUser.email },
+      { user_id: newUser.user_id, verified: verified, email_send: newUser.email },
       { transaction }
     );
     await transaction.commit();

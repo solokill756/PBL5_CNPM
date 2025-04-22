@@ -16,7 +16,6 @@ import { generateOtp } from "../utils/generateOtp.js";
 import { sendOtpEmail } from "../utils/sendOtp.js";
 import generateRandomPassword from "../utils/generatePassword.js";
 import { sendNewPasswordEmail } from "../utils/sendNewPassword.js";
-import jwt from "jsonwebtoken";
 dotenv.config();
 
 const sendOtp = async (req: Request, res: Response): Promise<void> => {
@@ -146,19 +145,7 @@ const resetPassword = async (req: Request, res: Response): Promise<void> => {
 };
 
 const generateNewToken = async (req: Request, res: Response): Promise<void> => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
-  if (!token) {
-    res.status(401).json({ error: "Thiếu token" });
-    return;
-  }
-  jwt.verify(
-    token,
-    process.env.ACCESS_TOKEN_SECRET as string,
-    async (err, _user) => {
-      if (err) {
-        if (err.name === "TokenExpiredError") {
-          const refreshToken =
+  const refreshToken =
             req.cookies?.refreshToken || req.headers["x-refresh-token"];
           if (!refreshToken) {
             res.status(401).json({ error: "Thiếu refresh token" });
@@ -171,18 +158,9 @@ const generateNewToken = async (req: Request, res: Response): Promise<void> => {
               .status(403)
               .json({ error: "Refresh token không hợp lệ hoặc đã hết hạn" });
             return;
-          }
-          res.status(200).json({ newAccessToken: `${newAccessToken}` });
-          return;
-        } else {
-          res.status(403).json({ error: "Token không hợp lệ" });
-          return;
-        }
-      }
-      res.status(200).json({ Message: "Token này chưa hết hạn" });
-      return;
-    }
-  );
+  }
+  res.status(200).json({ newAccessToken: `${newAccessToken}` });
+  return;
 };
 
 export {
