@@ -1,4 +1,3 @@
-import { setTokens } from "@/helper/tokenService";
 import { axiosPrivate } from "./axios";
 
 export const fetchLogin = async (email, password) => {
@@ -10,6 +9,9 @@ export const fetchLogin = async (email, password) => {
     } catch (error) {
       const status = error.response?.status;
       const message = error.response?.data?.error;
+      console.log('====================================');
+      console.log(message, error);
+      console.log('====================================');
   
       if (status === 403 && message === "Tài khoản của bạn chưa được xác thực") {
         return { user: { email, isVerified: false }, error: "unverified" };
