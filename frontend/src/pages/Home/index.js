@@ -3,7 +3,7 @@ import DefaultHeader from "@/layouts/DefaultHeader";
 import ClassList from "@/components/Class/ClassList";
 import FlashCardList from "@/components/FlashCard/FlashCardList";
 import AuthorList from "@/components/Author/AuthorList";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import VocabList from "@/components/Vocabulary/VocabList";
 import BlueButton from "@/components/BlueButton";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
@@ -19,6 +19,7 @@ const Home = () => {
   const [flashcards, setFlashcards] = useState([]);
   const [topAuthors, setTopAuthors] = useState([]);
   const [vocabs, setVocabs] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const getRecentClasses = async () => {
@@ -69,7 +70,7 @@ const Home = () => {
     getRecentFlashcards();
     getTopAuthors();
     getSuggestedVocabs();
-  }, [axiosPrivate]);
+  }, [axiosPrivate, navigate]);
 
   return (
     <main className="flex flex-1 flex-grow-1 flex-col">
