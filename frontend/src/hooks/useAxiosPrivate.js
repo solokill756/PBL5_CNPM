@@ -46,9 +46,6 @@ const useAxiosPrivate = () => {
             })
               .then(token => {
                 prevReq.headers['Authorization'] = 'Bearer ' + token;
-                console.log('====================================');
-                console.log("token 1: " + token);
-                console.log('====================================');
                 return axiosPrivate(prevReq);
               })
               .catch(e => Promise.reject(e));
@@ -64,9 +61,6 @@ const useAxiosPrivate = () => {
                 processQueue(null, newToken);
                 // retry chính request này
                 prevReq.headers['Authorization'] = 'Bearer ' + newToken;
-                console.log('====================================');
-                console.log("token 2: " + newToken);
-                console.log('====================================');
                 resolve(axiosPrivate(prevReq));
               })
               .catch(error => {

@@ -4,47 +4,17 @@ import ScrollButton from "../ScrollButton";
 import useScrollable from "@/hooks/useScrollable";
 import fallbackAvatar from "@/assets/images/avatar.jpg";
 
-const FlashCardList = ( { flashCards } ) => {
+const FlashCardList = ({ flashCards = [], loading }) => {
   const scrollRef = useRef(null);
   const [isHovered, setIsHovered] = useState(false);
-  
-  // const flashCardList = [
-  //   {
-  //     name: "まとめ1 複合動詞_N2語彙_耳から覚える",
-  //     author: "Thanh Huy",
-  //     number: "90",
-  //     avatar:
-  //       "https://i.pinimg.com/736x/82/f8/3c/82f83c07282e788a9f5c939da5d35938.jpg",
-  //   },
-  //   {
-  //     name: "まとめ1 複合動詞_N2語彙_耳から覚える",
-  //     author: "Thanh Huy",
-  //     number: "90",
-  //     avatar:
-  //       "https://i.pinimg.com/736x/82/f8/3c/82f83c07282e788a9f5c939da5d35938.jpg",
-  //   },
-  //   {
-  //     name: "まとめ2 複合動詞_N2語彙_耳から覚える",
-  //     author: "Thanh Huy",
-  //     number: "50",
-  //     avatar:
-  //       "https://i.pinimg.com/736x/82/f8/3c/82f83c07282e788a9f5c939da5d35938.jpg",
-  //   },
-  //   {
-  //     name: "まとめ3 複合動詞_N2語彙_耳から覚える",
-  //     author: "Thanh Huy",
-  //     number: "120",
-  //     avatar:
-  //       "https://i.pinimg.com/736x/82/f8/3c/82f83c07282e788a9f5c939da5d35938.jpg",
-  //   },
-  // ];
 
-  // Dùng custom hook, truyền ref và các thiết lập mong muốn
   const { isLeftVisible, isRightVisible, handleScroll } = useScrollable({
     scrollRef,
     itemsToScroll: 2,
     scrollBehavior: "smooth",
   });
+
+  const skeletons = new Array(2).fill(null);
 
   return (
     <div
@@ -59,13 +29,14 @@ const FlashCardList = ( { flashCards } ) => {
         ref={scrollRef}
         className="flex w-full scroll-smooth overflow-x-hidden scroll-snap-x snap-mandatory"
       >
-        {flashCards.map((card, index) => (
+        {(loading ? skeletons : flashCards).map((card, index) => (
           <FlashCardItem
             key={index}
-            title={card.title}
-            author={card.User.username}
-            number={card.FlashcardCount}
-            avatar={card.User.profile_picture ? card.User.profile_picture : fallbackAvatar}
+            title={loading ? "" : card.title}
+            author={loading ? "" : card.User.username}
+            number={loading ? 0 : card.FlashcardCount}
+            avatar={loading ? fallbackAvatar : (card.User.profile_picture || fallbackAvatar)}
+            loading={loading}
           />
         ))}
       </div>
@@ -77,4 +48,3 @@ const FlashCardList = ( { flashCards } ) => {
 };
 
 export default FlashCardList;
-
