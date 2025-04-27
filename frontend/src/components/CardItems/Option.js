@@ -13,20 +13,17 @@ const Option = ({title, options}) => {
 
   return (
     <div className='flex justify-between items-center'>
-        <div className='flex'>
-            <h4 className='text-base font-semibold text-gray-900 dark:text-white mb-3 text-left '>{title}</h4>
-        </div>
         <div className='relative'>
                 <Listbox value={selectedOption} onChange={setSelectedOption}>
                     <div className="relative">
-                        <Listbox.Button className="relative w-full cursor-pointer rounded-3xl border-2 border-gray-200 py-2 pl-4 pr-10 text-left text-gray-600 font-semibold hover:bg-gray-100 focus:outline-none">
+                        <Listbox.Button className="relative w-full cursor-pointer rounded-3xl border-2 border-gray-200 py-2 pl-4 pr-10 text-gray-600 font-semibold hover:bg-gray-100 focus:outline-none">
                         <span>{selectedOption.label}</span>
                         <span className="pointer-events-none absolute inset-y-0 -right-2 flex items-center pr-3">
                             <RiArrowDropDownLine className='w-10 h-10 text-gray-600'/>
                         </span>
                         </Listbox.Button>
 
-                        <Listbox.Options className="absolute z-0  mt-1 max-h-60 w-full overflow-auto rounded-2xl bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none ">
+                        <Listbox.Options className="absolute z-0  mt-1 max-h-60 w-full overflow-auto rounded-2xl bg-white py-1 text-base font-medium shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none ">
                         {options.map((opt, index) => (
                             <Listbox.Option
                             key={index}
