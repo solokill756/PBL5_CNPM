@@ -1,19 +1,20 @@
-import React, { useEffect, useRef, useState } from "react";
-import ScrollButton from "../ScrollButton";
+import React, { useRef, useState } from "react";
 import AuthorItem from "./AuthorItem";
+import ScrollButton from "../ScrollButton";
 import useScrollable from "@/hooks/useScrollable";
 import fallbackAvatar from "@/assets/images/avatar.jpg";
 
-
-const AuthorList = ( { authors } ) => {
+const AuthorList = ({ authors = [], loading }) => {
   const scrollRef = useRef(null);
   const [isHovered, setIsHovered] = useState(false);
 
   const { isLeftVisible, isRightVisible, handleScroll } = useScrollable({
-    scrollRef: scrollRef,
+    scrollRef,
     itemsToScroll: 2,
     scrollBehavior: 'smooth',
-  })
+  });
+
+  const skeletons = new Array(2).fill(null);
 
   return (
     <div
@@ -25,18 +26,18 @@ const AuthorList = ( { authors } ) => {
         <ScrollButton direction="left" onClick={() => handleScroll("left")} />
       )}
 
-      {/* Scrollable container */}
       <div
         ref={scrollRef}
         className="flex w-full scroll-smooth overflow-x-hidden scroll-snap-x snap-mandatory"
       >
-        {authors.map((card, index) => (
+        {(loading ? skeletons : authors).map((card, index) => (
           <AuthorItem
             key={index}
-            name={card.username}
-            numberClass={card.ClassCount}
-            numberFlashcard={card.ListFlashCardCount}
-            avatar={card.profile_picture ? card.profile_picture : fallbackAvatar}
+            name={loading ? "" : card.username}
+            numberClass={loading ? 0 : card.ClassCount}
+            numberFlashcard={loading ? 0 : card.ListFlashCardCount}
+            avatar={loading ? fallbackAvatar : (card.profile_picture || fallbackAvatar)}
+            loading={loading}
           />
         ))}
       </div>

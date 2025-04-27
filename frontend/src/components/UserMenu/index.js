@@ -34,11 +34,6 @@ const UserMenu = () => {
     }
   };
 
-  const handleToggleDarkMode = () => {
-    document.documentElement.classList.toggle('dark');
-    // Có thể lưu trạng thái vào localStorage nếu muốn giữ trạng thái
-  };
-
   return (
     <div className='flex-1 flex justify-center p-2 relative' ref={avatarRef}>
       <AvatarDisplay
@@ -54,7 +49,6 @@ const UserMenu = () => {
           email={user.email}
           avatar={user.profile_picture}
           onLogout={handleLogout}
-          onToggleDarkMode={handleToggleDarkMode}
         />
       )}
     </div>

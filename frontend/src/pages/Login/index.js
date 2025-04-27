@@ -9,7 +9,7 @@ import { fetchLogin } from "@/api/login";
 import { getOTP } from "@/api/getOTP";
 
 function Login() {
-  const { login } = useContext(AuthContext); // Lấy context để lưu token
+  const { login } = useContext(AuthContext); 
   const navigate = useNavigate();
   const [email, setemail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,7 +27,6 @@ function Login() {
       const { user, accessToken, refreshToken, error } = await fetchLogin(email, password);
 
       if (error === "unverified") {
-        // Điều hướng trước, gửi OTP sau (tránh delay)
         navigate(`/accounts/emailverification?email=${email}`);
         try {
           const response = await getOTP(email);
