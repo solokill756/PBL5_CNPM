@@ -20,13 +20,12 @@ const Home = () => {
   }, [init, axiosPrivate]);
 
   return (
-    <main className="flex flex-1 flex-grow-1 flex-col items-center">
+    <main className="flex flex-1 flex-grow-1 flex-col">
       <DefaultHeader />
       <div className="flex w-full overflow-hidden justify-center mt-4">
-        <div className="w-2/3 flex flex-wrap justify-center gap-4">
-          <div className="flex w-full justify-between items-center">
-            <div className="w-[13%]"></div>
-            <span className="flex-1 text-gray-600 text-lg font-semibold">
+        <div className="w-2/3 flex flex-col justify-center items-center space-y-5">
+          <div className="flex w-[80%] justify-between items-center">
+            <span className="px-3 w-full text-gray-600 text-lg font-semibold">
               Gần đây
             </span>
           </div>
@@ -48,9 +47,9 @@ const Home = () => {
               </>
             )}
           </div>
-          <div className="flex w-full mt-6 justify-between items-center">
-            <div className="w-[13%]"></div>
-            <span className="flex-1 text-gray-600 text-lg font-semibold">
+
+          <div className="flex w-[80%] mt-6 justify-between items-center">
+            <span className="px-3 flex w-full text-gray-600 text-lg font-semibold">
               Tác giả hàng đầu
             </span>
           </div>
@@ -71,7 +70,7 @@ const Home = () => {
             <BlueButton
               name={"Xem tất cả"}
               isActive={"login"}
-              size={"w-32 h-8"}
+              size={"w-32 h-8 !bg-red-700 hover:!bg-red-800"}
             />
           </div>
         </div>

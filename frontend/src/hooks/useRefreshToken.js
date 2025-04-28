@@ -3,7 +3,7 @@ import { axiosPrivate } from "../api/axios";
 import useAuth from "./useAuth";
 
 const useRefreshToken = () => {
-  const { setAuth } = useAuth();
+  const { auth, setAuth } = useAuth();
 
   const refresh = useCallback(async () => {
     try {

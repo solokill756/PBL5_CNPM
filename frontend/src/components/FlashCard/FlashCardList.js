@@ -2,6 +2,8 @@ import React, { useRef, useState } from "react";
 import FlashCardItem from "./FlashCardItem";
 import ScrollButton from "../ScrollButton";
 import { useNavigate } from "react-router-dom";
+import useScrollable from "@/hooks/useScrollable";
+import fallbackAvatar from '@/assets/images/avatar.jpg'
 
 const FlashCardList = ({ flashCards = [], loading }) => {
   const scrollRef = useRef(null);
