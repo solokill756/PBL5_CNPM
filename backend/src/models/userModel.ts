@@ -16,8 +16,7 @@ interface UserCreationAttributes extends Optional<UserAttributes, 'user_id' | 'p
 
 class User
   extends Model<UserAttributes, UserCreationAttributes>
-  implements UserAttributes
-{
+  implements UserAttributes {
   declare user_id: string;
   declare full_name: string;
   declare email: string;
@@ -67,7 +66,6 @@ export default (sequelize: Sequelize) => {
       reminder_time: {
         type: DataTypes.DATE,
         allowNull: true,
-
       },
       reminder_status: {
         type: DataTypes.BOOLEAN,
