@@ -8,6 +8,7 @@ import passport from "passport";
 import session from "express-session";
 import homePageRoutes from "./routes/homePageRoute.js";
 
+import { responseFormatter } from "./middleware/responseFormatter.js";
 dotenv.config();
 
 const app: Application = express();
@@ -37,6 +38,7 @@ app.use(cors(corOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(responseFormatter);
 
 // Routes
 app.use("/api/users", userRoutes);

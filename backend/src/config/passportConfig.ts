@@ -32,10 +32,11 @@ passport.use(
             full_name: profile.displayName,
             email: profile.emails?.[0]?.value || "",
             profile_picture: profile.photos?.[0]?.value || "",
+            profile_picture: profile.photos?.[0]?.value || "",
             datetime_joined: Date.now(),
             password: await bcrypt.hash(generateRandomPassword(), saltRounds),
           });
-        const newUser = await registerService(userData , 1);
+          const newUser = await registerService(userData, 1);
           const userPayload: UserPayload = {
             username: newUser.username,
             email: newUser.email,
@@ -50,10 +51,10 @@ passport.use(
         } else {
           let userData = user.toJSON();
           const payLoad: UserPayload = {
-                username: userData.username,
-                email: userData.email,
-                user_id: userData.user_id,
-                tokenVersion: userData.tokenVersion,
+            username: userData.username,
+            email: userData.email,
+            user_id: userData.user_id,
+            tokenVersion: userData.tokenVersion,
           };
           return done(null, {
             accessToken: generateAccessToken(payLoad),
