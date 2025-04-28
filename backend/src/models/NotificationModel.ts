@@ -1,4 +1,4 @@
-import { Sequelize, DataTypes, Model } from 'sequelize';
+import { Sequelize, DataTypes, Model } from "sequelize";
 
 interface NotificationAttributes {
   notification_id: string;
@@ -8,9 +8,15 @@ interface NotificationAttributes {
   created_at: Date;
 }
 
-interface NotificationCreationAttributes extends Partial<Pick<NotificationAttributes, 'notification_id' | 'created_at'>> {}
+interface NotificationCreationAttributes
+  extends Partial<
+    Pick<NotificationAttributes, "notification_id" | "created_at">
+  > {}
 
-class Notification extends Model<NotificationAttributes, NotificationCreationAttributes> implements NotificationAttributes {
+class Notification
+  extends Model<NotificationAttributes, NotificationCreationAttributes>
+  implements NotificationAttributes
+{
   declare notification_id: string;
   declare user_id: string;
   declare message: string;
@@ -47,7 +53,7 @@ export default (sequelize: Sequelize) => {
     },
     {
       sequelize,
-      tableName: 'notifications',
+      tableName: "notification",
       timestamps: false,
     }
   );

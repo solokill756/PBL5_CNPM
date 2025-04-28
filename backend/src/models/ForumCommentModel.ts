@@ -1,4 +1,4 @@
-import { Sequelize, DataTypes, Model } from 'sequelize';
+import { Sequelize, DataTypes, Model } from "sequelize";
 
 interface ForumCommentAttributes {
   comment_id: string;
@@ -8,9 +8,13 @@ interface ForumCommentAttributes {
   created_at: Date;
 }
 
-interface ForumCommentCreationAttributes extends Partial<Pick<ForumCommentAttributes, 'comment_id' | 'created_at'>> {}
+interface ForumCommentCreationAttributes
+  extends Partial<Pick<ForumCommentAttributes, "comment_id" | "created_at">> {}
 
-class ForumComment extends Model<ForumCommentAttributes, ForumCommentCreationAttributes> implements ForumCommentAttributes {
+class ForumComment
+  extends Model<ForumCommentAttributes, ForumCommentCreationAttributes>
+  implements ForumCommentAttributes
+{
   declare comment_id: string;
   declare post_id: string;
   declare user_id: string;
@@ -46,7 +50,7 @@ export default (sequelize: Sequelize) => {
     },
     {
       sequelize,
-      tableName: 'forum_comments',
+      tableName: "forum_comment",
       timestamps: false,
     }
   );

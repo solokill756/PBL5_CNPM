@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 services:
   database-mysql:
     image: mysql:8.0
@@ -7,17 +7,17 @@ services:
       - MYSQL_DATABASE=elearning
       - MYSQL_ROOT_PASSWORD=123456
     ports:
-      - '3307:3306'
+      - "3307:3306"
     volumes:
       - db_data:/var/lib/mysql
-      - ./my.cnf:/etc/mysql/conf.d/my.cnf 
+      - ./my.cnf:/etc/mysql/conf.d/my.cnf
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "database-mysql"]
       interval: 5s
       timeout: 10s
       retries: 10
     expose:
-      - '3306'
+      - "3306"
   backend:
     build:
       context: ./backend
@@ -45,9 +45,9 @@ services:
       - GOOGLE_REDIRECT_URI=http://localhost:9000/api/auth/google/callback
       - SESSION_SECRET=mySuperSecretKey123!
       - HOST_NAME=0.0.0.0
+      - NODE_ENV=development
     ports:
       - "9000:9000"
-    
+
 volumes:
   db_data:
-  

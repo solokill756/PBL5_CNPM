@@ -1,15 +1,18 @@
 import React from "react";
 import ClassItem from "./ClassItem";
 
-const ClassList = ({ classes }) => {
+const ClassList = ({ classes = [], loading }) => {
+  const skeletons = new Array(4).fill(null); // 2 hàng 2 cột
+
   return (
-    <div className="flex flex-wrap w-full justify-center gap-4">
-      {classes.map((classData, index) => (
+    <div className="grid grid-cols-2 gap-4 w-full">
+      {(loading ? skeletons : classes).map((classData, index) => (
         <ClassItem
           key={index}
-          name={classData.name}
-          author={classData.author}
-          member={classData.member}
+          name={loading ? "" : classData.class_name}
+          author={loading ? "" : classData.User.username}
+          member={loading ? 0 : classData.studentCount}
+          loading={loading}
         />
       ))}
     </div>

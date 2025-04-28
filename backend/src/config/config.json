@@ -3,24 +3,16 @@
     "username": "root",
     "password": "123456",
     "database": "elearning",
-    "host": "localhost",
-    "dialect": "mysql",
-    "port": "3307"
-  },
-  "test": {
-    "username": "root",
-     "password": "123456",
-    "database": "elearning",
-    "host": "localhost",
-    "port": "3307",
+    "host": "database-mysql",
+    "port": 3306,
     "dialect": "mysql"
   },
-  "production": {
+  "local": {
     "username": "root",
-     "password": "123456",
+    "password": "123456",
     "database": "elearning",
     "host": "localhost",
-    "port": "3307",
+    "port": 3307,
     "dialect": "mysql"
   }
 }

@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect } from "react";
 import Cookies from "js-cookie";
-import { clearTokens, setTokens } from "@/helper/tokenService";
+import defaultAvatar from "@/assets/images/avatar.jpg";
 
 const AuthContext = createContext({});
 
@@ -12,13 +12,14 @@ export const AuthProvider = ({ children }) => {
 
   const login = (accessToken, refreshToken, user) => {
     const authData = { accessToken, refreshToken, user };
-    setTokens(accessToken, refreshToken);
+    if (user.profile_picture === null) {
+      user.profile_picture = defaultAvatar;
+    }
     setAuth(authData);
     Cookies.set("auth", JSON.stringify(authData));
   };
 
   const logout = () => {
-    clearTokens();
     Cookies.remove("auth");
     setAuth(null);
   };
@@ -30,7 +31,7 @@ export const AuthProvider = ({ children }) => {
   }, [auth]);
 
   return (
-    <AuthContext.Provider value={{ auth, login, logout }}>
+    <AuthContext.Provider value={{ auth, setAuth, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -6,13 +6,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import AuthContext from "@/context/AuthProvider";
 import { fetchLogin } from "@/api/login";
-import Cookies from "js-cookie";
 import { getOTP } from "@/api/getOTP";
-import { getTokens, setTokens } from "@/helper/tokenService";
-import { loginGoogle } from "@/api/loginGoogle";
 
 function Login() {
-  const { login } = useContext(AuthContext); // Lấy context để lưu token
+  const { login } = useContext(AuthContext); 
   const navigate = useNavigate();
   const [email, setemail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,10 +23,10 @@ function Login() {
     setError("");
 
     try {
-      const { user, error } = await fetchLogin(email, password);
+  
+      const { user, accessToken, refreshToken, error } = await fetchLogin(email, password);
 
       if (error === "unverified") {
-        // Điều hướng trước, gửi OTP sau (tránh delay)
         navigate(`/accounts/emailverification?email=${email}`);
         try {
           const response = await getOTP(email);
@@ -40,8 +37,6 @@ function Login() {
         return;
       }
 
-      const { accessToken, refreshToken } = getTokens();
-      console.log(accessToken, refreshToken);
       if (!accessToken || !refreshToken) {
         setError("Không nhận được token hợp lệ. Vui lòng thử lại.");
         return;
@@ -67,7 +62,6 @@ function Login() {
   const handleGoogleLogin = async () => {
       window.location.href = "http://localhost:9000/api/auth/google";
   };
-  
   
 
   return (
@@ -110,7 +104,7 @@ function Login() {
           />
         </div>
         {error && (
-          <span className="px-8 my-2 text-sm font-medium text-red-600 text-center">
+          <span className="px-8 my-2 text-xs text-red-500 text-center">
             {error} {/* Hiển thị lỗi */}
           </span>
         )}

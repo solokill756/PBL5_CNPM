@@ -12,6 +12,9 @@ const AuthSuccess = () => {
           try {
             const res = await axiosPrivate.get("http://localhost:9000/api/auth/user");
             const { accessToken, refreshToken, user } = res.data.user;
+            console.log('====================================');
+            console.log("Login xong: " + accessToken, refreshToken, user);
+            console.log('====================================');
     
             if (!accessToken || !refreshToken) {
               console.log("Khong nhan duoc token");

@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useEffect } from "react";
 import DefaultHeader from "@/layouts/DefaultHeader";
 import ClassList from "@/components/Class/ClassList";
 import FlashCardList from "@/components/FlashCard/FlashCardList";
@@ -6,70 +6,71 @@ import AuthorList from "@/components/Author/AuthorList";
 import { Link } from "react-router-dom";
 import VocabList from "@/components/Vocabulary/VocabList";
 import BlueButton from "@/components/BlueButton";
-import { Button } from "@chakra-ui/react";
-import AuthContext from "@/context/AuthProvider";
-import Cookies from "js-cookie";
+import useAxiosPrivate from "@/hooks/useAxiosPrivate";
+import NopeNotice from "@/components/NopeNotice";
+import { useHomeStore } from "@/store/useHomeStore";
 
 const Home = () => {
-  const { setAuth } = useContext(AuthContext);
+  const axiosPrivate = useAxiosPrivate();
+  const { classes, flashcards, topAuthors, vocabs, init, loading } =
+    useHomeStore();
 
-  const handleLogout = () => {
-    try {
-      // Lưu accessToken vào cookie
-      Cookies.remove("accessToken");
-      Cookies.remove("refreshToken");
-      setAuth(null);
-    } catch (error) {
-      console.error("Error during logout:", error);
-      throw error;
-    }
-  };
-
-  const classes = [
-    { name: "Nihongo Classdddddddddddđdd", author: "Thanh Huy", member: "5" },
-    { name: "Nihongo Class", author: "Thanh Huy", member: "5" },
-    { name: "Nihongo Class", author: "Thanh Huy", member: "5" },
-    { name: "Nihongo Class", author: "Thanh Huy", member: "5" },
-  ];
+  useEffect(() => {
+    init(axiosPrivate);
+  }, [init, axiosPrivate]);
 
   return (
-    <main className="flex flex-1 flex-grow-1 flex-col items-center">
+    <main className="flex flex-1 flex-grow-1 flex-col">
       <DefaultHeader />
       <div className="flex w-full overflow-hidden justify-center mt-4">
-        <div className="w-2/3 flex flex-wrap justify-center gap-4">
-          <div className="flex w-full justify-between items-center">
-            <div className="w-[13%]"></div>
-            <span className="flex-1 text-gray-600 text-lg font-semibold">
+        <div className="w-2/3 flex flex-col justify-center items-center space-y-5">
+          <div className="flex w-[80%] justify-between items-center">
+            <span className="px-3 w-full text-gray-600 text-lg font-semibold">
               Gần đây
             </span>
           </div>
-          <ClassList classes={classes} />
-          <div className="mt-5">
-            <FlashCardList />
+          <div className="w-[80%]">
+            {!loading.classes &&
+            !loading.flashcards &&
+            classes?.length === 0 &&
+            flashcards?.length === 0 ? (
+              <NopeNotice type="lớp học" />
+            ) : (
+              <>
+                <ClassList classes={classes} loading={loading.classes} />
+                <div className="mt-5">
+                  <FlashCardList
+                    flashCards={flashcards}
+                    loading={loading.flashcards}
+                  />
+                </div>
+              </>
+            )}
           </div>
-          <div className="flex w-full mt-6 justify-between items-center">
-            <div className="w-[13%]"></div>
-            <span className="flex-1 text-gray-600 text-lg font-semibold">
+
+          <div className="flex w-[80%] mt-6 justify-between items-center">
+            <span className="px-3 flex w-full text-gray-600 text-lg font-semibold">
               Tác giả hàng đầu
             </span>
           </div>
-          <div className="">
-            <AuthorList />
+          <div className="w-[80%]">
+            <AuthorList authors={topAuthors} loading={loading.authors} />
           </div>
         </div>
-        <div className="flex-1 flex flex-col items-center">
-          <div className="flex mb-6 w-full justify-between items-center">
-            <div className="w-[10%]"></div>
+        <div className="flex-1 w-full flex flex-col items-center">
+          <div className="flex w-[80%] mb-6 justify-between items-center">
             <span className="flex-1 text-gray-600 text-lg font-semibold">
               Gợi ý
             </span>
           </div>
-          <VocabList />
+          <div className="w-[80%]">
+            <VocabList vocabs={vocabs} loading={loading.vocabs} />
+          </div>
           <div className="my-8 flex !justify-end !items-end">
             <BlueButton
               name={"Xem tất cả"}
               isActive={"login"}
-              size={"w-32 h-8"}
+              size={"w-32 h-8 !bg-red-700 hover:!bg-red-800"}
             />
           </div>
         </div>

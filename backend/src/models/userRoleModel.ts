@@ -1,4 +1,4 @@
-import { Sequelize, DataTypes, Model } from 'sequelize';
+import { Sequelize, DataTypes, Model } from "sequelize";
 
 class UserRole extends Model {
   declare user_id: string;
@@ -25,9 +25,9 @@ export default (sequelize: Sequelize) => {
     },
     {
       sequelize,
-      tableName: 'user_roles',
+      tableName: "user_role",
       timestamps: false,
-      indexes: [{ unique: true, fields: ['user_id', 'role_id'] }],
+      indexes: [{ unique: true, fields: ["user_id", "role_id"] }],
     }
   );
 

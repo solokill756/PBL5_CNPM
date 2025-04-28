@@ -1,4 +1,4 @@
-import { Sequelize, DataTypes, Model } from 'sequelize';
+import { Sequelize, DataTypes, Model } from "sequelize";
 
 interface LessonAttributes {
   lesson_id: string;
@@ -6,19 +6,25 @@ interface LessonAttributes {
   title: string;
   content?: string;
   video_url?: string;
-  ai_difficulty_level: 'easy' | 'medium' | 'hard';
+  ai_difficulty_level: "easy" | "medium" | "hard";
   created_at: Date;
 }
 
-interface LessonCreationAttributes extends Partial<Pick<LessonAttributes, 'lesson_id' | 'content' | 'video_url' | 'created_at'>> {}
+interface LessonCreationAttributes
+  extends Partial<
+    Pick<LessonAttributes, "lesson_id" | "content" | "video_url" | "created_at">
+  > {}
 
-class Lesson extends Model<LessonAttributes, LessonCreationAttributes> implements LessonAttributes {
+class Lesson
+  extends Model<LessonAttributes, LessonCreationAttributes>
+  implements LessonAttributes
+{
   declare lesson_id: string;
   declare class_id: string;
   declare title: string;
   declare content?: string;
   declare video_url?: string;
-  declare ai_difficulty_level: 'easy' | 'medium' | 'hard';
+  declare ai_difficulty_level: "easy" | "medium" | "hard";
   declare created_at: Date;
 }
 
@@ -47,9 +53,9 @@ export default (sequelize: Sequelize) => {
         allowNull: true,
       },
       ai_difficulty_level: {
-        type: DataTypes.ENUM('easy', 'medium', 'hard'),
+        type: DataTypes.ENUM("easy", "medium", "hard"),
         allowNull: false,
-        defaultValue: 'medium',
+        defaultValue: "medium",
       },
       created_at: {
         type: DataTypes.DATE,
@@ -59,7 +65,7 @@ export default (sequelize: Sequelize) => {
     },
     {
       sequelize,
-      tableName: 'lessons',
+      tableName: "lesson",
       timestamps: false,
     }
   );

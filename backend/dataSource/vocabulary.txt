@@ -1,0 +1,1806 @@
+自動化テスト - じどうかテスト
+Automation test, tự động test
+TỰ ĐỘNG HÓA
+
+テスト網羅率 - テストもうらりつ
+Test coverage, test xem có chạy được hết, bao phủ được hết test case hay ko 
+VÕNG LA SUẤT
+
+バグ／不具合 - バグ／ふぐあい
+Bug
+BẤT CỤ HỢP
+
+バグ修正 - バグしゅうせい
+Fixing bug
+TU CHÍNH
+
+デグレ - デグレ
+Degrade, ~ giảm
+
+リグレッションテスト/回帰テスト - リグレッションテスト/かいきテスト
+Regression test, xác nhận rằng việc sửa chữa hệ thống không làm ảnh hưởng đến toàn hệ thống
+HỒI QUI
+
+再構築 - さいこうちく
+Reconstruction
+TÁI CẤU TRÚC
+
+改造 - かいぞう
+Upgrade, nâng cấp
+CẢI TẠO
+
+移行 - いこう
+Migrate, chuyển giao giữa các màn hình
+DI HÀNH, HÀNG, HẠNH
+
+移植 - いしょく
+Porting, cổng giao tiếp
+DI THỰC
+
+プロジェクト管理 - プロジェクトかんり
+Project management
+QUẢN LÝ
+
+見積もり - みつもり
+Estimation
+KIẾN TÍCH
+
+見積書 - みつもりしょ
+Estimation document
+KIẾN TÍCH THƯ
+
+工数 - こうすう
+Effort
+CÔNG SỐ
+
+人月／人日／人時 - ひとづき／ひとび／ひとどき
+Man-month/Man-day/Man-hour
+NHÂN NGUYỆT NHÂN NHẬT NHÂN THỜI, THÌ
+
+計画 - けいかく
+Plan
+KẾ HỌA, HOẠCH
+
+計画立案／計画を立てる - けいかくりつあん／けいかくをたてる
+Make plan
+KẾ HỌA, HOẠCH LẬP ÁN KẾ HỌA, HOẠCH LẬP
+
+再計画／計画変更 - さいけいかく／けいかくへんこう
+Re-plan/change plan
+TÁI KẾ HỌA, HOẠCH KẾ HỌA, HOẠCH BiẾN CANH
+
+スケジュール（日程） - スケジュール（にってい）
+Schedule
+NHẬT TRÌNH
+
+リスケ／スケジュール変更 - リスケ／スケジュールへんこう
+Re-schedule/change schedule
+BiẾN CANH
+
+報告 - ほうこく
+Report
+BÁO CÁO
+
+日次報告（日報） - にちじほうこく（にっぽう）
+Daily report
+NHẬT THỨ BÁO CÁO NHẬT BÁO
+
+週次報告（週報） - しゅうつぎほうこく（しゅうほう）
+Weekly report
+CHU THỨ BÁO CÁO CHU BÁO
+
+月次報告（月報） - げつじほうこく（げっぽう）
+Monthly report
+NGUYỆT THỨ BÁO CÁO NGUYỆT BÁO
+
+進捗把握 - しんちょくはあく
+Progress control, nắm bắt điều chỉnh tiến độ
+TẤN, TIẾN BÀ ÁC, ỐC
+
+（日程）前倒し/予定より遅れている - （にってい）まえだおし/よていよりおくれている
+Ahead of schedule (Trước thời hạn)/behind schedule (Chậm tiến độ)
+NHẬT TRÌNH TIỀN ĐẢO DƯ ĐỊNH TRÌ
+
+納入 - のうにゅう
+Deliver/Release
+NẠP NHẬP
+
+成果物／納入物／リリース物 - せいかぶつ／のうにゅうぶつ／リリースもの
+Deliverables Sảm phẩm để diliver
+THÀNH QUẢ VẬT NẠP NHẬP VẬT VẬT
+
+データ収集／集約 - データしゅうしゅう／しゅうやく
+Collect data
+THU TẬP TẬP ƯỚC
+
+計画値／予定値 - けいかくあたい／よていあたい
+Planned value
+KẾ HỌA, HOẠCH TRỊ DƯ ĐỊNH TRỊ
+
+実績値 - じっせきち
+Actual value
+THỰC TÍCH TRỊ
+
+作業 - さぎょう
+Working
+TÁC NGHIỆP
+
+タスク一覧／作業一覧 - タスクいちらん／さぎょういちらん
+Task list
+NHẤT LÃM TÁC NGHIỆP NHẤT LÃM
+
+タスク(リソース)割り当て - タスク（リソース）わりあて
+Task assignment
+CÁT ĐANG, ĐƯƠNG
+
+差し戻し - さしもどし
+Reject
+SAI LỆ
+
+承認 - しょうにん
+Approve
+THỪA NHẬN
+
+手戻り - てもどり
+Rework
+THỦ LỆ
+
+リスク管理 - リスクかんり
+Risk management
+QUẢN LÝ
+
+リスク緩和／軽減 - リスクかんわ／けいげん
+Risk mitigation (Giảm mức độ ảnh hưởng & xác suất xảy ra của risk)
+HÕAN HÒA, HỌA KHINH GIẢM
+
+リスク回避 - リスクかいひ
+Risk contingency (Loại risk ta biết trước nó xảy ra. Tránh nó)
+HỒI TỴ
+
+会議／打ち合わせ - かいぎ／うちあわせ
+Meeting
+HỘI NGHỊ ĐẢ HỢP
+
+日次会議／朝礼 - にちじかいぎ／ちょうれい
+Daily meeting/morning meeting
+NHẬT THỨ HỘI NGHỊ TRIỀU LỄ
+
+定例会（議）／週会 - ていれいかい（ぎ）／しゅうかい
+Weekly meeting
+ĐỊNH LỆ HỘI NGHỊ CHU HỘI
+
+月例会（議） - げつれいかい（ぎ）
+Monthly meeting
+NGUYỆT LỆ HỘI NGHỊ
+
+反省会 - はんせいかい
+Post mortem meeting, cuộc họp để đánh giá
+PHẢN TỈNH HỘI
+
+共同反省会 - きょうどうはんせいかい
+Cooperation post mortem meeting, họp đánh giá chung
+CỘNG ĐỒNG PHẢN TỈNH HỘI
+
+課題特定 - かだいとくてい
+Specify issues
+KHÓA ĐỀ ĐẶC ĐỊNH
+
+課題分析 - かだいぶんせき
+Analyze issues
+KHÓA ĐỀ PHÂN TÍCH
+
+なぜなぜ5回分析 - なぜなぜ5かいぶんせき
+5 why
+HỒI PHÂN TÍCH
+
+根本原因の深堀 - こんぽんげんいんのふかほり
+Deep investigation to find the root cause
+Tìm nguyên nhân gốc rễ sâu
+CĂN BẢN NGUYÊN NHÂN THÂM QUẬT
+
+課題への対策 - かだいへのたいさく
+Solutions for the issues
+KHÓA ĐỀ ĐỐI SÁCH
+
+反省会報告書 - はんせいかいほうこくしょ
+Post mortem meeting report
+Báo cáo cuộc họp
+PHẢN TỈNH HỘI BÁO CÁO THƯ
+
+プロセス - プロセス
+Process
+
+品質管理 - ひんしつかんり 
+Quality management/control
+PHẨM CHẤT QUẢN LÝ
+
+審査 - しんさ 
+Audit (Kiểm toán)
+THẨM TRA
+
+不具合検出率／不具合指摘率 - ふぐあいけんしゅつりつ／ふぐあいしてきりつ
+Defect rate, tỉ lệ xuất hiện lỗi
+BẤT CỤ HỢP KIỂM XUẤT SUẤT BẤT CỤ HỢP CHỈ(SÁP, THÁP) TRÍCH SUẤT
+
+欠陥密度 - けっかんみつど 
+Defect density, mật độ lỗi
+KHUYẾT HÃM MẬT ĐỘ
+
+構成管理 - こうせいかんり 
+Configuration management
+CẤU THÀNH QUẢN LÝ
+
+品質ゲート - ひんしつゲート 
+Quality gate
+PHẨM CHẤT
+
+予実乖離／差分 - よじつかいり／さぶん
+ Deviation, sai số
+DƯ THỰC LY SAI PHÂN
+
+マイルストーン - マイルストーン 
+Mile stone
+
+不具合収束度 - ふぐあいしゅうそくど 
+Bug convergence, mức độ hội lỗi
+BẤT CỤ HỢP THU THÚC ĐỘ
+
+上流／下流欠陥検出率 - じょうりゅう／かりゅうけっかんけんしゅつりつ
+Upstream/downstream defect rate
+THƯỢNG LƯU HẠ LƯU KHUYẾT HÃM KIỂM XUẤT SUẤT
+
+品質保証 - ひんしつほしょう
+Quality assurance
+PHẨM CHẤT BẢO CHỨNG
+
+品質目標 - ひんしつもくひょう
+Quality target
+PHẨM CHẤT MỤC TIÊU
+
+品質 - ひんしつ
+Quality
+PHẨM CHẤT
+
+検収課題件数 - けんしゅうかだいけんすう 
+No. of leakage
+KIỂM THU KHÓA ĐỀ KIỆN SỐ
+
+費用 - ひよう
+Cost
+PHÍ DỤNG
+
+開発生産性 - かいはつせいさんせい 
+Development efficiency
+KHAI PHÁT SINH SẢN TÍNH
+
+納期 - のうき
+Delivery
+NẠP KỲ
+
+納期遵守率 - のうきじゅんしゅりつ
+Timeliness
+NẠP KỲ TUÂN THỦ, THÚ SUẤT
+
+目標達成 - もくひょうたっせい 
+ Reaching/achieving target
+MỤC TIÊU ĐẠT THÀNH
+
+共通欠陥共有 - きょうつうけっかんきょうゆう 
+Common defect sharing
+CỘNG THÔNG KHUYẾT HÃM CỘNG HỮU
+
+再発防止 - さいはつぼうし 
+Recurrence prevention
+TÁI PHÁT PHÒNG CHỈ
+
+欠陥の重み（付け） - けっかんのおもみ（つけ）
+Weighted defect
+KHUYẾT HÃM TRỌNG, TRÙNG PHÓ
+
+プロセステーラリング／カスタマイズ - プロセステーラリング／カスタマイズ
+Process tailoring/custom
+
+その他 - そのた
+Others
+THA
+
+契約書 - けいやくしょ
+Contract
+KHẾ ƯỚC THƯ
+
+提案書 - ていあんしょ
+Proposal, bản đề xuất kế hoạch
+ĐỀ ÁN THƯ
+
+基本契約 - きほんけいやく
+Basic contract
+CƠ BẢN KHẾ ƯỚC
+
+個別契約 - こべつけいやく
+Individual contract
+CÁ BIỆT KHẾ ƯỚC
+
+秘密保持契約書 - ひみつほじけいやくしょ
+Non-disclosure Agreement (NDA) Thỏa thuận ko tiết lộ
+BÍ MẬT BẢO TRÌ KHẾ ƯỚC THƯ
+
+納品書 - のうひんしょ
+Invoice (đơn hàng, delivery list)
+NẠP PHẨM THƯ
+
+請求書 - せいきゅうしょ
+Invoice, hóa đơn
+THỈNH CẦU THƯ
+
+情報セキュリティ - じょうほうセキュリティ
+Information Security
+TÌNH BÁO
+
+情報セキュリティ事故 - じょうほうセキュリティじこ
+Information Security Accident
+TÌNH BÁO SỰ CỐ
+
+ウィルス対策ソフト - ウィルスたいさくソフト
+Antivirus software
+ĐỐI SÁCH
+
+ウィルス感染のPC - ウィルスかんせんのPC
+Virus affected PC
+CẢM NHIỄM
+
+プログラム言語 - プログラムげんご
+Programining language
+NGÔN NGỮ
+
+ソースコード - ソースコード
+Source code
+
+高水準言語(機械語) - こうすいじゅんげんご（きかいご）
+High-level programming language
+CAO THỦY CHUẨN NGÔN NGỮ CƠ GIỚI NGỮ
+
+低水準言語(人間の言語に近い言語) - ていすいじゅんげんご（にんげんのげんごにちかいげんご）
+Low-level programming language
+ĐÊ THỦY CHUẨN NGÔN NGỮ NHÂN GIAN, GIÁN NGÔN NGỮ CÂ?N NGÔN NGỮ
+
+コンパイル(翻訳)／インタプリタ(通訳) - コンパイル（ほんやく）／インタプリタ（つうやく）
+Compile/interpreter
+PHIÊN DỊCH THÔNG DỊCH
+
+バイナリファイル - バイナリファイル
+Binary file
+
+半角文字（１バイト文字） - はんかくもじ（１バイトもじ）
+Half-size character
+BÁN GIÁC VĂN TỰ VĂN TỰ
+
+全角文字（２バイト文字) - ぜんかくもじ（２バイトもじ）
+Full-size character
+TÒAN GIÁC VĂN TỰ VĂN TỰ
+
+ソフトウェア開発工程 - ソフトウェアかいはつこうてい
+Software development process
+KHAI PHÁT CÔNG TRÌNH
+
+キックオフ会議 - キックオフかいぎ
+Kick off meeting, buổi họp đầu tiên dự án
+HỘI NGHỊ
+
+要求定義／要件定義 - ようきゅうていぎ／ようけんていぎ
+Requirement definition
+YÊU, YẾU CẦU ĐỊNH NGHĨA YÊU, YẾU KIỆN ĐỊNH NGHĨA
+
+設計 - せっけい
+Design
+THIẾT KẾ
+
+実装 - じっそう
+Implementation
+THỰC TRANG
+
+テスト - テスト
+Testing
+
+保守 - ほしゅ
+Maintenance
+BẢO THỦ, THÚ
+
+上流工程(前工程) - じょうりゅうこうてい（ぜんこうてい）
+Upstream process/Upper process
+THƯỢNG LƯU CÔNG TRÌNH TIỀN CÔNG TRÌNH
+
+要求検討／要求理解 - ようきゅうけんとう／ようきゅうりかい
+Study requirement
+YÊU, YẾU CẦU KIỂM THẢO YÊU, YẾU CẦU LÝ GIẢI
+
+要求定義書／要件定義書 - ようきゅうていぎしょ／ようけんていぎしょ
+Requirement definition document
+YÊU, YẾU CẦU ĐỊNH NGHĨA THƯ YÊU, YẾU KIỆN ĐỊNH NGHĨA THƯ
+
+要求仕様書／要件仕様書 - ようきゅうしようしょ／ようけんしようしょ
+Requirement specification document
+YÊU, YẾU CẦU SĨ DẠNG THƯ YÊU, YẾU KIỆN SĨ DẠNG THƯ
+
+機能要求 - きのうようきゅう
+Functional requirement
+CƠ NĂNG YÊU, YẾU CẦU
+
+非機能要求 - ひきのうようきゅう
+Non-functional requirement
+PHI CƠ NĂNG YÊU, YẾU CẦU
+
+基本設計(書)／アーキテクチャ設計 - きほんせっけい（しょ）／アーキテクチャせっけい
+Basic design/Architecture design
+CƠ BẢN THIẾT KẾ THƯ THIẾT KẾ
+
+プログラム設計 - プログラムせっけい
+Program design
+THIẾT KẾ
+
+機能設計 - きのうせっけい
+Functional design
+CƠ NĂNG THIẾT KẾ
+
+外部設計 - がいぶせっけい
+External design
+NGOẠI BỘ THIẾT KẾ
+
+物理設計 - ぶつりせっけい
+Physical design
+VẬT LÝ THIẾT KẾ
+
+詳細設計(書) - しょうさいせっけい（しょ）
+Detail design (document)
+TƯỜNG TẾ THIẾT KẾ THƯ
+
+内部設計 - ないぶせっけい
+Internal design
+NỘI BỘ THIẾT KẾ
+
+論理設計 - ろんりせっけい
+Logical design
+LuẬN LÝ THIẾT KẾ
+
+設計者 - せっけいしゃ
+Designer
+THIẾT KẾ GIẢ
+
+下流工程(後工程) - かりゅうこうてい（あとこうてい）
+Downstream process/lower process
+HẠ LƯU CÔNG TRÌNH HẬU CÔNG TRÌNH
+
+コーディング - コーディング
+Coding
+
+変数／関数(メソッド)／定数／引数(パラメータ） - へんすう／かんすう（メソッド）／ていすう／ひきすう（パラメータ）
+Variable/function (method)/constant/argument(parameter)
+BiẾN SỐ QUAN SỐ ĐỊNH SỐ DẪN SỐ
+
+変数を宣言する - へんすうをせんげんする
+Declare a variable
+Khai báo một biến
+BIẾN SỐ TUYÊN NGÔN
+
+関数(メソッド)を呼び出す - かんすう（メソッド）をよびだす
+Call function/method
+QUAN SỐ HÔ XUẤT
+
+A関数に整数変数を渡す - Aかんすうにせいすうへんすうをわたす
+Pass an integer variable to A function
+QUAN SỐ CHỈNH SỐ BIẾN SỐ ĐỘ
+
+変数に値を代入／付与する - へんすうにあたいをだいにゅう／ふよする
+Assign a value to variable
+BiẾN SỐ TRỊ ĐẠI NHẬP PHÓ DƯ, DỰ
+
+ループ／繰り返し - ループ／くりかえし
+Loop
+TẢO PHẢN
+
+無限ループ - むげんループ 
+Infinitive loop
+VÔ HẠN
+
+ループから抜け出す - ループからぬけだす
+Break away from the loop
+BẠT XUẤT
+
+開発者／プログラマー - かいはつしゃ／プログラマー
+Developer/programmer
+KHAI PHÁT GIẢ
+
+ステップ数 - ステップかず
+Line of code, No. of steps
+SỐ
+
+統合開発環境 - とうごうかいはつかんきょう
+Integrated development environment (IDE)
+Môi trường phát triển tích hợp
+THỐNG HỢP KHAI PHÁT HÒAN CẢNH
+
+デバッグ - デバッグ
+Debug
+
+テスト項目(テストケース、試験項目、評価項目) - テストこうもく（テストケース、しけんこうもく、ひょうかこうもく）
+Test case
+HẠNG MỤC THÍ NGHIỆM HẠNG MỤC BÌNH GIÁ HẠNG MỤC
+
+単体テスト(単体試験) - たんたいテスト（たんたいしけん）
+Unit test
+ĐƠN, ĐAN THỂ ĐƠN, ĐAN THỂ THÍ NGHIỆM
+
+単体テスト項目 - たんたいテストこうもく
+Unit test case
+ĐƠN, ĐAN THỂ HẠNG MỤC
+
+結合テスト - けつごうテスト
+Integration test/combination test
+KẾT HỢP
+
+結合テスト項目 - けつごうテストこうもく
+Integration test case
+KẾT HỢP HẠNG MỤC
+
+システムテスト／総合テスト - システムテスト／そうごうテスト
+System test
+TỔNG HỢP
+
+システムテスト項目 - システムテストこうもく
+System test case
+HẠNG MỤC
+
+受け入れテスト - うけいれテスト
+Acceptance test
+THỤ NHẬP
+
+テスト技法／テスト手法 - テストぎほう／テストしゅほう
+Test method
+KỸ PHÁP THỦ PHÁP
+
+ブラックボックステスト - ブラックボックステスト
+Black bock test
+
+ホワイトボックステスト - ホワイトボックステスト
+White box test
+
+テスター／試験者 - テスター／しけんしゃ
+Tester
+THÍ NGHIỆM GIẢ
+
+テスト環境 - テストかんきょう
+Test environment
+HÒAN CẢNH
+
+テスト報告書 - テストほうこくしょ
+Test report
+BÁO CÁO THƯ
+
+用語 - ようご
+Từ chuyên môn
+ DỤNG NGỮ
+
+基準 - きじゅん
+Standard, chuẩn
+ CƠ CHUẨN
+
+移行 - いこう
+Transition, chuyển đổi màn hình
+DI HÀNH/HÀNG/HẠNH
+
+液晶画面 - えきしょうがめん
+Màn hình LCD
+DỊCH TINH HỌA/HOẠCH DIỆN
+
+解除 - かいじょ
+Unlock, mở khóa ( mở password )
+GIẢI TRỪ
+
+回線 - かいせん
+Cable (LAN), mạch, đường truy cập
+HỒI TUYẾN
+
+括弧 - かっこ
+Dấu ngoặc
+QUÁT HỒ
+
+共通 - きょうつう
+Common, chung
+CỘNG THÔNG
+
+共有 - きょうゆう
+Share, chia sẻ
+CỘNG HỮU
+
+繰り返す - くりかえす
+Repeat, lặp lại
+TẢO PHẢN
+
+検索 - けんさく
+Search, Retrieve, tìm kiếm, truy vấn
+KIỂM SÁCH
+
+構築 - こうちく
+(System) Construction, Cấu trúc hệ thống
+CẤU TRÚC
+
+索引 - さくいん
+Index, Chỉ mục
+SÁCH DẪN
+
+仕組み - しくみ
+Hệ thống (Ví dụ : Hệ thống quản lý bán hàng, quản lý kho...)
+SĨ TỔ
+
+順次 - じゅんじ
+Tuần tự
+THUẬN THỨ
+
+障害 - しょうがい
+Error, Bug, lỗi
+CHƯỚNG HẠI
+
+承諾 - しょうだく
+Chấp thuận, chấp nhận
+THỪA NẶC
+
+初回 - しょかい
+Lần đầu 
+SƠ HỒI
+
+先頭 - せんとう
+Header, người đứng đầu
+TIÊN ĐẦU
+
+装着 - そうちゃく
+Implementation, trang bị
+TRANG TRƯỚC
+
+端末 - たんまつ
+Thiết bị đầu cuối, Terminal
+ĐOAN MẠT
+
+抽出 - ちゅうしゅつ
+Rút trích , trích xuất , Extraction
+TRỪU XUẤT
+
+定義 - ていぎ
+Định nghĩa, Definition
+ĐỊNH NGHĨA
+
+分離 - ぶんり
+Separate, phân tách , phân chia
+PHÂN LY
+
+文字列 - もじれつ
+Character string, chuỗi ký tự
+VĂN TỰ LIỆT
+
+平均 - へいきん
+Trung bình
+BÌNH QUÂN
+
+弊社 - へいしゃ
+Công ty tôi
+TỆ XÃ
+
+変更 - へんこう
+Change, modify, thay đổi
+BiẾN CANH
+
+変更の履歴 - へんこうの りれき
+Record of change
+BiẾN CANH LÝ LỊCH
+
+編集 - へんしゅう
+Edit, chỉnh sửa
+BIÊN TẬP
+
+保存 - ほぞん
+Save, lưu
+BẢO TỒN
+
+報告書 - ほうこくしょ
+Report, bảng báo cáo
+BÁO CÁO THƯ
+
+方法 - ほうほう
+Method, phương thức
+PHƯƠNG PHÁP
+
+満たす - みたす
+Satisfy, thỏa mãn
+MÃN
+
+無効 - むこう
+Ineffective, disable
+VÔ HIỆU
+
+目次 - もくじ
+Mục lục
+MỤC THỨ
+
+目的 - もくてき
+Mục đích
+MỤC ĐÍCH
+
+問題 - もんだい
+Vấn đề
+VẤN ĐỀ
+
+役割 - やくわり
+Role, vai trò
+DỊCH CÁT
+
+有効性 - ゆうこうせい
+Effective, tính hữu hiệu
+HỮU HIỆU TÍNH
+
+有用性 - ゆうようせい
+Usability , tính hữu dụng
+HỮU DỤNG TÍNH
+
+容易 - ようい
+Simple, đơn giản
+DUNG DỊ/DỊCH
+
+要求 - ようきゅう
+Requirement
+YÊU/YẾU CẦU
+
+利用 - りよう
+Use, sử dụng
+LỢI DỤNG
+
+理解 - りかい
+Hiểu
+LÝ GIẢI
+
+率 - りつ
+Tần suất
+SUẤT
+
+略語 - りゃくご
+Abbreviation, từ viết tắt
+LƯỢC NGỮ
+
+両方 - りょうほう
+Cả 2 
+LƯỠNG PHƯƠNG
+
+例外 - れいがい
+Exception, ngoại lệ
+LỆ NGOẠI
+
+連続 - れんぞく
+Continuation, liên tục
+LIÊN TỤC
+
+論理 - ろんり
+Logic
+LUẬN LÝ
+
+初期化 - しょきか
+Initialize, khởi tạo 
+SƠ KỲ HÓA
+
+任意 - にんい
+Optional, tùy chọn
+NHIỆM Ý
+
+四捨五入 - ししゃごにゅう
+Rounding off, làm tròn số
+TỨ XẢ NGŨ NHẬP
+
+迅速 - じんそく
+Quick, nhanh chóng
+TẤN TỐC
+
+情報暗号化 - じょうほうあんごうか
+Information encryption, mã hóa thông tin
+TÌNH BÁO ÁM HIỆU HÓA
+
+妥当性 - だとうせい
+Validate, tính hợp lệ
+THỎA ĐANG/ĐƯƠNG TÍNH
+
+付録 - ふろく
+Appendix, phụ lục
+PHÓ LỤC
+
+統合 - とうごう
+Integration, Kết hợp
+THỐNG HỢP
+
+導入 - どうにゅう
+Triển khai , cải đặt, thiết lập , setup, install
+ĐẠO NHẬP
+
+内蔵 - ないぞう
+Built -in, internal, bên trong
+NỘI TÀNG
+
+配信 - はいしん
+Truyền gửi thông tin
+PHỐI TÍN
+
+版数 - ばんすう/はんすう
+Version
+BẢN SỐ
+
+付属品 - ふぞくひん
+Thiết bị kèm theo, thiết bị phụ trợ
+PHÓ THUỘC PHẨM
+
+別途 - べっと
+( Tài liệu, file , văn bảng.. ) Riêng
+BIỆT ĐỒ
+
+保守 - ほしゅ
+Maintenance, bảo trì, bảo dưỡng
+BẢO THỦ/THÚ
+
+補足 - ほそく 
+Supplement, bổ sung, bổ túc
+BỔ TÚC
+
+無償｢無料｣ - むしょう
+For free, miễn phí
+VÔ THƯỜNG VÔ LIỆU
+
+目印 - めじるし
+Sign, mark, dấu hiệu
+MỤC ẤN
+
+要因 - よういん
+Factor, yếu tố quan trọng, nhân tố quan trọng
+YÊU/YẾU NHÂN
+
+要件 - ようけん
+Requirement, điều kiện, yêu cầu
+YÊU/YẾU KIỆN
+
+要素 - ようそ
+Factor, yếu tố quan trọng, nhân tố quan trọng
+YÊU/YẾU TỐ
+
+領域 - りょういき
+Territory, domain, area
+LĨNH/LÃNH VỰC
+
+了解 - りょうかい
+Understand
+LIỄU GIẢI
+
+連携 - れんけい
+Cooperation, hookup, hợp tác
+LIÊN HUỀ
+
+依頼 - いらい
+Request, yêu cầu
+Y LẠI
+
+維持 - いじ
+Remain, duy trì
+DUY TRÌ
+
+引継ぎ - ひきつぎ
+Kế thừa, nối tiếp
+DẪN KẾ
+
+影響 - えいきょう
+Effect, ảnh hưởng
+ẢNH HƯỞNG
+
+応答 - おうとう
+Respond, phản hồi
+ỨNG ĐÁP
+
+稼働 - かどう 
+Work, operate, hoạt động, ( máy ) chạy
+GIÁ ĐỘNG
+
+稼働率 - かどうりつ
+Availability, tần suất chạy máy
+GIÁ ĐỘNG SUẤT
+
+画面 - がめん
+Screen, màn hình
+HỌA/HOẠCH DIỆN
+
+解決 - かいけつ
+Solve, xử lý, giải quyết
+GIẢI QUYẾT
+
+回復 - かいふく
+Recovery, hồi phục, khôi phục
+HỒI PHỤC
+
+開始 - かいし
+Start, bắt đầu , triển khai
+KHAI THỦY/THỈ
+
+開発 - かいはつ
+Develop, phát triển
+KHAI PHÁT
+
+開発者 - かいはつしゃ
+Developer
+KHAI PHÁT GIẢ
+
+階層 - かいそう
+Layer, tầng ( phân tầng trong DB )
+GIAI TẦNG
+
+外観 - がいかん
+GUI, bề ngoài , giao diện
+NGOẠI QUAN
+
+外部 - がいぶ
+External, ngoại vi 
+NGOẠI BỘ
+
+概要 - がいよう
+Overview, khái lượt, tổng thể
+KHÁI YÊU/YẾU
+
+概要設計 - がいようせっけい
+Architecture design, basic design
+KHÁI YÊU/YẾU THIẾT KẾ
+
+該当 - がいとう
+Tương ứng
+CAI ĐANG/ĐƯƠNG
+
+拡張子 - かくちょうし
+Extension, phần mở rộng ( .exe; .com )
+KHUẾCH TRƯƠNG TỬ/TÝ
+
+格納 - かくのう
+Store, chứa, lưu trong DB
+CÁCH NẠP
+
+獲得 - かくとく
+Obtain, get, lấy ( IP, tham số...)
+HỌACH ĐẮC
+
+確認 - かくにん
+Confirm, xác nhận
+XÁC NHẬN
+
+完全 - かんぜん
+Completed, hoàn tất
+HÒAN TÒAN
+
+環境 - かんきょう
+Environment, môi trường
+HÒAN CẢNH
+
+管理者 - かんりしゃ
+Administrator, manager, người quản lý
+QUẢN LÝ GIẢ
+
+間隔 - かんかく
+Interval, khoảng cách
+GIAN/GIÁN CÁCH
+
+関係 - かんけい
+Quan hệ
+QUAN HỆ
+
+既存 - きぞん
+Existing, đã có
+KÝ TỒN
+
+機能 - きのう
+Chức năng
+CƠ NĂNG
+
+規則 - きそく
+Rule, quy tắc
+QUI TẮC
+
+規定 - きてい
+Quy định
+QUI ĐỊNH
+
+記憶 - きおく
+Memory, bộ nhớ, thiết bị lưu trữ
+KÝ ỨC
+
+記述 - きじゅつ
+Description, mô tả
+KÝ THUẬT
+
+許可 - きょか
+Permission, cho phép
+HỨA KHẢ
+
+境界 - きょうかい
+Border, biên , giới hạn biên
+CẢNH GIỚI
+
+区分 - くぶん
+Class, type, loại
+KHU PHÂN
+
+傾向 - けいこう
+Khuynh hướng, xu hướng
+KHUYNH HƯỚNG
+
+契約 - けいやく
+Hợp đồng
+KHẾ ƯỚC
+
+形式 - けいしき
+Format, hình thức, định dạng
+HÌNH THỨC
+
+携帯 - けいたい
+Mobile, thiết bị di động
+HUỀ ĐỚI/ĐÁI
+
+計画書 - けいかくしょ
+Bảng kế hoạch
+KẾ HỌA/HOẠCH THƯ
+
+計算 - けいさん
+Tính toán
+KẾ TOÁN
+
+警告 - けいこく
+Warning, cảnh báo
+CẢNH CÁO
+
+欠陥 - けっかん
+Defect, lỗi
+KHUYẾT HÃM
+
+結果 - けっか
+Result, kết quả
+KẾT QUẢ
+
+結合 - けつごう
+Integration, tích hợp, tổng hợp
+KẾT HỢP
+
+検査 - けんさ
+Inspection, test, kiểm tra, kiểm thử
+KIỂM TRA
+
+見積 - みつもり
+Estimation, báo giá, ước lượng
+KIẾN TÍCH
+
+故障 - こしょう
+Failures, trouble, lỗi 
+CỐ CHƯỚNG
+
+公開 - こうかい
+Public, công bố, công khai
+CÔNG KHAI
+
+更新 - こうしん
+Update, cập nhật
+CANH TÂN
+
+構造 - こうぞう
+Structure, cấu trúc
+CẤU TẠO
+
+考慮 - こうりょ
+Consider, suy xét
+KHẢO LỰ
+
+合格 - ごうかく
+Pass
+HỢP CÁCH
+
+合致 - がっち
+Nhất trí, đồng ý
+HỢP TRÍ
+
+再建築 - さいけんちく
+Rebuild, cấu trúc lại
+TÁI KIẾN TRÚC
+
+再度 - さいど
+Again, làm lại, lặp lại
+TÁI ĐỘ
+
+最終 - さいしゅう
+Final, cuối cùng
+TỐI CHUNG
+
+最新 - さいしん
+the latest, the newest, mới nhất
+TỐI TÂN
+
+最低 - さいてい
+The minimum, tối thiểu
+TỐI ĐÊ
+
+最適化 - さいてきか
+Optimize, tối ưu hóa
+TỐI THÍCH HÓA
+
+作業 - さぎょう
+công việc
+TÁC NGHIỆP
+
+作成 - さくせい
+Create, tạo 
+TÁC THÀNH
+
+作成者 - さくせいしゃ
+Creator, người tạo
+TÁC THÀNH GIẢ
+
+削除 - さくじょ
+Delete, xóa
+TƯỚC TRỪ
+
+参照 - さんしょう
+Reference
+TAM/THAM CHIẾU
+
+仕様書 - しようしょ
+Specification
+SĨ DẠNG THƯ
+
+使用 - しよう
+Use
+SỬ/SỨ DỤNG
+
+指定 - してい
+Select, chỉ định
+CHỈ ĐỊNH
+
+支援 - しえん
+support, hỗ trợ
+CHI VIỆN/VIÊN
+
+試験 - しけん
+Test, kiểm tra, kiểm thử
+THÍ NGHIỆM
+
+資料 - しりょう
+Tài liệu
+TƯ LIỆU
+
+実行 - じっこう
+Excute, thực thi, thực hiện
+THỰC HÀNH/HÀNG/HẠNH
+
+種別 - しゅべつ
+Classification, phân loại
+CHỦNG BIỆT
+
+受け入れ - うけいれ
+Receive, accept, nhận, chấp nhận
+THỤ NHẬP
+
+修正 - しゅうせい
+Fix, sửa
+TU CHÍNH
+
+修復 - しゅうふく
+Restore, phục hồi
+TU PHỤC
+
+終了 - しゅうりょう
+Finish, kết thúc
+CHUNG LIỄU
+
+重要 - じゅうよう
+Important, quan trọng
+TRỌNG/TRÙNG YÊU/YẾU
+
+出力 - しゅつりょく
+Output, xuất
+XUẤT LỰC
+
+準備 - じゅんび
+Chuẩn bị
+CHUẨN BỊ
+
+処理 - しょり
+Process, xử lý
+XỨ/XỬ LÝ
+
+初期 - しょき
+Thời kỳ đầu
+SƠ KỲ
+
+除去 - じょきょ
+Remove, gỡ bỏ
+TRỪ KHỬ/KHỨ
+
+承認 - しょうにん
+Approve, chấp nhận, chấp thuận
+THỪA NHẬN
+
+省略 - しょうりゃく
+Giản lược
+TỈNH LƯỢC
+
+詳細 (な） - しょうさい
+Detail, Chi tiết
+TƯỜNG TẾ
+
+場合 - ばあい
+Case, when, trong trường hợp, khi...
+TRƯỜNG/TRÀNG HỢP
+
+情報 - じょうほう
+Information, thông tini
+TÌNH BÁO
+
+条件 - じょうけん
+Condition, term, điều kiện
+ĐiỀU KIỆN
+
+状況 - じょうきょう
+Tình trạng
+TRẠNG HUỐNG
+
+状態 - じょうたい
+Status, trạng thái
+TRẠNG THÁI
+
+職名 - しょくめい
+Chuc vụ công việc
+CHỨC DANH
+
+信頼性 - しんらいせい
+Reliability , tính tin cậy
+TÍN LẠI TÍNH
+
+推薦 - すいせん
+Recommend, commend
+SUY TIẾN
+
+制限 - せいげん
+Limit, Restrict, giới hạn, phân quyền
+CHẾ HẠN
+
+制御 - せいぎょ
+Control, manage, điều khiển
+CHẾ NGỰ/NGỪ
+
+制約 - せいやく
+Limit, Restrict, giới hạn, phân quyền
+CHẾ ƯỚC
+
+性能 - せいのう
+Performance, tính năng
+TÍNH NĂNG
+
+整合 - せいごう
+Valid, phù hợp, hợp lệ
+CHỈNH HỢP
+
+正確さ - せいかくさ
+Tính chính xác
+CHÍNH XÁC
+
+生成 - せいせい
+Generate, sinh ra, tạo ra
+SINH THÀNH
+
+接続 - せつぞく
+Connect, kết nối
+TIẾP TỤC
+
+設計 - せっけい
+Design, thiết kế
+THIẾT KẾ
+
+設計者 - せっけいしゃ
+Designer, người thiết kế
+THIẾT KẾ GIẢ
+
+設定 - せってい
+Setting, thiết lập
+THIẾT ĐỊNH
+
+選択 - せんたく
+Select, lựa chọn
+THIÊN TRẠCH
+
+遷移 - せんい
+Transition, chuyển đổi màn hình
+ DI
+
+全体 - ぜんたい
+Whole, tổng thể
+TÒAN THỂ
+
+挿入 - そうにゅう
+Insert, chèn
+ NHẬP
+
+操作 - そうさ
+Operation, thao tác
+THÁO/THAO TÁC
+
+総合 - そうごう
+Integration, tổng hợp
+TỔNG HỢP
+
+送付先 - そうふさき
+Người nhận, nơi nhận
+TỐNG PHÓ TIÊN
+
+速度 - そくど
+Speed, tốc độ
+TỐC ĐỘ
+
+存在 - そんざい
+Tồn tại
+TỒN TẠI
+
+多様 - たよう
+Đa dạng
+ĐA DẠNG
+
+対象 - たいしょう
+Object, target, đối tượng
+ĐỐI TƯỢNG
+
+達成 - たっせい
+Đạt được
+ĐẠT THÀNH
+
+単体テスト - たんたいてすと
+Unit test, Test đơn thể
+ĐƠN/ĐAN THỂ
+
+担当 - たんとう
+Đảm nhận
+ĐẢM ĐANG/ĐƯƠNG
+
+探索 - たんさく
+Search, tìm kiếm
+THÁM SÁCH
+
+著作権 - ちょさくけん
+Copyright, bản quyền
+TRƯỚC/TRỨ TÁC QUYỀN
+
+著名 - ちょめい
+Signature, ký tên, chữ ký xác thực
+TRƯỚC/TRỨ DANH
+
+直後 - ちょくご
+Ngay sau khi
+TRỰC HẬU
+
+直接 - ちょくせつ
+Trực tiếp
+TRỰC TIẾP
+
+直前 - ちょくぜん
+Ngay trước khi
+TRỰC TIỀN
+
+追加 - ついか
+Add, thêm vào
+TRUY GIA
+
+通知 - つうち
+Inform, thông báo
+THÔNG TRI/TRÍ
+
+提供 - ていきょう
+Cung cấp
+ĐỀ CUNG
+
+程度 - ていど
+level, khoảng, cấp độ
+TRÌNH ĐỘ
+
+適用 - てきよう
+Apply
+THÍCH DỤNG
+
+展開 - てんかい
+Deplop, triển khai
+TRIỂN KHAI
+
+転送 - てんそう
+Transfer, forward, chuyển tiếp, truyền
+CHUYỂN TỐNG
+
+登録 - とうろく
+Register, đăng ký
+ĐĂNG LỤC
+
+統括 - とうかつ
+Tổng quát
+THỐNG QUÁT
+
+到達 - とうたつ
+Arrive, đạt đến ( mức độ )
+ĐÁO ĐẠT
+
+計算式 - けいさんしき
+Cách tính, công thức tính
+KẾ TOÁN THỨC
+
+頭文字 - かしらもじ
+Acronym, ký tự đầu
+ĐẦU VĂN TỰ
+
+同時 - どうじ
+Đồng thời
+ĐỒNG THỜI/THÌ
+
+同様 - どうよう
+Giống nhau
+ĐỒNG DẠNG
+
+特定 - とくてい
+Specific, đặc thù, đặc định
+ĐẶC ĐỊNH
+
+日付 - ひづけ
+Date, ngày tháng
+NHẬT PHÓ
+
+入力 - にゅうりょく
+Input
+NHẬP LỰC
+
+認証 - にんしょう
+Certification, chứng nhận, chứng thực
+NHẬN CHỨNG
+
+納入 - のうにゅう
+Delivery, giao hàng
+NẠP NHẬP
+
+発生 - はっせい
+phát sinh
+PHÁT SINH
+
+半角 - はんかく
+Half size, 1 byte
+BÁN GIÁC
+
+版数 - はんすう・ばんすう
+Version
+BẢN SỐ
+
+範囲 - はんい
+Scope, range
+PHẠM VI
+
+番号 - ばんごう
+Number
+PHIÊN HIỆU
+
+非機能 - ひきのう
+Non-function, phi tính năng
+PHI CƠ NĂNG
+
+表示 - ひょうじ
+Display, view
+BIỂU THỊ
+
+品質 - ひんしつ
+Quality, chất lượng
+PHẨM CHẤT
+
+部分 - ぶぶん
+Part, bộ phận
+BỘ PHÂN
+
+復旧 - ふっきゅう
+Repair, restore, khôi phục
+PHỤC CỰU
+
+分析 - ぶんせき
+Analysis, phân tích 
+PHÂN TÍCH
+
+コンタクト - Contact
+
+コンポーネント - Component
+
+サーバ - Server
+
+サービス - Service
+
+サイジング - Sizing
+
+サイズ - Size
+
+サイト - Site
+
+サブシステム - Subsystem
+
+サポート - Support
+
+サンプル - Sample Mẫu
+
+シーケンス - Sequence
+
+システム - System
+
+スキル - Skill
+
+スクリプト - Script
+
+スタートアップ - Startup
+
+スタックトレース - Stack trace
+Programmers commonly use stack tracing during interactive and post-mortem debugging. End-users may see a stack trace displayed as part of an error message, which the user can then report to a programmer.
+
+ステータス - Status
+
+ステップ - Step
+
+スピーカー - Speaker
+
+スペック - Spec Specification
+
+セキュリティ - Security
+
+セクション - Section
+
+ソース - Source
+
+ソフトウェア - Software
+
+ソリューション - Solution
+
+タイミング - Timing
+
+ダウン - Down
+
+ダウンロード - Download
+
+チェック - Check
+
+チェックリスト - Check list
+
+ツリー - Tree
+
+ディレクトリ - Directory
+
+データベース - Data base
+
+テーブル - Table
+
+テストケース - Test item, test case
+
+テンプレート - Template
+
+ドキュメント - Document
+
+ドメイン - Domain
+
+トランザクション - Transaction
+Giao dịch
+Transaction processing: information processing that is divided into individual, indivisible operations
+
+トランジション - Transition
+Chuyển đổi
+
+ニックネーム - Nickname
+
+ネットワーク - Network
+
+バージョン - Version
+
+ハードウェア - Hard ware
+
+ハードディスク - Hard disk
+
+ハイパーテキスト - Hypertext
+
+バグ - Bug
+
+パスワード - Password
+
+パックアップ - Backup
+
+パッケージ - Package
+
+バッファー - Buffer
+
+パフォーマンス - Performance
+
+パラメーター - Parameter
+
+ビュー - View
+
+ファイル - File
+
+フィーチャ - Feature
+
+フィード - Feed
+A mechanism for users to receive updates from data sources
+
+フィールド - Field
+
+フォーマット - Format
+
+フォルダ - Folder
+
+ブラウザ - Browser
+
+フラグ - Flag
+
+フレームワーク - Framework
+
+プレゼンテーション - Presentation
+
+ブロードバンド - Broadband
+Băng thông rộng
+
+プログラム - Program
+
+プロジェクト - Project
+
+プロセス - Process
+
+カテゴリー - Category
+
+キー - Key
+
+クエリー - Query
+
+クライアント - Client
+
+クラス - Class
+
+クリック - Click
+
+グループ - Group
+
+コアデータ - Core data
+
+コーディング - Coding
+
+コード - Code
+
+ゴール - Goal
+
+コールセンター - Call Center
+
+コネクター - Connector
+
+コミュニケーション - Communication
+
+コンストラクション - Construction
+
+プロセッサー - Processor
+
+プロトコル - Protocol
+
+プロパティ - Properties
+
+ベースライン - Base line
+
+ホスト - Host
+
+ポスト - Post
+
+ボタン - Button
+
+マイルストーン - Milestone
+
+マスター - Master
+
+マニュアル - Manual
+
+メイン - Main
+
+メール - Mail
+
+メソッド - Method
+
+メッセージ - Message
+
+メモリ - Memory
+
+メンテナンス - Maintenance
+
+メンバー - Member
+
+モジュール - Module
+
+モデル - Model
+
+ユーザ - User
+
+ユーティリティ - Utility
+Tiện ích
+
+ライセンス - License
+Giấy phép, bản quyền
+
+ライブラリ - Library
+
+ランク - Rank
+
+リクエスト - Request
+
+リスト - List
+
+リリース （する） - Release
+
+ルート - Route (Căn nguyên, nguồn gốc)
+
+ルール - Rule
+
+レコード - Record
+
+レビュー - Review
+
+レベル - Level
+
+ローカル - Local
+
+ロード - Load
+
+ロガー - Logger
+
+ログイン - Log in
+
+ロジック - Logic
+
+ワークオーダ - Work order
+
+データ - Data
+
+アーキテクチャー - Architecture
+
+アウトライン - Outline
+
+アクセス - Access
+
+アクター - Actor
+
+アサイン - Assignment
+
+アドレス - Address
+
+アプリケーション - Application
+
+アプローチ - Approach
+
+アンケート - Questionnaire Bảng câu hỏi
+
+イベント - Event
+
+イメージ - Image
+
+インストール （する） - Install
+
+インターネット - Internet
+
+インターネット・エクスプローラー - Internet explorer
+
+インターフェース - Interface
+
+イントラネット - Intranet
+
+インフラ - Infrastructure
+
+ウェブ - Web
+
+エクセル - Excel
+
+エラー - Error
+
+エンドユーザ - End user
+
+オブジェクト - Object
+
+オプション - Option
+
+オンライン - Online
+
+カード - Card

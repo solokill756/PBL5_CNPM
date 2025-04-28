@@ -1,4 +1,4 @@
-import { Sequelize, DataTypes, Model } from 'sequelize';
+import { Sequelize, DataTypes, Model } from "sequelize";
 
 interface ForumReportAttributes {
   report_id: string;
@@ -6,19 +6,28 @@ interface ForumReportAttributes {
   post_id?: string;
   comment_id?: string;
   reason: string;
-  status: 'pending' | 'reviewed' | 'resolved';
+  status: "pending" | "reviewed" | "resolved";
   created_at: Date;
 }
 
-interface ForumReportCreationAttributes extends Partial<Pick<ForumReportAttributes, 'report_id' | 'post_id' | 'comment_id' | 'created_at'>> {}
+interface ForumReportCreationAttributes
+  extends Partial<
+    Pick<
+      ForumReportAttributes,
+      "report_id" | "post_id" | "comment_id" | "created_at"
+    >
+  > {}
 
-class ForumReport extends Model<ForumReportAttributes, ForumReportCreationAttributes> implements ForumReportAttributes {
+class ForumReport
+  extends Model<ForumReportAttributes, ForumReportCreationAttributes>
+  implements ForumReportAttributes
+{
   declare report_id: string;
   declare reported_by: string;
   declare post_id?: string;
   declare comment_id?: string;
   declare reason: string;
-  declare status: 'pending' | 'reviewed' | 'resolved';
+  declare status: "pending" | "reviewed" | "resolved";
   declare created_at: Date;
 }
 
@@ -47,9 +56,9 @@ export default (sequelize: Sequelize) => {
         allowNull: false,
       },
       status: {
-        type: DataTypes.ENUM('pending', 'reviewed', 'resolved'),
+        type: DataTypes.ENUM("pending", "reviewed", "resolved"),
         allowNull: false,
-        defaultValue: 'pending',
+        defaultValue: "pending",
       },
       created_at: {
         type: DataTypes.DATE,
@@ -59,7 +68,7 @@ export default (sequelize: Sequelize) => {
     },
     {
       sequelize,
-      tableName: 'forum_reports',
+      tableName: "forum_report",
       timestamps: false,
     }
   );

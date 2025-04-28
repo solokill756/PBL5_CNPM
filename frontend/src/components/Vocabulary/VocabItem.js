@@ -1,19 +1,35 @@
 import React from "react";
-import { FaLaptopCode } from "react-icons/fa"; // Icon đại diện (có thể thay bằng ảnh)
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
-const VocabItem = ({ icon, titleJP, titleVN, description }) => {
+const VocabItem = ({ imgUrl, name, description, onError, loading = false }) => {
   return (
-    <div className="flex items-center bg-white shadow-md rounded-lg p-4 w-80 hover:bg-slate-100 hover:shadow-lg transition-all cursor-pointer">
-      {/* Icon hoặc hình ảnh */}
-      <div className="p-3 border rounded-lg bg-red-50">
-        {icon ? (icon) : <FaLaptopCode className="text-red-600 size-10" />}
+    <div className="flex items-center bg-white shadow-md rounded-lg p-4 w-full hover:bg-slate-100 hover:shadow-lg transition-all cursor-pointer">
+      <div className="p-1 border rounded-lg">
+        {loading ? (
+          <Skeleton height={48} width={48} borderRadius={8} />
+        ) : (
+          <img
+            onError={onError}
+            src={imgUrl}
+            alt="Img"
+            className="size-12 rounded-md"
+          />
+        )}
       </div>
 
-      {/* Nội dung */}
       <div className="ml-4 flex-1">
-        <h3 className="text-lg font-semibold text-gray-800">{titleJP}</h3>
-        <p className="text-sm text-gray-600">{titleVN}</p>
-        {/* <p className="text-xs text-gray-500 mt-1">{description}</p> */}
+        {loading ? (
+          <>
+            <Skeleton height={20} width="60%" />
+            <Skeleton height={14} width="80%" style={{ marginTop: 6 }} />
+          </>
+        ) : (
+          <>
+            <h3 className="text-lg font-semibold text-gray-800">{name}</h3>
+            <p className="text-sm text-gray-600">{description}</p>
+          </>
+        )}
       </div>
     </div>
   );

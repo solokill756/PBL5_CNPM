@@ -1,4 +1,4 @@
-import { Sequelize, DataTypes, Model } from 'sequelize';
+import { Sequelize, DataTypes, Model } from "sequelize";
 
 interface ClassAttributes {
   class_id: string;
@@ -8,9 +8,15 @@ interface ClassAttributes {
   created_at: Date;
 }
 
-interface ClassCreationAttributes extends Partial<Pick<ClassAttributes, 'class_id' | 'description' | 'created_at'>> {}
+interface ClassCreationAttributes
+  extends Partial<
+    Pick<ClassAttributes, "class_id" | "description" | "created_at">
+  > {}
 
-class Class extends Model<ClassAttributes, ClassCreationAttributes> implements ClassAttributes {
+class Class
+  extends Model<ClassAttributes, ClassCreationAttributes>
+  implements ClassAttributes
+{
   declare class_id: string;
   declare class_name: string;
   declare description?: string;
@@ -46,7 +52,7 @@ export default (sequelize: Sequelize) => {
     },
     {
       sequelize,
-      tableName: 'classes',
+      tableName: "class",
       timestamps: false,
     }
   );
