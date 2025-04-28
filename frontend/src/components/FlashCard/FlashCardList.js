@@ -1,9 +1,8 @@
 import React, { useRef, useState } from "react";
 import FlashCardItem from "./FlashCardItem";
 import ScrollButton from "../ScrollButton";
-import { useNavigate } from "react-router-dom";
 import useScrollable from "@/hooks/useScrollable";
-import fallbackAvatar from '@/assets/images/avatar.jpg'
+import fallbackAvatar from "@/assets/images/avatar.jpg";
 
 const FlashCardList = ({ flashCards = [], loading }) => {
   const scrollRef = useRef(null);
@@ -28,7 +27,7 @@ const FlashCardList = ({ flashCards = [], loading }) => {
       )}
       <div
         ref={scrollRef}
-        className="flex space-x-4 overflow-x-hidden scroll-smooth scrollbar-hide w-full px-4"
+        className="flex w-full scroll-smooth overflow-x-hidden scroll-snap-x snap-mandatory"
       >
         {(loading ? skeletons : flashCards).map((card, index) => (
           <FlashCardItem
