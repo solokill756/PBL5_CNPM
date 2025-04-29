@@ -32,6 +32,7 @@ const FlashCardList = ({ flashCards = [], loading }) => {
         {(loading ? skeletons : flashCards).map((card, index) => (
           <FlashCardItem
             key={index}
+            id={loading ? "" : card.list_id}
             title={loading ? "" : card.title}
             author={loading ? "" : card.User.username}
             number={loading ? 0 : card.FlashcardCount}

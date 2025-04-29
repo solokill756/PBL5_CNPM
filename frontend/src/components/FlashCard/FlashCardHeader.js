@@ -21,18 +21,18 @@ const dropdownMenu = [
   },
 ];
 
-const FlashCardHeader = ({ title, onSave, onShare, onMore }) => {
+const FlashCardHeader = ({ title, onSave, onShare, onMore, onStar }) => {
   return (
     <div className="w-full max-w-4xl px-4 py-4">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-800">{title}</h1>
         <div className="flex items-center gap-2">
-          <RoundButton icon={ <MdOutlineBookmarkAdd />} onClick={onSave} active={true}/>
+          <RoundButton icon={ <MdOutlineBookmarkAdd />} onClick={onSave}/>
           <RoundButton icon={<RiShare2Line />} onClick={onShare} />
           <RoundButton icon={<MdMoreHoriz />} onClick={onMore} isDropdown={true} menu={dropdownMenu}/>
         </div>
       </div>
-      <div className="flex items-center mt-1 p-3 text-gray-600 cursor-pointer hover:bg-zinc-100 hover:rounded-full w-fit">
+      <div onClick={onStar} className="flex items-center mt-1 p-3 text-gray-600 cursor-pointer hover:bg-zinc-100 hover:rounded-full w-fit">
         <FaStar className="size-5 text-yellow-400 fill-yellow-400" />
         <span className="ml-2 text-md font-medium">Cho điểm đánh giá đầu tiên</span>
       </div>

@@ -2,14 +2,14 @@ import React, { useState, useRef, useEffect } from "react";
 import { cloneElement } from "react";
 import Dropdown from "../Dropdown";
 
-const RoundButton = ({ icon, onClick = () => {}, border, menu = [], isDropdown = false }) => {
+const RoundButton = ({ icon, className = "", onClick = () => {}, border, menu = [], isDropdown = false }) => {
   const [active, setActive] = useState(false);
   const buttonRef = useRef();
 
   const toggleDropdown = (e) => {
     e.stopPropagation();
     setActive((prev) => !prev);
-    onClick(); // vẫn gọi callback nếu có
+    onClick();
   };
 
   useEffect(() => {
@@ -31,7 +31,7 @@ const RoundButton = ({ icon, onClick = () => {}, border, menu = [], isDropdown =
     : null;
 
   return (
-    <div className="relative inline-block text-left" ref={buttonRef}>
+    <div className={`relative inline-block text-left ${className}`} ref={buttonRef}>
       <button
         className={`flex border-2 ${border} ${
           active
@@ -46,7 +46,7 @@ const RoundButton = ({ icon, onClick = () => {}, border, menu = [], isDropdown =
       {isDropdown && active && (
         <Dropdown
           menu={menu}
-          onSelect={() => setActive(false)} // đóng dropdown khi chọn
+          onSelect={() => setActive(false)} 
         />
       )}
     </div>

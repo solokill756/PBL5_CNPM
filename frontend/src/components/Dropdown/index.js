@@ -14,14 +14,14 @@ const Dropdown = ({ menu = [], onSelect }) => {
                 if (onSelect) onSelect(); // đóng dropdown
                 if (item.onClick) item.onClick(); // hành động riêng
               }}
-              className="flex items-center gap-5 px-5 py-3 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+              className="flex items-center gap-5 px-5 py-2.5 hover:bg-red-50 dark:hover:bg-gray-600 dark:hover:text-white"
             >
               {item.icon && (
                 <span className="text-gray-500 dark:text-gray-300 size-4">
                   {item.icon}
                 </span>
               )}
-              <span className="text-gray-600 font-medium text-[15px]">{item.label}</span>
+              <span className="text-gray-600 font-medium text-sm">{item.label}</span>
             </Link>
           </li>
         ))}
