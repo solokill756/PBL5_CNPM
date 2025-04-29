@@ -21,6 +21,7 @@ module.exports = {
         user_id: "2e05b974-f0d3-4bb2-9625-bb8bc9c0c5c7",
         joined_at: new Date("2025-04-03T10:00:00"),
         last_accessed: new Date("2025-04-09T10:00:00"),
+        reminder_status: false,
       },
       {
         id: "2",
@@ -28,6 +29,7 @@ module.exports = {
         user_id: "2",
         joined_at: new Date("2025-04-03T10:05:00"),
         last_accessed: new Date("2025-04-09T09:55:00"),
+        reminder_status: false,
       },
       {
         id: "3",
@@ -35,6 +37,7 @@ module.exports = {
         user_id: "3",
         joined_at: new Date("2025-04-03T10:10:00"),
         last_accessed: new Date("2025-04-09T09:50:00"),
+        reminder_status: false,
       },
       {
         id: "4",
@@ -42,6 +45,7 @@ module.exports = {
         user_id: "4",
         joined_at: new Date("2025-04-03T10:15:00"),
         last_accessed: new Date("2025-04-09T09:45:00"),
+        reminder_status: false,
       },
       {
         id: "5",
@@ -49,6 +53,7 @@ module.exports = {
         user_id: "5",
         joined_at: new Date("2025-04-03T10:20:00"),
         last_accessed: new Date("2025-04-09T09:40:00"),
+        reminder_status: false,
       },
       {
         id: "6",
@@ -56,6 +61,7 @@ module.exports = {
         user_id: "2e05b974-f0d3-4bb2-9625-bb8bc9c0c5c7",
         joined_at: new Date("2025-04-03T10:25:00"),
         last_accessed: new Date("2025-04-09T09:35:00"),
+        reminder_status: false,
       },
       {
         id: "7",
@@ -63,6 +69,7 @@ module.exports = {
         user_id: "2",
         joined_at: new Date("2025-04-03T10:30:00"),
         last_accessed: new Date("2025-04-09T09:30:00"),
+        reminder_status: false,
       },
       {
         id: "8",
@@ -70,6 +77,7 @@ module.exports = {
         user_id: "3",
         joined_at: new Date("2025-04-03T10:35:00"),
         last_accessed: new Date("2025-04-09T09:25:00"),
+        reminder_status: false,
       },
       {
         id: "9",
@@ -77,6 +85,7 @@ module.exports = {
         user_id: "4",
         joined_at: new Date("2025-04-03T10:40:00"),
         last_accessed: new Date("2025-04-09T09:20:00"),
+        reminder_status: false,
       },
       {
         id: "10",
@@ -84,6 +93,7 @@ module.exports = {
         user_id: "5",
         joined_at: new Date("2025-04-03T10:45:00"),
         last_accessed: new Date("2025-04-09T09:15:00"),
+        reminder_status: false,
       },
       {
         id: "11",
@@ -91,6 +101,7 @@ module.exports = {
         user_id: "2",
         joined_at: new Date("2025-04-03T10:55:00"),
         last_accessed: new Date("2025-04-09T09:05:00"),
+        reminder_status: false,
       },
       {
         id: "12",
@@ -98,6 +109,7 @@ module.exports = {
         user_id: "3",
         joined_at: new Date("2025-04-03T11:00:00"),
         last_accessed: new Date("2025-04-09T09:00:00"),
+        reminder_status: false,
       },
       {
         id: "13",
@@ -105,6 +117,7 @@ module.exports = {
         user_id: "4",
         joined_at: new Date("2025-04-03T11:05:00"),
         last_accessed: new Date("2025-04-09T08:55:00"),
+        reminder_status: false,
       },
       {
         id: "14",
@@ -112,6 +125,7 @@ module.exports = {
         user_id: "5",
         joined_at: new Date("2025-04-03T11:10:00"),
         last_accessed: new Date("2025-04-09T08:50:00"),
+        reminder_status: false,
       },
       {
         id: "15",
@@ -119,6 +133,7 @@ module.exports = {
         user_id: "2e05b974-f0d3-4bb2-9625-bb8bc9c0c5c7",
         joined_at: new Date("2025-04-03T11:15:00"),
         last_accessed: new Date("2025-04-09T08:45:00"),
+        reminder_status: false,
       },
       {
         id: "16",
@@ -126,6 +141,7 @@ module.exports = {
         user_id: "2",
         joined_at: new Date("2025-04-03T11:20:00"),
         last_accessed: new Date("2025-04-09T08:40:00"),
+        reminder_status: false,
       },
       {
         id: "17",
@@ -133,6 +149,7 @@ module.exports = {
         user_id: "3",
         joined_at: new Date("2025-04-03T11:25:00"),
         last_accessed: new Date("2025-04-09T08:35:00"),
+        reminder_status: false,
       },
       {
         id: "18",
@@ -140,6 +157,7 @@ module.exports = {
         user_id: "4",
         joined_at: new Date("2025-04-03T11:30:00"),
         last_accessed: new Date("2025-04-09T08:30:00"),
+        reminder_status: false,
       },
       {
         id: "19",
@@ -147,6 +165,7 @@ module.exports = {
         user_id: "5",
         joined_at: new Date("2025-04-03T11:35:00"),
         last_accessed: new Date("2025-04-09T08:25:00"),
+        reminder_status: false,
       },
     ]);
     /**

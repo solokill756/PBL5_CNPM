@@ -2,25 +2,26 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('class', {
-      class_id: {
+    await queryInterface.createTable('search_history', {
+      history_id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
         primaryKey: true,
       },
-      class_name: {
-        type: Sequelize.STRING(255),
+      user_id: {
+        type: Sequelize.UUID,
         allowNull: false,
+        references: {
+          model: 'user',
+          key: 'user_id'
+        },
+        onDelete: 'CASCADE'
       },
-      description: {
-        type: Sequelize.TEXT,
-        allowNull: true,
-      },
-      created_by: {
+      vocab_id: {
         type: Sequelize.UUID,
         allowNull: false,
       },
-      created_at: {
+      searched_at: {
         type: Sequelize.DATE,
         allowNull: false,
         defaultValue: Sequelize.NOW,
@@ -29,6 +30,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('class');
+    await queryInterface.dropTable('search_history');
   },
 };

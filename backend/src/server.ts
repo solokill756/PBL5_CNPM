@@ -7,7 +7,7 @@ import authRoutes from "./routes/authenticationRoute.js";
 import passport from "passport";
 import session from "express-session";
 import homePageRoutes from "./routes/homePageRoute.js";
-
+import profileRoutes from "./routes/profileRoute.js";
 import { responseFormatter } from "./middleware/responseFormatter.js";
 dotenv.config();
 
@@ -44,7 +44,7 @@ app.use(responseFormatter);
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/homePage", homePageRoutes);
-
+app.use("/api/profile", profileRoutes);
 app.listen(port, hostname, () => {
   console.log(`Example app listening on port ${hostname}/${port}`);
 });

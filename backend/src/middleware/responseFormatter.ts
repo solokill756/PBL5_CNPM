@@ -27,7 +27,7 @@ const sendError = (
 };
 
 // Middleware không cần thiết trong trường hợp này, nhưng có thể giữ để đồng bộ
-const responseFormatter = (req: Request, res: Response, next: NextFunction) => {
+const responseFormatter = (_req: Request, _res: Response, next: NextFunction) => {
     // Có thể thêm logic khác nếu cần
     next();
 };

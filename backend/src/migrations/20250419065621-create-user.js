@@ -39,10 +39,30 @@ module.exports = {
         allowNull: false,
         defaultValue: 0,
       },
+      
+      reminder_time: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
+      
     });
+    await queryInterface.addColumn('user', 'reminder_status', {
+      type: Sequelize.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    });
+   
+    await queryInterface.addIndex('user', ['reminder_time'], {
+      name: 'idx_reminder_time',
+    });
+
   },
+  
 
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('user');
+    await queryInterface.removeIndex('user', 'idx_reminder_time');
+    await queryInterface.removeColumn('user', 'reminder_status');
+   
   },
 };

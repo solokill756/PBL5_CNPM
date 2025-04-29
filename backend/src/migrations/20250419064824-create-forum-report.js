@@ -11,6 +11,11 @@ module.exports = {
       reported_by: {
         type: Sequelize.UUID,
         allowNull: false,
+        references: {
+          model: 'user',
+          key: 'user_id'
+        },
+        onDelete: 'CASCADE'
       },
       post_id: {
         type: Sequelize.UUID,

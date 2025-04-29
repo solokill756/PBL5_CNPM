@@ -20,6 +20,11 @@ module.exports = {
       user_id: {
         type: Sequelize.UUID,
         allowNull: false,
+        references: {
+          model: 'user',
+          key: 'user_id'
+        },
+        onDelete: 'CASCADE'
       },
       number_word_forget: {
         type: Sequelize.INTEGER,
@@ -30,6 +35,7 @@ module.exports = {
 
     await queryInterface.addIndex('flashcardStudy', ['list_id', 'user_id'], {
       unique: true,
+      name: 'flashcardStudy_list_id_user_id_unique',
     });
   },
 

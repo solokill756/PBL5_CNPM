@@ -2,8 +2,8 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('notification', {
-      notification_id: {
+    await queryInterface.createTable('forum_like', {
+      like_id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
         primaryKey: true,
@@ -11,15 +11,19 @@ module.exports = {
       user_id: {
         type: Sequelize.UUID,
         allowNull: false,
+        references: {
+          model: 'user',
+          key: 'user_id'
+        },
+        onDelete: 'CASCADE'
       },
-      message: {
-        type: Sequelize.TEXT,
-        allowNull: false,
+      post_id: {
+        type: Sequelize.UUID,
+        allowNull: true,
       },
-      is_read: {
-        type: Sequelize.BOOLEAN,
-        allowNull: false,
-        defaultValue: false,
+      comment_id: {
+        type: Sequelize.UUID,
+        allowNull: true,
       },
       created_at: {
         type: Sequelize.DATE,
@@ -30,6 +34,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('notification');
+    await queryInterface.dropTable('forum_like');
   },
 };

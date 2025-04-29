@@ -12,7 +12,7 @@ services:
       - db_data:/var/lib/mysql
       - ./my.cnf:/etc/mysql/conf.d/my.cnf
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "database-mysql"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "database-mysql" ]
       interval: 5s
       timeout: 10s
       retries: 10
@@ -46,6 +46,9 @@ services:
       - SESSION_SECRET=mySuperSecretKey123!
       - HOST_NAME=0.0.0.0
       - NODE_ENV=development
+      - CLOUDINARY_CLOUD_NAME=doycdzvf6
+      - CLOUDINARY_API_KEY=179171766789256
+      - CLOUDINARY_API_SECRET=HFmVtheG18WESIi_5cN-WhDGZyA
     ports:
       - "9000:9000"
 

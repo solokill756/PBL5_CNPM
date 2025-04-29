@@ -2,8 +2,8 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('search_history', {
-      history_id: {
+    await queryInterface.createTable('list_flashcard', {
+      list_id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
         primaryKey: true,
@@ -11,12 +11,21 @@ module.exports = {
       user_id: {
         type: Sequelize.UUID,
         allowNull: false,
+        references: {
+          model: 'user',
+          key: 'user_id'
+        },
+        onDelete: 'CASCADE'
       },
-      vocab_id: {
-        type: Sequelize.UUID,
+      title: {
+        type: Sequelize.STRING,
         allowNull: false,
       },
-      searched_at: {
+      description: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+      },
+      created_at: {
         type: Sequelize.DATE,
         allowNull: false,
         defaultValue: Sequelize.NOW,
@@ -25,6 +34,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('search_history');
+    await queryInterface.dropTable('list_flashcard');
   },
 };

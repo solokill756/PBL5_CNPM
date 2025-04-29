@@ -1,23 +1,20 @@
-'use strict';
-
+"use strict";
+/** @type {import('sequelize-cli').Migration} */
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('forum_like', {
-      like_id: {
+    await queryInterface.createTable("vocabulary_topic", {
+      topic_id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
         primaryKey: true,
       },
-      user_id: {
-        type: Sequelize.UUID,
+      name: {
+        type: Sequelize.STRING(100),
         allowNull: false,
+        unique: true,
       },
-      post_id: {
-        type: Sequelize.UUID,
-        allowNull: true,
-      },
-      comment_id: {
-        type: Sequelize.UUID,
+      description: {
+        type: Sequelize.TEXT,
         allowNull: true,
       },
       created_at: {
@@ -25,10 +22,15 @@ module.exports = {
         allowNull: false,
         defaultValue: Sequelize.NOW,
       },
+      image_url: {
+        type: Sequelize.STRING(255),
+        allowNull: true,
+      },
     });
+
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('forum_like');
+    await queryInterface.dropTable("vocabulary_topic");
   },
 };

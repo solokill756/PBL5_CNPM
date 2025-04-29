@@ -11,6 +11,11 @@ module.exports = {
       user_id: {
         type: Sequelize.UUID,
         allowNull: false,
+        references: {
+          model: 'user',
+          key: 'user_id'
+        },
+        onDelete: 'CASCADE'
       },
       email_send: {
         type: Sequelize.STRING(255),
@@ -35,6 +40,7 @@ module.exports = {
         defaultValue: Sequelize.NOW,
         allowNull: false,
       },
+   
     });
   },
 

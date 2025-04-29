@@ -2,8 +2,8 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('list_flashcard', {
-      list_id: {
+    await queryInterface.createTable('forum_post', {
+      post_id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
         primaryKey: true,
@@ -11,12 +11,21 @@ module.exports = {
       user_id: {
         type: Sequelize.UUID,
         allowNull: false,
+        references: {
+          model: 'user',
+          key: 'user_id'
+        },
+        onDelete: 'CASCADE'
       },
       title: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(255),
         allowNull: false,
       },
-      description: {
+      content: {
+        type: Sequelize.TEXT,
+        allowNull: false,
+      },
+      ai_generated_answer: {
         type: Sequelize.TEXT,
         allowNull: true,
       },
@@ -29,6 +38,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('list_flashcard');
+    await queryInterface.dropTable('forum_post');
   },
 };
