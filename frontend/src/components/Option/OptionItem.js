@@ -2,7 +2,6 @@ import { NavLink, useParams } from "react-router-dom";
 
 const tabs = [
   { label: "Học phần", to: "" }, 
-  { label: "Thư mục", to: "folders" },
   { label: "Lớp học", to: "classes" },
 ];
 

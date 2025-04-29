@@ -4,12 +4,19 @@ import OptionItem from '@/components/Option/OptionItem'
 import Option from '@/components/CardItems/Option'
 import SearchInput from '@/components/SearchInput'
 import Course from '@/components/Course/Course'
+import ListCourse from '@/components/Course/ListCourse'
 
 const Library = () => {
   const Options = [
     { value: "created", label: "Đã tạo" },
     { value: "recently", label: "Gần đây" },
     { value: "studied", label: "Đã học"}
+  ];
+  const time = [
+    {header: "Tuần này"},
+    {header: "Tuần trước"},
+    {header: "Tháng 3 năm 2025"},
+    {header: "Tháng 2 năm 2025"},
   ];
   return (
     <main className='flex flex-1 flex-grow-1 flex-col items-center'>
@@ -28,14 +35,14 @@ const Library = () => {
             </div>
         </div>
         <div className='mt-10'>
-            <Course
-              header = "tuan nay"
-              vocabulary={"70 tu vung"}
-              author={"le quyen"}
-              avatar={'https://i.pinimg.com/736x/82/f8/3c/82f83c07282e788a9f5c939da5d35938.jpg'}
-              lesson={"tu vung n2"}
-            />
-          </div>
+                  {time.map((item, index) => (
+                  <ListCourse
+                    key={index}
+                    header={item.header}
+                  />
+                ))}
+
+        </div>
         
     
     </div>
