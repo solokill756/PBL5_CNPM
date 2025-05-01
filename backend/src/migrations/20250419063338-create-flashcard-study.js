@@ -31,6 +31,11 @@ module.exports = {
         allowNull: false,
         defaultValue: 0,
       },
+      rate: {
+        type: Sequelize.FLOAT,
+        allowNull: false,
+        defaultValue: 0,
+      },
     });
 
     await queryInterface.addIndex('flashcardStudy', ['list_id', 'user_id'], {

@@ -6,6 +6,11 @@ interface UserClientData {
   datatime_joined: string,
   // user_id : string,
 }
+interface listFlashcardClientData {
+  tile: string,
+  description?: string,
+  created_at: string,
+}
 const filterUserData = (user: any): UserClientData => ({
   full_name: user.full_name,
   email: user.email,
@@ -15,4 +20,10 @@ const filterUserData = (user: any): UserClientData => ({
   // user_id : user.user_id,
 });
 
-export { filterUserData, UserClientData };
+const filterListFlashcardData = (flashcard: any): listFlashcardClientData => ({
+  tile: flashcard.tile,
+  description: flashcard.description,
+  created_at: flashcard.created_at,
+});
+
+export { filterUserData, UserClientData, filterListFlashcardData, listFlashcardClientData };

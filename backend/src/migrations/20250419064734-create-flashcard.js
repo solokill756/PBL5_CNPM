@@ -12,33 +12,30 @@ module.exports = {
         type: Sequelize.UUID,
         allowNull: false,
       },
-      vocab_id: {
-        type: Sequelize.UUID,
+      front_text: {
+        type: Sequelize.TEXT,
+        allowNull: false,
+      },
+      back_text: {
+        type: Sequelize.TEXT,
         allowNull: false,
       },
       custom_note: {
         type: Sequelize.TEXT,
         allowNull: true,
       },
-      review_count: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        defaultValue: 0,
-      },
-      last_review: {
-        type: Sequelize.DATE,
-        allowNull: false,
-        defaultValue: Sequelize.NOW,
-      },
-      ai_priority: {
-        type: Sequelize.BOOLEAN,
-        allowNull: false,
-        defaultValue: false,
-      },
+        
     });
-  },
+    await queryInterface.addIndex('flashcard', ['list_id']);
+    await queryInterface.addColumn('flashcard', 'ai_explanation', {
+      type: Sequelize.TEXT,
+      allowNull: true,
+    });
 
+  },
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('flashcard');
+    await queryInterface.removeColumn('flashcard', 'ai_explanation');
+    await queryInterface.removeIndex('flashcard', ['list_id']);
   },
 };

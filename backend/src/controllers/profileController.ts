@@ -1,5 +1,5 @@
 import { sendError, sendSuccess } from "../middleware/responseFormatter";
-import profileService from "../services/profileService";
+import profileService from "../services/profilePageService";
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import { saltRounds } from "../helpers/tokenHelper";

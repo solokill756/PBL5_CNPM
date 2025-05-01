@@ -57,6 +57,7 @@ const initializeModels = async () => {
   const { default: VocabularyTopic } = await import(
     "./VocabularyTopicModel.js"
   );
+  const { default: FlashcardUser } = await import("./FlashcardUserModel.js");
 
   // Khởi tạo các model
   db.vocabularyTopic = VocabularyTopic(sequelize);
@@ -79,6 +80,7 @@ const initializeModels = async () => {
   db.forumReport = ForumReportModel(sequelize);
   db.listFlashcard = ListFlashcard(sequelize);
   db.flashcardStudy = FlashcardStudy(sequelize);
+  db.flashcardUser = FlashcardUser(sequelize);
 
   // Xét quan hệ giữa các bảng
   db.user.belongsToMany(db.role, {
@@ -89,7 +91,10 @@ const initializeModels = async () => {
     through: db.userRole,
     foreignKey: "role_id",
   });
-
+  db.flashcard.hasMany(db.flashcardUser, { foreignKey: "flashcard_id", onDelete: 'CASCADE' });
+  db.flashcardUser.belongsTo(db.flashcard, { foreignKey: "flashcard_id" });
+  db.user.hasMany(db.flashcardUser, { foreignKey: "user_id", onDelete: 'CASCADE' });
+  db.flashcardUser.belongsTo(db.user, { foreignKey: "user_id" });
   db.user.hasMany(db.authentication, { foreignKey: "user_id", onDelete: 'CASCADE' });
   db.authentication.belongsTo(db.user, { foreignKey: "user_id" });
   db.user.hasMany(db.class, { foreignKey: "created_by", onDelete: 'CASCADE' });
@@ -104,8 +109,6 @@ const initializeModels = async () => {
   db.class.hasMany(db.lesson, { foreignKey: "class_id", onDelete: 'CASCADE' });
   db.lesson.belongsTo(db.class, { foreignKey: "class_id" });
 
-  db.vocabulary.hasMany(db.flashcard, { foreignKey: "vocab_id", onDelete: 'CASCADE' });
-  db.flashcard.belongsTo(db.vocabulary, { foreignKey: "vocab_id" });
 
   db.lesson.hasMany(db.quizz, { foreignKey: "lesson_id", onDelete: 'CASCADE' });
   db.quizz.belongsTo(db.lesson, { foreignKey: "lesson_id" });
