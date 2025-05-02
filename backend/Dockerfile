@@ -39,7 +39,6 @@ COPY --from=builder /elearning/backend/src/migrations ./src/migrations
 # Command khởi chạy ứng dụng
 CMD ["/bin/bash", "-c", "\
   /wait-for-it.sh database-mysql:3306 --timeout=60 --strict && \
-  npx sequelize-cli db:migrate --migrations-path src/migrations --debug && \
   npx sequelize-cli db:seed:all --seeders-path src/seeders --debug && \
   node dist/server.js"]
 

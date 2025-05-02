@@ -1,8 +1,8 @@
 export const fetchLogout = async (axiosPrivate) => {
   try {
     const response = await axiosPrivate.post("/api/auth/logout");
-    const { message } = response.data;
-    
+    const { message } = response.data.data;
+
     return { message, error: null };
   } catch (error) {
     return { message: null, error: error.response?.data?.error };
