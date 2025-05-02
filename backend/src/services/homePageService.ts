@@ -76,7 +76,7 @@ const getRecentFlashcardsService = async (userId: string): Promise<any> => {
           model: db.flashcard,
           as: "Flashcard",
           attributes: [],
-          required: false,
+          required: true,
         },
       ],
       attributes: {
