@@ -8,19 +8,16 @@ interface UserAttributes {
   profile_picture?: string;
   datetime_joined: Date;
   username: string;
-  tokenVersion: number;
+  reminder_time?: Date;
+  reminder_status?: boolean;
+  tokenVersion?: number;
 }
 
-interface UserCreationAttributes
-  extends Optional<
-    UserAttributes,
-    "user_id" | "profile_picture" | "datetime_joined"
-  > {}
+interface UserCreationAttributes extends Optional<UserAttributes, 'user_id' | 'profile_picture' | 'datetime_joined'> { }
 
 class User
   extends Model<UserAttributes, UserCreationAttributes>
-  implements UserAttributes
-{
+  implements UserAttributes {
   declare user_id: string;
   declare full_name: string;
   declare email: string;
@@ -28,7 +25,9 @@ class User
   declare profile_picture?: string;
   declare datetime_joined: Date;
   declare username: string;
-  declare tokenVersion: number;
+  declare reminder_time?: Date;
+  declare reminder_status?: boolean;
+  declare tokenVersion?: number;
 }
 
 export default (sequelize: Sequelize) => {
@@ -65,6 +64,15 @@ export default (sequelize: Sequelize) => {
         type: DataTypes.STRING(100),
         allowNull: false,
         unique: false,
+      },
+      reminder_time: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      reminder_status: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: false,
       },
       tokenVersion: {
         type: DataTypes.INTEGER,

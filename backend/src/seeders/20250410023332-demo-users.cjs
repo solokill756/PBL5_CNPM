@@ -13,14 +13,14 @@ module.exports = {
      * }], {});
      */
     const userCount = await queryInterface.sequelize.query(
-      "SELECT COUNT(*) as count FROM user",
+      "SELECT COUNT(*) as count FROM users",
       { type: queryInterface.sequelize.QueryTypes.SELECT }
     );
     if (userCount[0].count > 0) {
       console.log("Users table already seeded. Skipping...");
       return;
     }
-    await queryInterface.bulkInsert("user", [
+    await queryInterface.bulkInsert("users", [
       {
         user_id: "2",
         full_name: "Thanh Huyền",
@@ -29,8 +29,6 @@ module.exports = {
         profile_picture: null,
         datetime_joined: new Date("2025-04-01T08:00:00"),
         username: "thanh_huyen",
-        tokenVersion: 0,
-        reminder_status: false,
       },
       {
         user_id: "2e05b974-f0d3-4bb2-9625-bb8bc9c0c5c7",
@@ -41,8 +39,6 @@ module.exports = {
         profile_picture: null,
         datetime_joined: new Date("2025-04-06T15:53:07"),
         username: "cuthaoddd",
-        tokenVersion: 0,
-        reminder_status: false,
       },
       {
         user_id: "3",
@@ -52,8 +48,6 @@ module.exports = {
         profile_picture: null,
         datetime_joined: new Date("2025-04-01T08:05:00"),
         username: "minh_anh",
-        tokenVersion: 0,
-        reminder_status: false,
       },
       {
         user_id: "4",
@@ -63,8 +57,6 @@ module.exports = {
         profile_picture: null,
         datetime_joined: new Date("2025-04-01T08:10:00"),
         username: "quoc_bao",
-        tokenVersion: 0,
-        reminder_status: false,
       },
       {
         user_id: "5",
@@ -74,8 +66,6 @@ module.exports = {
         profile_picture: null,
         datetime_joined: new Date("2025-04-01T08:15:00"),
         username: "ngoc_linh",
-        tokenVersion: 0,
-        reminder_status: false,
       },
       {
         user_id: "6",
@@ -85,14 +75,12 @@ module.exports = {
         profile_picture: null,
         datetime_joined: new Date("2025-04-01T08:20:00"),
         username: "hoang_nam",
-        tokenVersion: 0,
-        reminder_status: false,
       },
     ]);
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.bulkDelete("user", null, {});
+    await queryInterface.bulkDelete("users", null, {});
     /**
      * Add commands to revert seed here.
      *
