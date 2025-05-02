@@ -45,7 +45,7 @@ passport.use(
           return done(null, {
             accessToken: generateAccessToken(userPayload),
             refreshToken: generateRefreshToken(userPayload),
-            user: filterUserData(newUser),
+            user: newUser,
           });
         } else {
           let userData = user.toJSON();
