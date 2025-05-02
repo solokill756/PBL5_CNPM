@@ -76,9 +76,9 @@ module.exports = {
       front_text: front,
       back_text: back,
       custom_note: note,
-      review_count: Math.floor(Math.random() * 5),
-      last_review: new Date(now.getTime() - idx * 86400000),
-      ai_priority: idx % 4 === 0
+      // review_count: Math.floor(Math.random() * 5),
+      // last_review: new Date(now.getTime() - idx * 86400000),
+      // ai_priority: idx % 4 === 0
     }));
 
     await queryInterface.bulkInsert("flashcard", flashcards, {});
