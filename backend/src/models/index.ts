@@ -6,12 +6,19 @@ dotenv.config();
 const sequelize = new Sequelize(database.DB, database.USER, database.PASSWORD, {
   port: database.port,
   host: database.HOST,
+  
   dialect: database.dialect as Dialect,
   pool: {
     max: database.pool.max,
     min: database.pool.min,
     acquire: database.pool.acquire,
     idle: database.pool.idle,
+  },
+  dialectOptions: {
+    ssl: {
+      require: true,            
+      
+    }
   },
 });
 
@@ -58,6 +65,8 @@ const initializeModels = async () => {
     "./VocabularyTopicModel.js"
   );
   const { default: FlashcardUser } = await import("./FlashcardUserModel.js");
+  const { default: ListFlashCardClass } = await import("./ListFlashCardClass.js");
+
 
   // Khởi tạo các model
   db.vocabularyTopic = VocabularyTopic(sequelize);
@@ -81,7 +90,7 @@ const initializeModels = async () => {
   db.listFlashcard = ListFlashcard(sequelize);
   db.flashcardStudy = FlashcardStudy(sequelize);
   db.flashcardUser = FlashcardUser(sequelize);
-
+  db.listFlashCardClass = ListFlashCardClass(sequelize);
   // Xét quan hệ giữa các bảng
   db.user.belongsToMany(db.role, {
     through: db.userRole,
@@ -183,10 +192,13 @@ const initializeModels = async () => {
     foreignKey: "topic_id",
     onDelete: 'CASCADE'
   });
-
+  db.listFlashcard.hasMany(db.listFlashCardClass, { foreignKey: "list_id", onDelete: 'CASCADE' });
+  db.listFlashCardClass.belongsTo(db.listFlashcard, { foreignKey: "list_id" });
+  db.class.hasMany(db.listFlashCardClass, { foreignKey: "class_id", onDelete: 'CASCADE' });
+  db.listFlashCardClass.belongsTo(db.class, { foreignKey: "class_id" });
   // Đồng bộ database
   db.sequelize
-    .sync({ force: false })
+    .sync({ force: false})
     .then(() => {
       console.log("Database synced successfully");
     })

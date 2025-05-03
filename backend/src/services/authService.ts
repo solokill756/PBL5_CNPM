@@ -47,7 +47,7 @@ const registerService = async (
       { transaction }
     );
     await transaction.commit();
-    return filterUserData(newUser);
+    return newUser;
   } catch (error) {
     transaction.rollback();
     throw error;

@@ -7,6 +7,7 @@ interface FlashcardStudyAttributes {
   number_word_forget: number;
   id: string;
   rate: number;
+  comment: string;
 }
 
 interface FlashcardStudyCreationAttributes
@@ -21,6 +22,7 @@ class FlashcardStudy
   declare list_id: string;
   declare number_word_forget: number;
   declare rate: number;
+  declare comment: string;
 }
 
 export default (sequelize: Sequelize) => {
@@ -54,11 +56,21 @@ export default (sequelize: Sequelize) => {
         allowNull: false,
         defaultValue: 0,
       },
+      comment: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
     },
     {
       sequelize,
       tableName: "flashcardStudy",
       timestamps: false,
+      indexes: [
+        {
+          unique: true,
+          fields: ["list_id", "user_id"]
+        }
+      ]
     }
   );
 

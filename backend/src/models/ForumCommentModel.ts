@@ -52,6 +52,12 @@ export default (sequelize: Sequelize) => {
       sequelize,
       tableName: "forum_comment",
       timestamps: false,
+      indexes: [
+        {
+          unique: true,
+          fields: ["comment_id"]
+        }
+      ]
     }
   );
 

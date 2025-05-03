@@ -1,13 +1,15 @@
 import db from "../models";
+import { sendLinkListFlashCard } from "../utils/sendLinkListFlashCard";
 
 
-const rateListFlashcard = async (list_id: string, rate: number, user_id: string) => {
+const rateListFlashcard = async (list_id: string, rate: number, user_id: string , comment: string) => {
     try {
         const currentRate = await db.listFlashcard.findOne({
             where: { list_id },
         });
         await db.flashcardStudy.update({
             rate: Number(rate),
+            comment: comment,
         }, {
             where: { list_id, user_id },
         });
@@ -104,18 +106,62 @@ const getFlashcardByListId = async (list_id: string, user_id: string) => {
 };
 
 const checkRateFlashcard = async (list_id: string, user_id: string) => {
-    const flashcard = await db.flashcardStudy.findOne({
-        where: { list_id, user_id },
-    });
-    if (flashcard.rate > 0) {
-        return true;
+    try {
+        const flashcard = await db.flashcardStudy.findOne({
+            where: { list_id, user_id },
+        });
+        if (flashcard.rate > 0) {
+            return true;
+        }
+        return false;
+    } catch (error) {
+        throw new Error("Error checking rate flashcard");
     }
-    return false;
 };
 
+const addListFlashcardToClass = async (list_id : string , classes : string[]) => {
+  try {
+      await db.listFlashCardClass.destroy({where: {list_id}});
+      for (const class_id of classes) {   
+          await db.listFlashCardClass.create({list_id, class_id});
+      }
+      return true;
+  } catch (error) {
+      throw new Error("Error adding list flashcard to class");
+  }
+};
 
+const shareLinkListFlashcardToUser = async (list_id : string , email : string) => {
 
-export { rateListFlashcard, likeFlashcard, unlikeFlashcard, updateReviewCount, updateLastReview, getFlashcardByListId, checkRateFlashcard };
+    try {
+        const listFlashcard = await db.listFlashcard.findOne({where: {list_id}});
+        const link = `http://localhost:9000/flashcard/addUserToList/${list_id}`;
+        await sendLinkListFlashCard(email, link, listFlashcard.name);
+        return true;
+    } catch (error) {
+        throw new Error("Error sharing link list flashcard to user");
+    }
+};
+
+const addUserToListFlashcard = async (list_id : string , user_id : string) => {
+   try {
+     await db.flashcardStudy.create({list_id, user_id});
+     return true;
+   } catch (error) {
+        throw new Error("Error adding user to list flashcard");
+   }
+};
+
+const getClassOfUser = async (user_id : string) => {
+    try {
+        const classes = await db.class.findAll({where: {created_by: user_id}});
+        return classes;
+    } catch (error) {
+        throw new Error("Error getting class of user");
+    }
+};
+
+export { rateListFlashcard, likeFlashcard, unlikeFlashcard, updateReviewCount, updateLastReview, getFlashcardByListId, checkRateFlashcard, addListFlashcardToClass, shareLinkListFlashcardToUser, addUserToListFlashcard, getClassOfUser };
 
 
 

@@ -67,6 +67,12 @@ export default (sequelize: Sequelize) => {
       sequelize,
       tableName: "lesson",
       timestamps: false,
+      indexes: [
+        {
+          unique: true,
+          fields: ["lesson_id"]
+        }
+      ]
     }
   );
 

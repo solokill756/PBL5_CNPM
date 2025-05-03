@@ -55,7 +55,14 @@ export default (sequelize: Sequelize) => {
       sequelize,
       tableName: "notification",
       timestamps: false,
+      indexes: [
+        {
+          unique: true,
+          fields: ["notification_id"]
+        }
+      ]
     }
+
   );
 
   return Notification;

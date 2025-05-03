@@ -57,6 +57,12 @@ export default (sequelize: Sequelize) => {
       sequelize,
       tableName: "forum_like",
       timestamps: false,
+      indexes: [
+        {
+          unique: true,
+          fields: ["like_id"]
+        }
+      ]
     }
   );
 

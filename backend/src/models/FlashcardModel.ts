@@ -63,6 +63,12 @@ export default (sequelize: Sequelize) => {
       sequelize,
       tableName: "flashcard",
       timestamps: false,
+      indexes: [
+        {
+          unique: true,
+          fields: ["flashcard_id"]
+        }
+      ]
     }
   );
 

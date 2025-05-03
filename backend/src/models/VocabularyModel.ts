@@ -88,6 +88,12 @@ export default (sequelize: Sequelize) => {
       sequelize,
       tableName: "vocabulary",
       timestamps: false,
+      indexes: [
+        {
+          unique: true,
+          fields: ["vocab_id"]
+        }
+      ]
     }
   );
 

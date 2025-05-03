@@ -60,6 +60,12 @@ export default (sequelize: Sequelize) => {
       sequelize,
       tableName: "forum_post",
       timestamps: false,
+      indexes: [
+        {
+          unique: true,
+          fields: ["post_id"]
+        }
+      ]
     }
   );
   return ForumPost;

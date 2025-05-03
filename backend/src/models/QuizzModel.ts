@@ -83,6 +83,12 @@ export default (sequelize: Sequelize) => {
       sequelize,
       tableName: "quizz",
       timestamps: false,
+      indexes: [
+        {
+          unique: true,
+          fields: ["quiz_id"]
+        }
+      ]
     }
   );
 

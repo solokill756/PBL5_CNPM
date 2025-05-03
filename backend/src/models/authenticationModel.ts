@@ -52,6 +52,7 @@ export default (sequelize: Sequelize) => {
       sequelize,
       tableName: 'authentication',
       timestamps: false,
+      
     }
   );
 

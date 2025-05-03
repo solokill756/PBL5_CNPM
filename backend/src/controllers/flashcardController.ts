@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { sendError, sendSuccess } from '../middleware/responseFormatter';
-import { getFlashcardByListId, likeFlashcard, rateListFlashcard, unlikeFlashcard, updateLastReview, updateReviewCount, checkRateFlashcard } from '../services/flashcardPageService';
+import { getFlashcardByListId, likeFlashcard, rateListFlashcard, unlikeFlashcard, updateLastReview, updateReviewCount, checkRateFlashcard, addListFlashcardToClass, shareLinkListFlashcardToUser, addUserToListFlashcard, getClassOfUser } from '../services/flashcardPageService';
 const getFlashcardByListIdController = async (req: Request, res: Response) => {
     const userId = (req as any).user.user_id;
     if (!userId) {
@@ -16,14 +16,14 @@ const getFlashcardByListIdController = async (req: Request, res: Response) => {
     }
 };
 const rateListFlashcardController = async (req: Request, res: Response) => {
-    const { list_id, rate } = req.body;
+    const { list_id, rate, comment } = req.body;
     const userId = (req as any).user.user_id;
     if (!userId) {
         sendError(res, "Unauthorized", 401);
         return;
     }
     try {
-        const flashcards = await rateListFlashcard(list_id, rate, userId);
+        const flashcards = await rateListFlashcard(list_id, rate, userId , comment);
         sendSuccess(res, flashcards);
     } catch (error: any) {
         sendError(res, error.message, 500);
@@ -101,4 +101,48 @@ const checkRateFlashcardController = async (req: Request, res: Response) => {
         sendError(res, error.message, 500);
     }
 };
-export { rateListFlashcardController, likeFlashcardController, unlikeFlashcardController, updateReviewCountController, updateLastReviewController, getFlashcardByListIdController, checkRateFlashcardController };
+const addListFlashcardToClassController = async (req: Request, res: Response) => {
+    const { list_id, classes } = req.body;
+    try {
+        const flashcards = await addListFlashcardToClass(list_id, classes);
+        sendSuccess(res, flashcards);
+    } catch (error: any) {
+        sendError(res, error.message, 500);
+    }
+};
+const shareLinkListFlashcardToUserController = async (req: Request, res: Response) => {
+    const { list_id, email } = req.body;
+    try {
+        const flashcards = await shareLinkListFlashcardToUser(list_id, email);
+        sendSuccess(res, flashcards);
+    } catch (error: any) {
+        sendError(res, error.message, 500);
+    }
+};
+const addUserToListFlashcardController = async (req: Request, res: Response) => {
+    const { list_id, user_id } = req.body;
+    try {
+        const flashcards = await addUserToListFlashcard(list_id, user_id);
+        sendSuccess(res, flashcards);
+    } catch (error: any) {
+        sendError(res, error.message, 500);
+    }
+};
+const getClassOfUserController = async (req: Request, res: Response) => {
+    const userId = (req as any).user.user_id;
+    if (!userId) {
+        sendError(res, "Unauthorized", 401);
+        return;
+    }
+    try {
+        const classes = await getClassOfUser(userId);
+        sendSuccess(res, classes);
+    } catch (error: any) {
+        sendError(res, error.message, 500);
+    }
+};
+ 
+
+
+
+export { rateListFlashcardController, likeFlashcardController, unlikeFlashcardController, updateReviewCountController, updateLastReviewController, getFlashcardByListIdController, checkRateFlashcardController, addListFlashcardToClassController, shareLinkListFlashcardToUserController, addUserToListFlashcardController, getClassOfUserController };

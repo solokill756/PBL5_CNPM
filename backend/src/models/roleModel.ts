@@ -23,6 +23,12 @@ export default (sequelize: Sequelize) => {
       sequelize,
       tableName: "role",
       timestamps: false,
+      indexes: [
+        {
+          unique: true,
+          fields: ["role_id"]
+        }
+      ]
     }
   );
 
