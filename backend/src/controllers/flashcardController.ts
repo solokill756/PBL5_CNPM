@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { sendError, sendSuccess } from '../middleware/responseFormatter';
-import { getFlashcardByListId, likeFlashcard, rateListFlashcard, unlikeFlashcard, updateLastReview, updateReviewCount, checkRateFlashcard, addListFlashcardToClass, shareLinkListFlashcardToUser, addUserToListFlashcard, getClassOfUser } from '../services/flashcardPageService';
+import { getFlashcardByListId, likeFlashcard, rateListFlashcard, unlikeFlashcard, updateLastReview, updateReviewCount, checkRateFlashcard, addListFlashcardToClass, shareLinkListFlashcardToUser, getClassOfUser } from '../services/flashcardPageService';
 const getFlashcardByListIdController = async (req: Request, res: Response) => {
     const userId = (req as any).user.user_id;
     if (!userId) {
@@ -119,15 +119,6 @@ const shareLinkListFlashcardToUserController = async (req: Request, res: Respons
         sendError(res, error.message, 500);
     }
 };
-const addUserToListFlashcardController = async (req: Request, res: Response) => {
-    const { list_id, user_id } = req.body;
-    try {
-        const flashcards = await addUserToListFlashcard(list_id, user_id);
-        sendSuccess(res, flashcards);
-    } catch (error: any) {
-        sendError(res, error.message, 500);
-    }
-};
 const getClassOfUserController = async (req: Request, res: Response) => {
     const userId = (req as any).user.user_id;
     if (!userId) {
@@ -145,4 +136,4 @@ const getClassOfUserController = async (req: Request, res: Response) => {
 
 
 
-export { rateListFlashcardController, likeFlashcardController, unlikeFlashcardController, updateReviewCountController, updateLastReviewController, getFlashcardByListIdController, checkRateFlashcardController, addListFlashcardToClassController, shareLinkListFlashcardToUserController, addUserToListFlashcardController, getClassOfUserController };
+export { rateListFlashcardController, likeFlashcardController, unlikeFlashcardController, updateReviewCountController, updateLastReviewController, getFlashcardByListIdController, checkRateFlashcardController, addListFlashcardToClassController, shareLinkListFlashcardToUserController, getClassOfUserController };

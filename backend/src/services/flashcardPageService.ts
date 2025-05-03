@@ -80,6 +80,21 @@ const updateLastReview = async (flashcard_id: string, user_id: string) => {
 
 const getFlashcardByListId = async (list_id: string, user_id: string) => {
     try {
+        const flashcardStudy = await db.flashcardStudy.findOne({where: {list_id, user_id}});
+        if(flashcardStudy){
+            await db.flashcardStudy.update({
+                review_count: flashcardStudy.review_count + 1,
+                last_review: new Date(),
+            }, {where: {list_id, user_id}});
+        }
+        else{
+            await db.flashcardStudy.create({
+                list_id,
+                user_id,
+                review_count: 1,
+                last_review: new Date(),
+            });
+        }
         const flashcards = await db.flashcard.findAll({
             where: { list_id },
             attributes: ["flashcard_id", "front_text", "back_text", "custom_note", "ai_explanation"],
@@ -98,7 +113,7 @@ const getFlashcardByListId = async (list_id: string, user_id: string) => {
         }
 
         );
-
+        
         return flashcards;
     } catch (error) {
         throw new Error("Error fetching flashcards");
@@ -143,14 +158,6 @@ const shareLinkListFlashcardToUser = async (list_id : string , email : string) =
     }
 };
 
-const addUserToListFlashcard = async (list_id : string , user_id : string) => {
-   try {
-     await db.flashcardStudy.create({list_id, user_id});
-     return true;
-   } catch (error) {
-        throw new Error("Error adding user to list flashcard");
-   }
-};
 
 const getClassOfUser = async (user_id : string) => {
     try {
@@ -161,7 +168,7 @@ const getClassOfUser = async (user_id : string) => {
     }
 };
 
-export { rateListFlashcard, likeFlashcard, unlikeFlashcard, updateReviewCount, updateLastReview, getFlashcardByListId, checkRateFlashcard, addListFlashcardToClass, shareLinkListFlashcardToUser, addUserToListFlashcard, getClassOfUser };
+export { rateListFlashcard, likeFlashcard, unlikeFlashcard, updateReviewCount, updateLastReview, getFlashcardByListId, checkRateFlashcard, addListFlashcardToClass, shareLinkListFlashcardToUser, getClassOfUser };
 
 
 
