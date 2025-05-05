@@ -12,7 +12,7 @@ flashCardRoutes.delete("/unlikeFlashcard", unlikeFlashcardController);
 flashCardRoutes.post("/rateListFlashcard", rateListFlashcardController);
 flashCardRoutes.post("/updateReviewCount", updateReviewCountController);
 flashCardRoutes.post("/updateLastReview", updateLastReviewController);
-flashCardRoutes.get("/checkRateFlashcard", checkRateFlashcardController);
+flashCardRoutes.get("/checkRateFlashcard/:list_id", checkRateFlashcardController);
 flashCardRoutes.post("/addListFlashcardToClass", addListFlashcardToClassController);
 flashCardRoutes.post("/shareLinkListFlashcardToUser", shareLinkListFlashcardToUserController);
 flashCardRoutes.get("/getClassOfUser", getClassOfUserController);

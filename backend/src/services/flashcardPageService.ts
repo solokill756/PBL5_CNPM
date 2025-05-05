@@ -104,6 +104,7 @@ const getFlashcardByListId = async (list_id: string, user_id: string) => {
                     model: db.flashcardUser,
                     attributes: ["like_status"],
                     where: { user_id: user_id },
+                    required : false,
                 },
             ],
             order: [
@@ -120,7 +121,7 @@ const getFlashcardByListId = async (list_id: string, user_id: string) => {
     }
 };
 
-const checkRateFlashcard = async (list_id: string, user_id: string) => {
+const checkRateFlashcard = async (list_id: string, user_id: string)  => {
     try {
         const flashcard = await db.flashcardStudy.findOne({
             where: { list_id, user_id },
@@ -150,7 +151,7 @@ const shareLinkListFlashcardToUser = async (list_id : string , email : string) =
 
     try {
         const listFlashcard = await db.listFlashcard.findOne({where: {list_id}});
-        const link = `http://localhost:9000/flashcard/addUserToList/${list_id}`;
+        const link = `http://3000/flashcard/id`;
         await sendLinkListFlashCard(email, link, listFlashcard.name);
         return true;
     } catch (error) {

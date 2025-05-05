@@ -93,7 +93,7 @@ const checkRateFlashcardController = async (req: Request, res: Response) => {
         sendError(res, "Unauthorized", 401);
         return;
     }
-    const { list_id } = req.body;
+    const {list_id} = req.params;
     try {
         const flashcards = await checkRateFlashcard(list_id, userId);
         sendSuccess(res, flashcards);
