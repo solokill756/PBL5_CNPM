@@ -1,10 +1,12 @@
 import { axiosPrivate } from "@/api/axios";
 import AuthContext from "@/context/AuthProvider";
+import { useAuthStore } from "@/store/useAuthStore";
 import React, { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const AuthSuccess = () => {
-  const { login } = useContext(AuthContext);
+  const login  = useAuthStore(state => state.login);
+  const setTokens  = useAuthStore(state => state.setTokens);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,16 +16,14 @@ const AuthSuccess = () => {
           "http://localhost:9000/api/auth/user"
         );
         const { accessToken, refreshToken, user } = res.data.user;
-        console.log("====================================");
-        console.log("Login xong: " + accessToken, refreshToken, user);
-        console.log("====================================");
 
         if (!accessToken || !refreshToken) {
           console.log("Khong nhan duoc token");
           return;
         }
 
-        login(accessToken, refreshToken, user);
+        login({accessToken, refreshToken, user});
+        setTokens({accessToken, refreshToken});
         navigate("/");
       } catch (error) {
         console.error("Not authenticated");
