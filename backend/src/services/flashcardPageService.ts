@@ -121,13 +121,13 @@ const getFlashcardByListId = async (list_id: string, user_id: string) => {
     }
 };
 
-const checkRateFlashcard = async (list_id: string, user_id: string)  => {
+const checkRateFlashcard = async (list_id: string, user_id: string) : Promise<number | boolean> => {
     try {
         const flashcard = await db.flashcardStudy.findOne({
             where: { list_id, user_id },
         });
         if (flashcard.rate > 0) {
-            return true;
+            return flashcard.rate;
         }
         return false;
     } catch (error) {
