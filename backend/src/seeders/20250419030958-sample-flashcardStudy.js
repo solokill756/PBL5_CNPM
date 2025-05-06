@@ -19,7 +19,7 @@ module.exports = {
         list_id: "1a2b3c4d-0000-0000-0000-000000000001",
         last_accessed: now,
         number_word_forget: 3,
-        rate: 4.5,
+        rate: 0,
       },
       {
         user_id: "2e05b974-f0d3-4bb2-9625-bb8bc9c0c5c7",
@@ -27,7 +27,7 @@ module.exports = {
         list_id: "1a2b3c4d-0000-0000-0000-000000000002",
         last_accessed: new Date(now.getTime() - 86400000), // 1 day ago
         number_word_forget: 5,
-        rate: 4.5,
+        rate: 0,
       },
       {
         user_id: "4",
@@ -35,7 +35,7 @@ module.exports = {
         list_id: "1a2b3c4d-0000-0000-0000-000000000001",
         last_accessed: new Date(now.getTime() - 3 * 86400000), // 3 days ago
         number_word_forget: 2,
-        rate: 4.5,
+        rate: 0,
       },
     ]);
   },

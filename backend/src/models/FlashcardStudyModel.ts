@@ -49,7 +49,7 @@ export default (sequelize: Sequelize) => {
       number_word_forget: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: DataTypes.INTEGER,
+        defaultValue: 0,
       },
       rate: {
         type: DataTypes.FLOAT,

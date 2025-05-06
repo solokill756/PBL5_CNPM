@@ -13,21 +13,17 @@ const rateListFlashcard = async (list_id: string, rate: number, user_id: string 
         }, {
             where: { list_id, user_id },
         });
-        const allRates = await db.flashcardStudy.findAll({
-            where: {
-                list_id,
-                rate: { [db.Sequelize.Op.gt]: 0 },
-            },
-            attributes: ['rate'],
-        });
-        const sumOfPeopleRate = allRates.reduce((sum: number, rate: any) => sum + rate.rate, 0);
-        const newRate = (currentRate.rate + sumOfPeopleRate) / (allRates.length + 1);
+        const allRates = Number(currentRate.number_rate);
+
+       
+        const newRate = (currentRate.rate + rate) / (allRates + 1);
         await db.listFlashcard.update({
             rate: newRate,
+            number_rate: allRates + 1,
         }, {
             where: { list_id },
         });
-        return { rate: newRate };
+        return { rate: newRate, numberRate: allRates + 1 };
     } catch (error) {
         throw new Error("Error rating list flashcard");
     }
@@ -121,18 +117,16 @@ const getFlashcardByListId = async (list_id: string, user_id: string) => {
     }
 };
 
-const checkRateFlashcard = async (list_id: string, user_id: string) : Promise<{rate: number, numberRate: number} | boolean> => {
+const checkRateFlashcard = async (list_id: string, user_id: string) : Promise<{rate: number} | boolean> => {
     try {
         const flashcard = await db.flashcardStudy.findOne({
             where: { list_id, user_id },
         });
-        const numberRate = await db.flashcardStudy.count({
-            where: { list_id, rate: { [db.Sequelize.Op.gt]: 0 } },
-        });
-        if (flashcard.rate > 0) {
-            return {
-                rate: flashcard.rate,
-                numberRate: numberRate,
+        if(flashcard){
+            if (flashcard.rate > 0) {
+                return {
+                    rate: flashcard.rate,
+                }
             }
         }
         return false;

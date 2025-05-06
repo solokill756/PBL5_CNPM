@@ -7,11 +7,12 @@ interface ListFlashcardAttributes {
   description?: string;
   created_at: Date;
   rate: number;
+  number_rate: number;
 }
 
 interface ListFlashcardCreationAttributes
   extends Partial<
-    Pick<ListFlashcardAttributes, "list_id" | "description" | "created_at">
+    Pick<ListFlashcardAttributes, "list_id" | "description" | "created_at" | "rate" | "number_rate">
   > { }
 
 class ListFlashcard
@@ -23,6 +24,7 @@ class ListFlashcard
   declare description?: string;
   declare created_at: Date;
   declare rate: number;
+  declare number_rate: number;
 }
 
 export default (sequelize: Sequelize) => {
@@ -52,6 +54,11 @@ export default (sequelize: Sequelize) => {
       },
       rate: {
         type: DataTypes.FLOAT,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      number_rate: {
+        type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 0,
       },
