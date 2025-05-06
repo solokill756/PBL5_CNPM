@@ -49,7 +49,7 @@ const unlikeFlashcardController = async (req: Request, res: Response) => {
         sendError(res, "Unauthorized", 401);
         return;
     }
-    const { flashcard_id } = req.body;
+    const { flashcard_id } = req.params;
     try {
         const flashcards = await unlikeFlashcard(flashcard_id, userId);
         sendSuccess(res, flashcards);

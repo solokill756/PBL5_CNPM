@@ -8,7 +8,7 @@ flashCardRoutes.all("*", (req: Request, res: Response, next: NextFunction) => {
 });
 flashCardRoutes.get("/getFlashcardByListId/:list_id", getFlashcardByListIdController);
 flashCardRoutes.post("/likeFlashcard", likeFlashcardController);
-flashCardRoutes.delete("/unlikeFlashcard", unlikeFlashcardController);
+flashCardRoutes.delete("/unlikeFlashcard/:flashcard_id", unlikeFlashcardController);
 flashCardRoutes.post("/rateListFlashcard", rateListFlashcardController);
 flashCardRoutes.post("/updateReviewCount", updateReviewCountController);
 flashCardRoutes.post("/updateLastReview", updateLastReviewController);
