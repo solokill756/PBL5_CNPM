@@ -13,11 +13,14 @@ import Forum from "@/pages/Forum";
 import Quiz from "@/pages/Quiz";
 import AuthSuccess from "@/components/AuthSuccess";
 import FlashCard from "@/pages/Flashcard";
+import { useAuthStore } from "@/store/useAuthStore";
 
 // Component bảo vệ route yêu cầu xác thực
 function PrivateRoute({ children }) {
-  const { auth } = useAuth();
-  return auth?.accessToken ? (
+  // const { auth } = useAuth();
+  const accessToken = useAuthStore(state => state.accessToken);
+
+  return accessToken ? (
     children
   ) : (
     <Navigate to="/accounts/login" replace />
@@ -26,8 +29,8 @@ function PrivateRoute({ children }) {
 
 // Component bảo vệ route dành cho khách
 function GuestRoute({ children }) {
-  const { auth } = useAuth();
-  return !auth?.accessToken ? children : <Navigate to="/" replace />;
+  const accessToken = useAuthStore(state => state.accessToken);
+  return !accessToken ? children : <Navigate to="/" replace />;
 }
 
 const router = createBrowserRouter([

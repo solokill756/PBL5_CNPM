@@ -6,11 +6,11 @@ const AvatarLeft = ({
   avatar,
   avatarSize = "",
   textSize = "text-sm",
-  height,
+  height = "",
 }) => {
   return (
-    <div className={`flex p-2 justify-center items-center gap-3 ${height}`}>
-      <div className={`w-auto ${avatarSize}`}>
+    <div className={`flex w-full p-2 justify-center items-center gap-3 ${height}`}>
+      <div className={`${avatarSize}`}>
         <img className="rounded-full" alt="avatar" src={avatar} />
       </div>
       <div className={`flex-1 flex flex-col ${textSize}`}>
