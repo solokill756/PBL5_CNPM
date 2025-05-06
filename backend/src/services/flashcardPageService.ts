@@ -121,13 +121,19 @@ const getFlashcardByListId = async (list_id: string, user_id: string) => {
     }
 };
 
-const checkRateFlashcard = async (list_id: string, user_id: string) : Promise<number | boolean> => {
+const checkRateFlashcard = async (list_id: string, user_id: string) : Promise<{rate: number, numberRate: number} | boolean> => {
     try {
         const flashcard = await db.flashcardStudy.findOne({
             where: { list_id, user_id },
         });
+        const numberRate = await db.flashcardStudy.count({
+            where: { list_id, rate: { [db.Sequelize.Op.gt]: 0 } },
+        });
         if (flashcard.rate > 0) {
-            return flashcard.rate;
+            return {
+                rate: flashcard.rate,
+                numberRate: numberRate,
+            }
         }
         return false;
     } catch (error) {
@@ -151,7 +157,7 @@ const shareLinkListFlashcardToUser = async (list_id : string , email : string) =
 
     try {
         const listFlashcard = await db.listFlashcard.findOne({where: {list_id}});
-        const link = `http://3000/flashcard/id`;
+        const link = `http://3000/flashcard/${list_id}`;
         await sendLinkListFlashCard(email, link, listFlashcard.name);
         return true;
     } catch (error) {
@@ -162,7 +168,20 @@ const shareLinkListFlashcardToUser = async (list_id : string , email : string) =
 
 const getClassOfUser = async (user_id : string) => {
     try {
-        const classes = await db.class.findAll({where: {created_by: user_id}});
+        
+        const classes = await db.class.findAll(
+            {
+                where: {created_by: user_id},
+                include: [
+                    {
+                        model: db.listFlashCardClass,
+                        attributes: ["list_id"],
+                        required: false,
+                    }
+                ],
+             
+            }
+        );
         return classes;
     } catch (error) {
         throw new Error("Error getting class of user");
