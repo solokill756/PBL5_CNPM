@@ -7,6 +7,7 @@ const SearchInput = ({
   className = "",
   editable = true,
   value,
+  onChange,
 }) => {
   return (
     <form className={`form relative w-5/6 ${className}`}>
@@ -34,6 +35,7 @@ const SearchInput = ({
       <input
         readOnly={!editable}
         value={value}
+        onChange={onChange}
         className={`input selection:bg-red-100 rounded-md bg-zinc-100 font-semibold text-gray-600 w-full ${
           searchIcon ? "px-8" : "px-4"
         } py-2 border-2 border-transparent focus:outline-none focus:border-blue-500 placeholder-gray-400 transition-all duration-300 overflow-hidden whitespace-nowrap text-ellipsis`}

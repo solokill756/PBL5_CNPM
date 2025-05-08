@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { axiosPrivate } from "../api/axios";
 import useRefreshToken from "./useRefreshToken";
-import useAuth from "./useAuth";
+import { useAuthStore } from "@/store/useAuthStore";
 
 let isRefreshing = false;
 let failedQueue = [];
@@ -17,14 +17,14 @@ const processQueue = (error, token = null) => {
 
 const useAxiosPrivate = () => {
   const refresh = useRefreshToken();
-  const { auth } = useAuth();
+  const accessToken = useAuthStore(state => state.accessToken);
 
   useEffect(() => {
     // intercept request để gắn token
     const reqInterceptor = axiosPrivate.interceptors.request.use(
       (config) => {
         if (!config.headers["Authorization"]) {
-          config.headers["Authorization"] = `Bearer ${auth?.accessToken}`;
+          config.headers["Authorization"] = `Bearer ${accessToken}`;
         }
         return config;
       },
@@ -82,7 +82,7 @@ const useAxiosPrivate = () => {
       axiosPrivate.interceptors.request.eject(reqInterceptor);
       axiosPrivate.interceptors.response.eject(resInterceptor);
     };
-  }, [auth?.accessToken, refresh]);
+  }, [accessToken, refresh]);
 
   return axiosPrivate;
 };

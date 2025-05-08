@@ -1,28 +1,26 @@
 import { useCallback } from "react";
 import { axiosPrivate } from "../api/axios";
 import useAuth from "./useAuth";
+import { useAuthStore } from "@/store/useAuthStore";
 
 const useRefreshToken = () => {
-  const { auth, setAuth } = useAuth();
+  const refreshToken = useAuthStore(state => state.refreshToken);
+  const setTokens   = useAuthStore(state => state.setTokens);
 
   const refresh = useCallback(async () => {
     try {
       const { data } = await axiosPrivate.get("/api/auth/generateNewToken", {
-        headers: { "x-refresh-token": auth?.refreshToken },
+        headers: { "x-refresh-token": refreshToken },
       });
       const newAccessToken = data.newAccessToken;
 
-      setAuth((prev) => ({
-        ...prev,
-        accessToken: newAccessToken,
-      }));
-
+      setTokens({ accessToken: newAccessToken, refreshToken });
       return newAccessToken;
     } catch (err) {
       console.error("Refresh token failed:", err);
       throw err;
     }
-  }, [auth?.refreshToken, setAuth]);
+  }, [refreshToken, setTokens]);
 
   return refresh;
 };

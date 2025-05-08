@@ -1,107 +1,214 @@
 import { create } from "zustand";
 import { shuffleArray } from "../utils/array";
 import { persist } from "zustand/middleware";
+import { fetchFlashcardList } from "@/api/getFlashcardList";
+import { fetchIsRated } from "@/api/getIsRated";
+import { starOnFlashcard } from "@/api/starOnFlashcard";
+import { unStarOnFlashcard } from "@/api/unStarOnFlashcard";
 
-const rawCards = [
-  { id: 1, front: "勉強", back: "Học tập" },
-  { id: 2, front: "学校", back: "Trường học" },
-  { id: 3, front: "先生", back: "Giáo viên" },
-  { id: 4, front: "学生", back: "Học sinh" },
-  { id: 5, front: "図書館", back: "Thư viện" },
-  { id: 6, front: "病院", back: "Bệnh viện" },
-  { id: 7, front: "映画", back: "Phim" },
-  { id: 8, front: "天気", back: "Thời tiết" },
-  { id: 9, front: "雨", back: "Mưa" },
-  { id: 10, front: "晴れ", back: "Trời nắng" },
-  { id: 11, front: "風", back: "Gió" },
-  { id: 12, front: "時間", back: "Thời gian" },
-  { id: 13, front: "今日", back: "Hôm nay" },
-  { id: 14, front: "明日", back: "Ngày mai" },
-  { id: 15, front: "昨日", back: "Hôm qua" },
-  { id: 16, front: "食べる", back: "Ăn" },
-  { id: 17, front: "飲む", back: "Uống" },
-  { id: 18, front: "行く", back: "Đi" },
-  { id: 19, front: "来る", back: "Đến" },
-  { id: 20, front: "見る", back: "Xem" },
-  { id: 21, front: "聞く", back: "Nghe" },
-  { id: 22, front: "書く", back: "Viết" },
-  { id: 23, front: "読む", back: "Đọc" },
-  { id: 24, front: "話す", back: "Nói chuyện" },
-  { id: 25, front: "友達", back: "Bạn bè" },
-  { id: 26, front: "家族", back: "Gia đình" },
-  { id: 27, front: "父", back: "Bố" },
-  { id: 28, front: "母", back: "Mẹ" },
-  { id: 29, front: "兄", back: "Anh trai" },
-  { id: 30, front: "姉", back: "Chị gái" },
-  { id: 31, front: "弟", back: "Em trai" },
-  { id: 32, front: "妹", back: "Em gái" },
-  { id: 33, front: "猫", back: "Mèo" },
-  { id: 34, front: "犬", back: "Chó" },
-  { id: 35, front: "車", back: "Xe hơi" },
-  { id: 36, front: "自転車", back: "Xe đạp" },
-  { id: 37, front: "駅", back: "Nhà ga" },
-  { id: 38, front: "店", back: "Cửa hàng" },
-  { id: 39, front: "会社", back: "Công ty" },
-  { id: 40, front: "仕事", back: "Công việc" },
-  { id: 41, front: "料理", back: "Nấu ăn" },
-  { id: 42, front: "音楽", back: "Âm nhạc" },
-  { id: 43, front: "歌", back: "Bài hát" },
-  { id: 44, front: "運動", back: "Vận động" },
-  { id: 45, front: "買い物", back: "Mua sắm" },
-  { id: 46, front: "旅行", back: "Du lịch" },
-  { id: 47, front: "朝", back: "Buổi sáng" },
-  { id: 48, front: "昼", back: "Buổi trưa" },
-  { id: 49, front: "晩", back: "Buổi tối" },
-  { id: 50, front: "夜", back: "Đêm" },
-];
+const getValidIndex = (deck, currentId) => {
+  if (!deck.length) return 0;
+  if (!currentId) return 0;
+  const index = deck.findIndex(card => card.flashcard_id === currentId);
+  return index >= 0 ? index : 0;
+};
+
+// Debounce function để hạn chế gửi request liên tục
+const debounce = (func, delay) => {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => func(...args), delay);
+  };
+};
 
 export const useFlashcardStore = create(
   persist(
     (set, get) => ({
       // Data
-      originalDeck: rawCards,
+      originalDeck: [],
       shuffledDeck: [],
+      displayDeck: [],
+
+      // NEW: Cache for flashcard metadata from homepage
+      flashcardCache: {}, // Map of id -> flashcard metadata
 
       // State
       isShuffled: false,
-      displayDeck: rawCards,
+      isRated: false,
       currentIndex: 0,
       showShuffleStatus: false,
       starredMap: {},
-      // User preference: which side shows first
       showFrontFirst: true,
+      showOnlyStarred: false,
+
+      // Track saved classes for flashcards
+      savedClassesMap: {},
+
+      // Queue cho các ID flashcard cần gửi star request
+      starQueue: {},
+
+      // Đánh dấu nếu đang có quá trình xử lý star đang diễn ra
+      processingStars: false,
 
       // Modal
       isModalOpen: false,
       modalType: null,
       rating: null,
-      selectedTags: [],
+      selectedTags: "",
+
+      // Loading/Error
+      loading: false,
+      error: null,
+
+      // NEW: Methods for handling flashcard metadata cache
+
+      // Add multiple flashcards to cache (used when coming from homepage)
+      cacheFlashcards: (flashcards) => {
+        const newCache = { ...get().flashcardCache };
+
+        flashcards.forEach((flashcard) => {
+          newCache[flashcard.list_id] = {
+            ...flashcard,
+            lastUpdated: new Date().getTime(),
+          };
+        });
+
+        set({ flashcardCache: newCache });
+      },
+
+      // Update a single flashcard in cache
+      updateFlashcardCache: (id, data) => {
+        set((state) => ({
+          flashcardCache: {
+            ...state.flashcardCache,
+            [id]: {
+              ...state.flashcardCache[id],
+              ...data,
+              lastUpdated: new Date().getTime(),
+            },
+          },
+        }));
+      },
+
+      // Get cached flashcard or null if not found or expired
+      getCachedFlashcard: (id, maxAgeMs = 5 * 60 * 1000) => {
+        // Default 5 min expiry
+        const cached = get().flashcardCache[id];
+
+        if (!cached) return null;
+
+        const now = new Date().getTime();
+        const isExpired =
+          cached.lastUpdated && now - cached.lastUpdated > maxAgeMs;
+
+        return isExpired ? null : cached;
+      },
+
+      // Clear cache for specific flashcard
+      clearFlashcardCache: (id) => {
+        const newCache = { ...get().flashcardCache };
+        delete newCache[id];
+        set({ flashcardCache: newCache });
+      },
+
+      // Clear entire cache
+      clearAllFlashcardCache: () => {
+        set({ flashcardCache: {} });
+      },
+
+      // Update saved classes map for a flashcard
+      updateSavedClasses: (flashcardId, classIds) => {
+        set((state) => ({
+          savedClassesMap: {
+            ...state.savedClassesMap,
+            [flashcardId]: classIds,
+          },
+        }));
+      },
+
+      // Check if a flashcard is saved to any class
+      isFlashcardSaved: (flashcardId) => {
+        const classes = get().savedClassesMap[flashcardId] || [];
+        return classes.length > 0;
+      },
+
+      fetchFlashcardList: async (axios, id) => {
+        set({ loading: true, error: null });
+        try {
+          const cards = await fetchFlashcardList(axios, id);
+
+          const newStarredMap = {};
+          cards.forEach((item) => {
+            newStarredMap[item.flashcard_id] =
+              item.FlashCardUsers?.[0]?.like_status || false;
+          });
+
+          set({
+            originalDeck: cards,
+            displayDeck: cards,
+            currentIndex: 0,
+            isShuffled: false,
+            isRated: false,
+            starredMap: newStarredMap,
+            showOnlyStarred: false,
+          });
+        } catch (err) {
+          set({ error: err });
+        } finally {
+          set({ loading: false });
+        }
+      },
+
+      fetchIsRated: async (axios, id) => {
+        set({ loading: true, error: null });
+        try {
+          const isRated = await fetchIsRated(axios, id);
+          set({ isRated: isRated });
+        } catch (err) {
+          set({ error: err });
+        } finally {
+          set({ loading: false });
+        }
+      },
+
+      setIsRated: (value) => set({ isRated: value }),
 
       // Actions
       shuffle: () => {
-        const { isShuffled, originalDeck } = get();
+        const { isShuffled, originalDeck, showOnlyStarred, starredMap, displayDeck, currentIndex } = get();
+        
+        // Get current card ID before shuffling
+        const currentCardId = displayDeck[currentIndex]?.flashcard_id;
+        
         // Toggle shuffle state
         const nextShuffled = !isShuffled;
+        
+        // Filter deck based on showOnlyStarred setting
+        const filteredDeck = showOnlyStarred 
+          ? originalDeck.filter(card => starredMap[card.flashcard_id])
+          : originalDeck;
+
         if (nextShuffled) {
           // Generate a fresh shuffle each time
-          const newShuffled = shuffleArray(originalDeck);
-          const currentId = get().displayDeck[get().currentIndex]?.id;
-          const newIndex = newShuffled.findIndex((c) => c.id === currentId);
+          const newShuffled = shuffleArray(filteredDeck);
+          const newIndex = getValidIndex(newShuffled, currentCardId);
+          
           set({
             isShuffled: true,
             shuffledDeck: newShuffled,
             displayDeck: newShuffled,
-            currentIndex: newIndex >= 0 ? newIndex : 0,
+            currentIndex: newIndex,
             showShuffleStatus: true,
           });
         } else {
           // Revert to original order
-          const currentId = get().displayDeck[get().currentIndex]?.id;
-          const newIndex = originalDeck.findIndex((c) => c.id === currentId);
+          const newIndex = getValidIndex(filteredDeck, currentCardId);
+          
           set({
             isShuffled: false,
-            displayDeck: originalDeck,
-            currentIndex: newIndex >= 0 ? newIndex : 0,
+            displayDeck: filteredDeck,
+            currentIndex: newIndex,
             showShuffleStatus: true,
           });
         }
@@ -110,10 +217,86 @@ export const useFlashcardStore = create(
       },
 
       setCurrentIndex: (idx) => set({ currentIndex: idx }),
-      toggleStar: (id) =>
+
+      // Hàm xử lý thay đổi star trên UI và thêm vào queue
+      toggleStar: (id) => {
+        const store = get();
+        const newStarredState = !store.starredMap[id];
+
+        // Cập nhật UI ngay lập tức
         set((state) => ({
-          starredMap: { ...state.starredMap, [id]: !state.starredMap[id] },
-        })),
+          starredMap: { ...state.starredMap, [id]: newStarredState },
+        }));
+
+        // Thêm vào queue và set thời gian để xử lý
+        set((state) => ({
+          starQueue: { ...state.starQueue, [id]: newStarredState },
+        }));
+
+        // Gọi hàm xử lý queue sau delay
+        store.processStarQueue();
+      },
+
+      // Hàm debounce để xử lý queue star sau một khoảng thời gian
+      processStarQueue: debounce(async () => {
+        const store = get();
+        const { starQueue, processingStars } = store;
+
+        // Nếu không có gì trong queue hoặc đang xử lý, bỏ qua
+        if (Object.keys(starQueue).length === 0 || processingStars) {
+          return;
+        }
+
+        // Đánh dấu đang xử lý
+        set({ processingStars: true });
+
+        try {
+          // Lấy một bản sao của queue hiện tại
+          const currentQueue = { ...starQueue };
+
+          // Xóa các item đã xử lý khỏi queue
+          set({ starQueue: {} });
+
+          // Gửi request cho từng flashcard trong queue
+          for (const [id, isStarred] of Object.entries(currentQueue)) {
+            try {
+              if (isStarred) {
+                // Gọi API star nếu trạng thái là true
+                await starOnFlashcard(get().axios, id);
+              } else {
+                // Gọi API unstar nếu trạng thái là false
+                await unStarOnFlashcard(get().axios, id);
+              }
+              console.log(
+                `Star status for flashcard ${id} updated to: ${isStarred}`
+              );
+            } catch (error) {
+              console.error(
+                `Failed to update star for flashcard ${id}:`,
+                error
+              );
+
+              // Khôi phục trạng thái UI nếu request thất bại
+              set((state) => ({
+                starredMap: {
+                  ...state.starredMap,
+                  [id]: !isStarred,
+                },
+              }));
+            }
+          }
+        } finally {
+          // Đánh dấu đã xử lý xong
+          set({ processingStars: false });
+
+          // Kiểm tra nếu có thêm items được thêm vào queue trong quá trình xử lý
+          const remainingQueue = get().starQueue;
+          if (Object.keys(remainingQueue).length > 0) {
+            // Gọi lại hàm xử lý cho các item còn lại sau một delay ngắn
+            setTimeout(() => get().processStarQueue(), 100);
+          }
+        }
+      }, 1500), // Delay 1.5 giây trước khi xử lý queue
 
       openModal: (type) => set({ isModalOpen: true, modalType: type }),
       closeModal: () =>
@@ -121,36 +304,108 @@ export const useFlashcardStore = create(
           isModalOpen: false,
           modalType: null,
           rating: null,
-          selectedTags: [],
+          selectedTags: "",
         }),
       setRating: (index) => set({ rating: index }),
 
       toggleTag: (tag) =>
         set((state) => ({
-          selectedTags: state.selectedTags.includes(tag)
-            ? state.selectedTags.filter((t) => t !== tag)
-            : [...state.selectedTags, tag],
+          selectedTags: state.selectedTags === tag ? "" : tag,
         })),
 
       // New action: set which side shows first
       setShowFrontFirst: (value) => set({ showFrontFirst: value }),
       toggleShowFrontFirst: () =>
         set((state) => ({ showFrontFirst: !state.showFrontFirst })),
+
+      setShowOnlyStarred: (value) => {
+        const { originalDeck, starredMap, currentIndex, displayDeck } = get();
+        
+        // Get current card ID before filtering
+        const currentCardId = displayDeck[currentIndex]?.flashcard_id;
+        
+        // Filter the deck based on starred status
+        const filteredDeck = value 
+          ? originalDeck.filter(card => starredMap[card.flashcard_id])
+          : originalDeck;
+
+        // Get valid index for the filtered deck
+        const newIndex = getValidIndex(filteredDeck, currentCardId);
+
+        set({ 
+          showOnlyStarred: value,
+          displayDeck: filteredDeck,
+          currentIndex: newIndex,
+          // Reset shuffle state when filtering
+          isShuffled: false,
+          shuffledDeck: []
+        });
+      },
+
+      // restart currentIndex
+      restartKey: 0,
+      incrementRestartKey: () =>
+        set((state) => ({ restartKey: state.restartKey + 1 })),
+
+      // Thêm axios vào store để sử dụng trong các hàm
+      setAxios: (axios) => set({ axios }),
+
+      // Thêm state mới
+      currentFlashcard: null,
+      flashcardLoading: false,
+      flashcardError: null,
+
+      // Thêm method mới để fetch và cache flashcard
+      fetchAndCacheFlashcard: async (axios, list_id) => {
+        const store = get();
+
+        // Kiểm tra cache trước
+        const cached = store.getCachedFlashcard(list_id);
+        if (cached) {
+          set({ currentFlashcard: cached });
+          return cached;
+        }
+
+        set({ flashcardLoading: true, flashcardError: null });
+        try {
+          const response = await fetchFlashcardList(axios, list_id);
+          const flashcardData = response.data;
+
+          // Cache flashcard
+          store.updateFlashcardCache(list_id, flashcardData);
+
+          // Cập nhật state
+          set({
+            currentFlashcard: flashcardData,
+            flashcardLoading: false,
+          });
+
+          return flashcardData;
+        } catch (error) {
+          set({
+            flashcardError: error,
+            flashcardLoading: false,
+          });
+          throw error;
+        }
+      },
     }),
-    // {
-    //   name: 'flashcard-storage',        // key trong localStorage
-    //   getStorage: () => localStorage,   // bắt buộc chỉ rõ nếu env hỗn hợp (SSR/CSR)
-    //   partialize: state => ({
-    //     // Chỉ lưu những state cần thiết
-    //     isShuffled: state.isShuffled,
-    //     displayDeck: state.displayDeck,
-    //     currentIndex: state.currentIndex,
-    //     starredMap: state.starredMap,
-    //     showFrontFirst: state.showFrontFirst,
-    //   }),
-    //   onRehydrateStorage: () => state => {
-    //     console.log('Rehydrated flashcard-store:', state);
-    //   },
-    // }
+    {
+      name: "flashcard-storage", // key trong localStorage
+      getStorage: () => localStorage, // bắt buộc chỉ rõ nếu env hỗn hợp (SSR/CSR)
+      partialize: (state) => ({
+        // Chỉ lưu những state cần thiết
+        isShuffled: state.isShuffled,
+        displayDeck: state.displayDeck,
+        currentIndex: state.currentIndex,
+        starredMap: state.starredMap,
+        showFrontFirst: state.showFrontFirst,
+        savedClassesMap: state.savedClassesMap,
+        flashcardCache: state.flashcardCache, // NEW: Save cache to localStorage
+      }),
+      onRehydrateStorage: () => (state) => {
+        console.log("Rehydrated flashcard-store:", state);
+      },
+    }
   )
 );

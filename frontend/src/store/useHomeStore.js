@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 import { fetchRecentClasses } from "@/api/recentClass";
 import { fetchRecentFlashcards } from "@/api/recentFlashcard";
 import { fetchTopAuthor } from "@/api/topAuthor";
@@ -39,6 +39,17 @@ export const useHomeStore = create((set, get) => ({
       set({ loading: { ...get().loading, flashcards: false } });
     }
   },
+  // fetchFlashcardsById: async (axios, id) => {
+  //   set({ loading: { ...get().loading, flashcards: true } });
+  //   try {
+  //     const { data } = await fetchRecentFlashcards(axios, id);
+  //     set({ flashcards: data || [] });
+  //   } catch (err) {
+  //     set({ error: err });
+  //   } finally {
+  //     set({ loading: { ...get().loading, flashcards: false } });
+  //   }
+  // },
   fetchAuthors: async (axios) => {
     set({ loading: { ...get().loading, authors: true } });
     try {
@@ -61,6 +72,11 @@ export const useHomeStore = create((set, get) => ({
       set({ loading: { ...get().loading, vocabs: false } });
     }
   },
+
+  getFlashcardById: (id) => {
+    const { flashcards } = get();
+    return flashcards.find((item) => item.list_id === id);
+  },  
 
   // Combined loader nhận axios từ component
   init: (axios) => {

@@ -9,15 +9,20 @@ import BlueButton from "@/components/BlueButton";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import NopeNotice from "@/components/NopeNotice";
 import { useHomeStore } from "@/store/useHomeStore";
+import { useFlashcardStore } from "@/store/useflashcardStore";
 
 const Home = () => {
   const axiosPrivate = useAxiosPrivate();
   const { classes, flashcards, topAuthors, vocabs, init, loading } =
     useHomeStore();
 
+  const setAxios = useFlashcardStore((state) => state.setAxios);
+
   useEffect(() => {
+    setAxios(axiosPrivate);
+
     init(axiosPrivate);
-  }, [init, axiosPrivate]);
+  }, [init, axiosPrivate, setAxios]);
 
   return (
     <main className="flex flex-1 flex-grow-1 flex-col">

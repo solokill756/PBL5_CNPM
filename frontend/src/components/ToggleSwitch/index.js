@@ -1,6 +1,6 @@
 import React from "react";
 
-const ToggleSwitch = ({ label, onChange, className = "" }) => {
+const ToggleSwitch = ({ label, onChange, checked = false, className = "" }) => {
   return (
     <div className={className}>
       <input
@@ -8,6 +8,7 @@ const ToggleSwitch = ({ label, onChange, className = "" }) => {
         type="checkbox"
         role="switch"
         id="flexSwitchChecked"
+        checked={checked}
         onChange={onChange}
       />
       <label

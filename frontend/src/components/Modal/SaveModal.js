@@ -1,25 +1,84 @@
 // src/components/SaveModal.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Modal from "@/components/Modal/Modal";
 import { useFlashcardStore } from "@/store/useflashcardStore";
 import ClassOptionList from "../Class/ClassOptionList";
+import { saveFlashcardToClasses } from "@/api/saveFlashcardToClasses";
+import useAxiosPrivate from "@/hooks/useAxiosPrivate";
+import { useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export default function SaveModal() {
-  const { isModalOpen, modalType, closeModal } = useFlashcardStore();
+  const axiosPrivate = useAxiosPrivate();
+  const { flashcardId } = useParams();
+
+  const { 
+    isModalOpen, 
+    modalType, 
+    closeModal, 
+    savedClassesMap, 
+    updateSavedClasses 
+  } = useFlashcardStore();
+  
   const [selectedIds, setSelectedIds] = useState([]);
+  const [initialSelectedIds, setInitialSelectedIds] = useState([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   if (modalType !== "save") return null;
 
-  const isDisabled = selectedIds.length === 0;
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+
+      await saveFlashcardToClasses(axiosPrivate, flashcardId, selectedIds);
+
+      // Update the saved classes in the global store
+      updateSavedClasses(flashcardId, selectedIds);
+
+      const addedClasses = selectedIds.filter(
+        (id) => !initialSelectedIds.includes(id)
+      );
+      const removedClasses = initialSelectedIds.filter(
+        (id) => !selectedIds.includes(id)
+      );
+
+      let message;
+      if (addedClasses.length > 0 && removedClasses.length > 0) {
+        message = "Đã cập nhật lớp học cho flashcard!";
+      } else if (addedClasses.length > 0) {
+        message = "Đã lưu flashcard vào lớp học!";
+      } else if (removedClasses.length > 0) {
+        message = "Đã xóa flashcard khỏi lớp học!";
+      } else {
+        message = "Không có thay đổi nào được thực hiện.";
+      }
+
+      toast.success(message);
+      closeModal();
+    } catch (error) {
+      console.error("Error saving:", error);
+      toast.error("Lưu thất bại. Vui lòng thử lại.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
-    <Modal isOpen={isModalOpen} onClose={closeModal} size="max-w-md">
+    <Modal
+      isOpen={isModalOpen && modalType === "save"}
+      onClose={closeModal}
+      size="max-w-md"
+    >
       <div className="mt-4 !p-0 space-y-6">
         <h2 className="text-3xl px-4 mb-4 font-bold">Lưu vào lớp học</h2>
 
         <div className="relative">
           <div className="max-h-52 overflow-y-auto space-y-2 p-4 shadow-sm">
-            <ClassOptionList onChange={setSelectedIds} />
+            <ClassOptionList
+              onChange={setSelectedIds}
+              flashcardId={flashcardId}
+              onInitialSelectionLoad={setInitialSelectedIds}
+            />
           </div>
           <div className="pointer-events-none absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-white to-transparent rounded-t-lg"></div>
           <div className="pointer-events-none absolute -bottom-2 left-0 right-0 h-6 bg-gradient-to-t from-white to-transparent rounded-b-lg"></div>
@@ -27,19 +86,21 @@ export default function SaveModal() {
 
         <div className="flex justify-end">
           <button
-            onClick={() => {
-              closeModal();
-            }}
+            onClick={handleSave}
             className={`px-3.5 py-2.5 rounded-full font-semibold transition-opacity
               ${
-                isDisabled
-                  ? "bg-gray-300 text-gray-500 opacity-50"
+                isSaving
+                  ? "bg-red-700 text-white opacity-50"
                   : "bg-red-700 hover:bg-red-800 text-white cursor-pointer"
               }
             `}
-            disabled={isDisabled}
+            disabled={isSaving}
           >
-            Lưu
+            {isSaving ? (
+              <div className="size-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              "Lưu"
+            )}
           </button>
         </div>
       </div>
