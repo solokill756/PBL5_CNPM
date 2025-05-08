@@ -1,5 +1,6 @@
+import { sendLinkListFlashCard } from './../utils/sendLinkListFlashCard';
 import db from "../models";
-import { sendLinkListFlashCard } from "../utils/sendLinkListFlashCard";
+
 
 
 const rateListFlashcard = async (list_id: string, rate: number, user_id: string , comment: string) => {
@@ -91,27 +92,31 @@ const getFlashcardByListId = async (list_id: string, user_id: string) => {
                 last_review: new Date(),
             });
         }
-        const flashcards = await db.flashcard.findAll({
+      
+        const data = await db.listFlashcard.findOne({
             where: { list_id },
-            attributes: ["flashcard_id", "front_text", "back_text", "custom_note", "ai_explanation"],
-
             include: [
                 {
-                    model: db.flashcardUser,
-                    attributes: ["like_status"],
-                    where: { user_id: user_id },
-                    required : false,
-                },
+                    model: db.flashcard,
+                    required: true,
+                    as: "Flashcard",
+                    include: [
+                        {
+                            model: db.flashcardUser,
+                            attributes: ["like_status", "last_review"], 
+                            where: {user_id: user_id},
+                            required: true,
+                        }
+                    ]
+                }
             ],
             order: [
-                [db.flashcardUser, 'last_review', 'DESC'],
+                [{ model: db.flashcard, as: "Flashcard" }, { model: db.flashcardUser }, 'last_review', 'DESC'],  
             ],
             subQuery: false,
-        }
-
-        );
+        });
         
-        return flashcards;
+        return data;
     } catch (error) {
         throw new Error("Error fetching flashcards");
     }
