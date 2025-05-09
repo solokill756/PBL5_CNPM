@@ -47,3 +47,4 @@ app.*.map.json
 /backend/.env
 .qodo
 /aci-backend.yml
+/AlServer

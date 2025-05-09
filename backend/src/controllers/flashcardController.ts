@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { sendError, sendSuccess } from '../middleware/responseFormatter';
-import { getFlashcardByListId, likeFlashcard, rateListFlashcard, unlikeFlashcard, updateLastReview, updateReviewCount, checkRateFlashcard, addListFlashcardToClass, shareLinkListFlashcardToUser, getClassOfUser } from '../services/flashcardPageService';
+import { getFlashcardByListId, likeFlashcard, rateListFlashcard, unlikeFlashcard, updateLastReview, updateReviewCount, checkRateFlashcard, addListFlashcardToClass, shareLinkListFlashcardToUser, getClassOfUser, getAllExplanation } from '../services/flashcardPageService';
 const getFlashcardByListIdController = async (req: Request, res: Response) => {
     const userId = (req as any).user.user_id;
     if (!userId) {
@@ -23,7 +23,7 @@ const rateListFlashcardController = async (req: Request, res: Response) => {
         return;
     }
     try {
-        const flashcards = await rateListFlashcard(list_id, rate, userId , comment);
+        const flashcards = await rateListFlashcard(list_id, Number(rate), userId , comment);
         sendSuccess(res, flashcards);
     } catch (error: any) {
         sendError(res, error.message, 500);
@@ -132,8 +132,19 @@ const getClassOfUserController = async (req: Request, res: Response) => {
         sendError(res, error.message, 500);
     }
 };
+
+const getAllExplanationController = async (req: Request, res: Response) => {
+    const { flashcard_id } = req.params;
+    try {
+        const explanation = await getAllExplanation(flashcard_id);
+        sendSuccess(res, explanation);
+    } catch (error: any) {
+        sendError(res, error.message, 500);
+    }
+};
+
  
 
 
 
-export { rateListFlashcardController, likeFlashcardController, unlikeFlashcardController, updateReviewCountController, updateLastReviewController, getFlashcardByListIdController, checkRateFlashcardController, addListFlashcardToClassController, shareLinkListFlashcardToUserController, getClassOfUserController };
+export { rateListFlashcardController, likeFlashcardController, unlikeFlashcardController, updateReviewCountController, updateLastReviewController, getFlashcardByListIdController, checkRateFlashcardController, addListFlashcardToClassController, shareLinkListFlashcardToUserController, getClassOfUserController , getAllExplanationController};

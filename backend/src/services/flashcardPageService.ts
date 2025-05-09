@@ -1,7 +1,8 @@
 import { sendLinkListFlashCard } from './../utils/sendLinkListFlashCard';
 import db from "../models";
+import dotenv from 'dotenv';
 
-
+dotenv.config();
 
 const rateListFlashcard = async (list_id: string, rate: number, user_id: string , comment: string) => {
     try {
@@ -9,14 +10,12 @@ const rateListFlashcard = async (list_id: string, rate: number, user_id: string 
             where: { list_id },
         });
         await db.flashcardStudy.update({
-            rate: Number(rate),
+            rate: rate,
             comment: comment,
         }, {
             where: { list_id, user_id },
         });
         const allRates = Number(currentRate.number_rate);
-
-       
         const newRate = (currentRate.rate + rate) / (allRates + 1);
         await db.listFlashcard.update({
             rate: newRate,
@@ -84,38 +83,38 @@ const getFlashcardByListId = async (list_id: string, user_id: string) => {
                 last_review: new Date(),
             }, {where: {list_id, user_id}});
         }
-        else{
+        else {
             await db.flashcardStudy.create({
                 list_id,
                 user_id,
                 review_count: 1,
                 last_review: new Date(),
             });
+            
         }
       
-        const data = await db.listFlashcard.findOne({
+        const listFlashcard = await db.flashcard.findAll({
             where: { list_id },
-            include: [
-                {
-                    model: db.flashcard,
-                    required: true,
-                    as: "Flashcard",
-                    include: [
-                        {
-                            model: db.flashcardUser,
-                            attributes: ["like_status", "last_review"], 
-                            where: {user_id: user_id},
-                            required: true,
-                        }
-                    ]
-                }
-            ],
-            order: [
-                [{ model: db.flashcard, as: "Flashcard" }, { model: db.flashcardUser }, 'last_review', 'DESC'],  
-            ],
-            subQuery: false,
+            include: [{
+                model: db.flashcardUser,
+                attributes: ["like_status"],
+                required: false,
+            }],
+            subQuery: false
         });
-        
+        const inforListFlashcard = await db.listFlashcard.findOne({
+            where: {list_id},
+           
+        });
+        const userInfor = await db.user.findOne({
+            where: {user_id: inforListFlashcard.user_id},
+            attributes: ["username", "profile_picture"],
+        });
+        const data = {
+            flashcard: listFlashcard,
+            inforListFlashcard: inforListFlashcard,
+            userInfor: userInfor,
+        }
         return data;
     } catch (error) {
         throw new Error("Error fetching flashcards");
@@ -187,7 +186,53 @@ const getClassOfUser = async (user_id : string) => {
     }
 };
 
-export { rateListFlashcard, likeFlashcard, unlikeFlashcard, updateReviewCount, updateLastReview, getFlashcardByListId, checkRateFlashcard, addListFlashcardToClass, shareLinkListFlashcardToUser, getClassOfUser };
+const getAllExplanation = async (flashcard_id: string) => {
+    try {
+        const flashcard = await db.flashcard.findOne({ where: { flashcard_id } });
+        if (!flashcard) {
+            throw new Error("Flashcard not found");
+        }
+        
+        // Gọi đến Flask API
+        const response = await fetch('http://localhost:5000/generate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                text: flashcard.front_text
+            })
+        });
+        
+        if (!response.ok) {
+            const errorBody = await response.text();
+            throw new Error(`Flask API error: ${response.status} - ${errorBody}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error || 'Failed to generate explanation');
+        }
+        
+        const explanation = result.response;
+        
+        // Update the flashcard with the explanation
+        await db.flashcard.update(
+            { ai_explanation: explanation },
+            { where: { flashcard_id } }
+        );
+        
+        return explanation;
+    } catch (error) {
+        console.error("Error during getAllExplanation:", error);
+        throw new Error(`Error getting AI explanation: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+};
+
+
+
+export { rateListFlashcard, likeFlashcard, unlikeFlashcard, updateReviewCount, updateLastReview, getFlashcardByListId, checkRateFlashcard, addListFlashcardToClass, shareLinkListFlashcardToUser, getClassOfUser, getAllExplanation };
 
 
 

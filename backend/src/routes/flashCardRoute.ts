@@ -1,5 +1,5 @@
 import { NextFunction, Router, Request, Response } from "express";
-import { getFlashcardByListIdController, updateReviewCountController, rateListFlashcardController, unlikeFlashcardController, updateLastReviewController, likeFlashcardController, checkRateFlashcardController,  addListFlashcardToClassController, shareLinkListFlashcardToUserController, getClassOfUserController } from "../controllers/flashcardController";
+import { getFlashcardByListIdController, updateReviewCountController, rateListFlashcardController, unlikeFlashcardController, updateLastReviewController, likeFlashcardController, checkRateFlashcardController,  addListFlashcardToClassController, shareLinkListFlashcardToUserController, getClassOfUserController, getAllExplanationController } from "../controllers/flashcardController";
 import { authenticateToken } from "../middleware/authMiddleware";
 
 const flashCardRoutes = Router();
@@ -16,5 +16,6 @@ flashCardRoutes.get("/checkRateFlashcard/:list_id", checkRateFlashcardController
 flashCardRoutes.post("/addListFlashcardToClass", addListFlashcardToClassController);
 flashCardRoutes.post("/shareLinkListFlashcardToUser", shareLinkListFlashcardToUserController);
 flashCardRoutes.get("/getClassOfUser", getClassOfUserController);
+flashCardRoutes.get("/getAlExplanation/:flashcard_id", getAllExplanationController);
 export default flashCardRoutes;
 
