@@ -136,8 +136,8 @@ const QuizPage = () => {
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
-      {/* Fixed position navigator for desktop */}
-      <div className="hidden lg:block fixed left-8 top-8 w-64 z-40">
+      {/* Fixed position navigator for desktop - adjusted top position to avoid header overlap */}
+      <div className="hidden lg:block fixed left-8 top-32 w-64 z-30">
         <QuestionNavigator 
           questions={questions} 
           currentQuestionIndex={currentQuestionIndex}
@@ -146,8 +146,8 @@ const QuizPage = () => {
         />
       </div>
 
-      {/* Mobile/Tablet navigator (non-fixed) */}
-      <div className="lg:hidden mb-6">
+      {/* Mobile/Tablet navigator (non-fixed) - added margin-top for better spacing */}
+      <div className="lg:hidden mb-6 mt-6">
         <QuestionNavigator 
           questions={questions} 
           currentQuestionIndex={currentQuestionIndex}
@@ -157,7 +157,7 @@ const QuizPage = () => {
       </div>
       
       {/* Questions list with proper margin to accommodate the fixed sidebar */}
-      <div className="lg:ml-72">
+      <div className="lg:ml-72 mt-6">
         <div className="space-y-16 w-full flex-col gap-4">
           {questions.map((q, index) => (
             <div
