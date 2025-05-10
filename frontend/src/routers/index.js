@@ -115,6 +115,10 @@ const router = createBrowserRouter([
   {
     path: "/flashcard/:flashcardId/detail",
     element: <FlashCard mode="detail"/>
+  },
+  {
+    path: "/flashcard/:flashcardId/quiz",
+    element: <Quiz />
   }
 ]);
 
