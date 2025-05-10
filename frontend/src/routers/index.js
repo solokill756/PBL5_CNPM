@@ -7,7 +7,6 @@ import Profile from "@/pages/Profile";
 import DefaultGuest from "@/layouts/DefaultGuest";
 import Home from "@/pages/Home";
 import EmailVerification from "@/pages/EmailVerification";
-import useAuth from "@/hooks/useAuth";
 import Library from "@/pages/Library";
 import Forum from "@/pages/Forum";
 import Quiz from "@/pages/Quiz";
@@ -102,6 +101,14 @@ const router = createBrowserRouter([
     path: "/auth-success",
     element: <AuthSuccess />,
   },
+  {
+    path: "/flashcard/:flashcardId/learn",
+    // element: <LearnFlashcard />,
+  },
+  {
+    path: "/flashcard/:flashcardId/detail",
+    element: <FlashCard mode="detail"/>
+  }
 ]);
 
 export default router;

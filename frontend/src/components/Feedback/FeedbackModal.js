@@ -26,6 +26,10 @@ export default function FeedbackModal() {
 
   const [hoverIndex, setHoverIndex] = useState(null);
   const [isFetchingRated, setIsFetchingRated] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const updateFlashcardMetadata = useFlashcardStore(
+    (state) => state.updateFlashcardMetadata
+  );
 
   useEffect(() => {
     const fetchRated = async () => {
@@ -50,6 +54,7 @@ export default function FeedbackModal() {
 
   const handleRating = async () => {
     if (isRated === false) {
+      setIsSubmitting(true);
       try {
         const data = await postFlashcardRating(
           axiosPrivate,
@@ -57,10 +62,16 @@ export default function FeedbackModal() {
           rating,
           selectedTags
         );
+        if (data && data.rate !== undefined && data.numberRate !== undefined) {
+          updateFlashcardMetadata(data.rate, data.numberRate);
+        }
+
         setIsRated(true);
         closeModal();
       } catch (error) {
         console.log(error);
+      } finally {
+        setIsSubmitting(false);
       }
     }
   };
@@ -75,7 +86,9 @@ export default function FeedbackModal() {
         <>
           <div className="mt-4 space-y-6">
             <h2 className="text-3xl font-bold">
-              {isRated === false ? "Bạn đánh giá học phần này như thế nào?" : "Bạn đã đánh giá học phần này rồi"}
+              {isRated === false
+                ? "Bạn đánh giá học phần này như thế nào?"
+                : "Bạn đã đánh giá học phần này rồi"}
             </h2>
             <div
               className="flex gap-6 cursor-pointer"
@@ -85,9 +98,9 @@ export default function FeedbackModal() {
                 <FaStar
                   key={i}
                   onMouseEnter={() => !isRated && setHoverIndex(i)}
-                  onClick={() => !isRated && setRating(i)}
+                  onClick={() => !isRated && setRating(i + 1)}
                   className={`size-5 transition-all ${
-                    i <= (hoverIndex !== null ? hoverIndex : rating)
+                    i < (hoverIndex !== null ? hoverIndex + 1 : rating)
                       ? "fill-yellow-400 stroke-yellow-400"
                       : "fill-white stroke-gray-500"
                   } ${isRated ? "cursor-default" : "cursor-pointer"}`}
@@ -100,12 +113,12 @@ export default function FeedbackModal() {
               <>
                 <hr />
                 <h3 className="text-xl font-semibold text-gray-600">
-                  {rating <= 2
+                  {rating <= 3
                     ? "Điều gì cần được cải thiện"
                     : "Điều gì bạn thích nhất"}
                 </h3>
                 <div className="flex flex-wrap gap-4">
-                  {(rating <= 2
+                  {(rating <= 3
                     ? [
                         "Không đủ chi tiết",
                         "Trình bày tệ",
@@ -139,10 +152,14 @@ export default function FeedbackModal() {
                   rating === null || isRated !== false
                     ? "bg-gray-300 text-gray-500 opacity-50"
                     : "bg-red-700 hover:bg-red-800 text-white"
-                }`}
-                disabled={rating === null || isRated !== false}
+                } ${isSubmitting ? "opacity-50 cursor-default" : ""}`}
+                disabled={rating === null || isRated !== false || isSubmitting}
               >
-                Gửi
+                {isSubmitting ? (
+                  <div className="size-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  "Gửi"
+                )}
               </button>
             </div>
           </div>

@@ -39,7 +39,7 @@ export const useAuthStore = create((set, get) => ({
     set({ accessToken: null, refreshToken: null, user: null });
     syncCookies(get());
   },
-
+  
   updateUser: (updates) => {
     set((state) => {
       const merged = { ...state.user, ...updates };

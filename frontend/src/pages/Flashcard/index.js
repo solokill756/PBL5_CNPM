@@ -1,70 +1,127 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import FlashCardHeader from "@/components/FlashCard/FlashCardHeader";
 import FlashCardOptionList from "@/components/FlashCard/FlashCardOptionList";
 import DefaultHeader from "@/layouts/DefaultHeader";
 import { useFlashcardStore } from "@/store/useflashcardStore";
 import FlashCardArea from "@/components/FlashCard/FlashCardArea";
 import FeedbackModal from "@/components/Feedback/FeedbackModal";
-import "./index.css";
 import ShareModal from "@/components/Modal/ShareModal";
 import SaveModal from "@/components/Modal/SaveModal";
-import { useHomeStore } from "@/store/useHomeStore";
-import { useParams } from "react-router-dom";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
-import { fetchFlashcardList } from "@/api/getFlashcardList";
 import AuthorInfo from "@/components/Author/AuthorInfor";
+import "./index.css";
+import ModeHeader from "@/components/ModeHeader";
+import { getTimeAgo } from "@/utils/getTimeAgo";
+import defaultAvatar from "@/assets/images/avatar.jpg";
 
-export default function FlashCard() {
+export default function FlashCard({ mode = "" }) {
   const { flashcardId } = useParams();
-  const [meta, setMeta] = useState(null);
-  const [items, setItems] = useState([]);
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const axios = useAxiosPrivate();
+  const prevModeRef = useRef(null);
 
-  const openModal = useFlashcardStore((state) => state.openModal);
-  const loading = useFlashcardStore((state) => state.loading);
-  const isFlashcardSaved = useFlashcardStore((state) => state.isFlashcardSaved);
-  const getFlashcardById = useHomeStore((state) => state.getFlashcardById);
+  const {
+    openModal,
+    isFlashcardSaved,
+    setAxios,
+    fetchIsRated,
+    currentIndex,
+    displayDeck,
+    fetchFlashcardList,
+    flashcardMetadata,
+    authorInfor,
+    isDataLoaded,
+    lastLoadedId,
+    resetFlashcardState
+  } = useFlashcardStore();
 
   useEffect(() => {
-    // Lấy metadata từ store (nếu có)
-    const foundMeta = getFlashcardById(flashcardId);
-    console.log("Cardd " + foundMeta);
+    const fetchData = async () => {
+      // Chỉ gọi API nếu chưa load data hoặc đang load data cho flashcard khác
+      if (!isDataLoaded || lastLoadedId !== flashcardId) {
+        try {
+          setLoading(true);
+          setAxios(axios);
 
-    setMeta(foundMeta);
-
-    // Lấy các item của list
-    const fetchItems = async () => {
-      try {
-        const data = await fetchFlashcardList(axios, flashcardId);
-        setItems(data);
-      } catch (e) {
-        setItems([]);
+          await fetchFlashcardList(axios, flashcardId);
+          await fetchIsRated(axios, flashcardId);
+        } catch (error) {
+          setError(error);
+        } finally {
+          setLoading(false);
+        }
       }
     };
-    fetchItems();
-  }, [flashcardId]);
+
+    fetchData();
+  }, [flashcardId, axios, setAxios, fetchIsRated, isDataLoaded, lastLoadedId]);
+
+  useEffect(() => {
+    // Kiểm tra nếu đang chuyển từ mode detail sang mode khác
+    if (prevModeRef.current === "detail" && mode !== "detail") {
+      resetFlashcardState();
+    }
+    
+    // Cập nhật mode trước đó
+    prevModeRef.current = mode;
+  }, [mode]);
 
   return (
     <main className="flex flex-col items-center flex-grow scrollbar-hide">
-      <DefaultHeader />
-      {meta && (
+      {/* Dropdown chuyển mode */}
+      <div className="flex w-full justify-start">
+        {mode === "detail" && (
+          <ModeHeader
+            mode={mode}
+            flashcardId={flashcardId}
+            flashcardTitle={flashcardMetadata.title}
+            currentIndex={currentIndex}
+            totalCard={displayDeck.length}
+            onSetting={() => openModal("setting")}
+            onClose={() => navigate(`/flashcard/${flashcardId}`)}
+          />
+        )}
+      </div>
+
+      {/* Chỉ hiện header khi không phải mode detail */}
+      {mode !== "detail" && <DefaultHeader />}
+
+      {flashcardMetadata && mode !== "detail" && (
         <FlashCardHeader
-          title={meta.title}
-          rating={parseFloat(Number(meta.rate).toFixed(1))}
-          ratingCount={`(${meta.number_rate} đánh giá)`}
+          title={flashcardMetadata.title}
+          rating={parseFloat(Number(flashcardMetadata.rate).toFixed(1))}
+          ratingCount={`(${flashcardMetadata.number_rate} đánh giá)`}
           onSave={() => openModal("save")}
           onShare={() => openModal("share")}
           onStar={() => openModal("star")}
           isSaved={isFlashcardSaved(flashcardId)}
+          loading={loading}
         />
       )}
-      <FlashCardOptionList />
-      <FlashCardArea items={items} loading={loading} />
+
+      {mode !== "detail" && <FlashCardOptionList flashcardId={flashcardId} />}
+
+      <FlashCardArea mode={mode} loading={loading} error={error} />
+
       <FeedbackModal />
       <ShareModal />
       <SaveModal />
-      <hr className="w-[870px] border-zinc-200 my-4" />
-      <AuthorInfo className="justify-start" authorName={'huy'} authorAvatar={'https://i.pravatar.cc/300'} authorCreatedAt={'1 năm'}/>
+
+      {mode !== "detail" && (
+        <>
+          <hr className="w-[870px] border-zinc-200 my-4" />
+          <AuthorInfo
+            className="justify-start"
+            authorName={authorInfor.username}
+            authorAvatar={authorInfor.profile_picture || defaultAvatar}
+            authorCreatedAt={getTimeAgo(flashcardMetadata.created_at)}
+            loading={loading}
+          />
+        </>
+      )}
     </main>
   );
 }

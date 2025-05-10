@@ -11,7 +11,7 @@ const RoundButton = ({
   isDropdown = false, 
   isSaved = false,
   isActive = false,
-  label = "" // Added label prop for dynamic text
+  label = "" 
 }) => {
   const [active, setActive] = useState(false);
   const buttonRef = useRef();
@@ -36,7 +36,7 @@ const RoundButton = ({
     ? cloneElement(icon, {
         className: `${icon.props.className || ""} ${
           isSaved ? "text-red-400" : isActive ? "text-red-400" : ""
-        } size-5 text-gray-600`,
+        } size-5 font-semibold text-gray-600`,
       })
     : null;
 
