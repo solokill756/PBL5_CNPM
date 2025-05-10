@@ -105,6 +105,10 @@ const router = createBrowserRouter([
     path: "/auth-success",
     element: <AuthSuccess />,
   },
+  {
+    path: "/flashcard/:flashcardId/quiz",
+    element: <Quiz />
+  }
 ]);
 
 export default router;
