@@ -6,8 +6,8 @@ import { RiArrowDropDownLine } from "react-icons/ri";
 const QuizModal = ({ isOpen, onClose, onSubmit, maxQuestions, title }) => {
 
   const answerOptions = [
-    { label: "Tiếng Việt", value: "vietnamese" },
-    { label: "Tiếng Nhật", value: "japanese" },
+    { label: "Tiếng Việt", value: "1" },
+    { label: "Tiếng Nhật", value: "2" },
   ];
 
 
