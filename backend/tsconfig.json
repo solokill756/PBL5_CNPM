@@ -15,6 +15,6 @@
     "noImplicitReturns": true, // Kiểm tra hàm không có return
     "noUnusedLocals": true // Kiểm tra biến không sử dụng
   },
-  "include": ["src"], // Bao gồm thư mục src để biên dịch
+  "include": ["src", "src/models"], // Bao gồm thư mục src để biên dịch
   "exclude": ["node_modules"] // Loại trừ node_modules khỏi quá trình biên dịch
 }

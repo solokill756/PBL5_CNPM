@@ -52,7 +52,6 @@ const initializeModels = async () => {
     "./SearchHistoryModel.js"
   );
   const { default: FlashcardModel } = await import("./FlashcardModel.js");
-  const { default: QuizModel } = await import("./QuizzModel.js");
   const { default: QuizResultModel } = await import("./QuizResultstModel.js");
   const { default: NotificationModel } = await import("./NotificationModel.js");
   const { default: ForumPostModel } = await import("./ForumPostModel.js");
@@ -80,7 +79,7 @@ const initializeModels = async () => {
   db.vocabulary = VocabularyModel(sequelize);
   db.searchHistory = SearchHistoryModel(sequelize);
   db.flashcard = FlashcardModel(sequelize);
-  db.quizz = QuizModel(sequelize);
+   
   db.quizResult = QuizResultModel(sequelize);
   db.notification = NotificationModel(sequelize);
   db.forumPost = ForumPostModel(sequelize);
@@ -119,14 +118,10 @@ const initializeModels = async () => {
   db.lesson.belongsTo(db.class, { foreignKey: "class_id" });
 
 
-  db.lesson.hasMany(db.quizz, { foreignKey: "lesson_id", onDelete: 'CASCADE' });
-  db.quizz.belongsTo(db.lesson, { foreignKey: "lesson_id" });
-
   db.user.hasMany(db.quizResult, { foreignKey: "user_id", onDelete: 'CASCADE' });
   db.quizResult.belongsTo(db.user, { foreignKey: "user_id" });
 
-  db.quizz.hasMany(db.quizResult, { foreignKey: "quiz_id", onDelete: 'CASCADE' });
-  db.quizResult.belongsTo(db.quizz, { foreignKey: "quiz_id" });
+
 
   db.user.hasMany(db.notification, { foreignKey: "user_id", onDelete: 'CASCADE' });
   db.notification.belongsTo(db.user, { foreignKey: "user_id" });
