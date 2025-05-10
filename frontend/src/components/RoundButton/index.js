@@ -5,6 +5,7 @@ import Dropdown from "../Dropdown";
 const RoundButton = ({ 
   icon, 
   className = "", 
+  buttonClassName = "",
   onClick = () => {}, 
   border, 
   menu = [], 
@@ -45,7 +46,7 @@ const RoundButton = ({
   return (
     <div className={`relative inline-block text-left ${className}`} ref={buttonRef}>
       <button
-        className={`flex border-2 ${border} ${
+        className={`flex border-2 ${border} ${buttonClassName} ${
           isSaved
             ? "bg-red-50 hover:bg-red-100 text-red-500 border-red-300"
             : isActive
