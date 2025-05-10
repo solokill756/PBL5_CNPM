@@ -14,7 +14,7 @@ const saveResultQuizController = async (req : Request , res : Response) => {
     const { score  } = req.body;
     const user_id =(req as any).user.user_id;
     if(!user_id){
-        return res.status(401).json({message : "Unauthorized"});
+         res.status(401).json({message : "Unauthorized"});
     }
     try {
         const result = await saveResultQuiz(Number(score) , user_id);
