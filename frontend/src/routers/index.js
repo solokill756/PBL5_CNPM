@@ -108,12 +108,8 @@ const router = createBrowserRouter([
     element: <AuthSuccess />,
   },
   {
-    path: "/flashcard/:flashcardId/learn",
-    // element: <LearnFlashcard />,
-  },
-  {
-    path: "/flashcard/:flashcardId/detail",
-    element: <FlashCard mode="detail"/>
+    path: "/flashcard/:flashcardId/quiz",
+    element: <Quiz />
   }
 ]);
 
