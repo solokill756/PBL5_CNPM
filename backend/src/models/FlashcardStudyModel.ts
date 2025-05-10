@@ -8,6 +8,7 @@ interface FlashcardStudyAttributes {
   id: string;
   rate: number;
   comment: string;
+  last_review_flashcard_id : string;  
 }
 
 interface FlashcardStudyCreationAttributes
@@ -23,6 +24,7 @@ class FlashcardStudy
   declare number_word_forget: number;
   declare rate: number;
   declare comment: string;
+  declare last_review_flashcard_id : string;
 }
 
 export default (sequelize: Sequelize) => {
@@ -60,6 +62,12 @@ export default (sequelize: Sequelize) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+     
+      last_review_flashcard_id: { 
+        type: DataTypes.UUID,
+        allowNull: true,
+      },
+      
     },
     {
       sequelize,

@@ -198,9 +198,12 @@ const getAllExplanation = async (flashcard_id: string) => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
             body: JSON.stringify({
-                text: flashcard.front_text
+                word: flashcard.front_text,
+                language: "Japanese",
+               
             })
         });
         

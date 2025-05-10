@@ -7,6 +7,7 @@ interface FlashCardUserAttributes {
     last_review: Date;
     created_at: Date;
     like_status: boolean;
+    remember_status: boolean;
 }
 
 class FlashCardUser extends Model<FlashCardUserAttributes> implements FlashCardUserAttributes {
@@ -16,6 +17,7 @@ class FlashCardUser extends Model<FlashCardUserAttributes> implements FlashCardU
     declare last_review: Date;
     declare created_at: Date;
     declare like_status: boolean;
+    declare remember_status: boolean;
 }
 
 
@@ -51,8 +53,11 @@ export default (sequelize: Sequelize) => {
                 allowNull: false,
                 defaultValue: false,
             },
-
-
+            remember_status: {
+                type: DataTypes.BOOLEAN,
+                allowNull: false,
+                defaultValue: false,
+            },
         },
         {
             sequelize,

@@ -8,6 +8,7 @@ interface ListFlashcardAttributes {
   created_at: Date;
   rate: number;
   number_rate: number;
+  
 }
 
 interface ListFlashcardCreationAttributes
