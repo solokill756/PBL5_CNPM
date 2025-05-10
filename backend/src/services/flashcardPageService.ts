@@ -1,5 +1,5 @@
+import db from '../models'
 import { sendLinkListFlashCard } from './../utils/sendLinkListFlashCard';
-import db from "../models";
 import dotenv from 'dotenv';
 import { addFlashcardToLearn } from './learnService';
 
