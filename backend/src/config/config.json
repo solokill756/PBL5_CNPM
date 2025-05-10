@@ -1,11 +1,22 @@
 {
   "development": {
-    "username": "root",
-    "password": "123456",
-    "database": "elearning",
-    "host": "database-mysql",
+    "username": "rootThao",
+    "password": "Thao1234567890@",
+    "database": "itnihongo",
+    "host": "hosythao.mysql.database.azure.com",
     "port": 3306,
-    "dialect": "mysql"
+    "dialect": "mysql",
+    "dialectOptions": {
+      "ssl": {
+        "require": true
+      }
+    },
+    "pool": {
+      "max": 5,
+      "min": 0,
+      "acquire": 30000,
+      "idle": 10000
+    }
   },
   "local": {
     "username": "root",

@@ -7,14 +7,18 @@ import { FcGoogle } from "react-icons/fc";
 import AuthContext from "@/context/AuthProvider";
 import { fetchLogin } from "@/api/login";
 import { getOTP } from "@/api/getOTP";
+import { useAuthStore } from "@/store/useAuthStore";
 
 function Login() {
-  const { login } = useContext(AuthContext); 
+  // const { login } = useContext(AuthContext); 
   const navigate = useNavigate();
   const [email, setemail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const login     = useAuthStore(state => state.login);
+  const setTokens = useAuthStore(state => state.setTokens);
 
   const isLoginDisabled = email.trim() === "" || password.length < 8;
 
@@ -42,7 +46,8 @@ function Login() {
         return;
       }
 
-      login(accessToken, refreshToken, user);
+      login({accessToken, refreshToken, user});
+      setTokens({ accessToken, refreshToken });
       navigate("/");
     } catch (err) {
       const status = err.response?.status;
@@ -62,6 +67,7 @@ function Login() {
   const handleGoogleLogin = async () => {
       window.location.href = "http://localhost:9000/api/auth/google";
   };
+  
   
 
   return (

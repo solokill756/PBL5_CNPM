@@ -6,10 +6,11 @@ import AuthContext from "@/context/AuthProvider";
 import { useContext, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { getOTP } from "@/api/getOTP";
+import { useAuthStore } from "@/store/useAuthStore";
 
 function EmailVerification() {
   const location = useLocation();
-  const { login } = useContext(AuthContext);
+  // const { login } = useContext(AuthContext);
   const queryParams = new URLSearchParams(location.search);
   const navigate = useNavigate();
 
@@ -18,6 +19,10 @@ function EmailVerification() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState("");
   const [disabled, setDisabled] = useState(true);
+
+  const login     = useAuthStore(state => state.login);
+  const setTokens = useAuthStore(state => state.setTokens);
+
   const handleInputChange = (e) => {
     setCode(e.target.value);
   };
@@ -46,7 +51,8 @@ function EmailVerification() {
           return;
         }
 
-        login(accessToken, refreshToken, user);
+        login({accessToken, refreshToken, user});
+        setTokens({ accessToken, refreshToken });
         navigate("/");
       } else {
         setError(message);

@@ -32,14 +32,12 @@ RUN npm install --omit=dev
 # Sao chép các file cần thiết từ giai đoạn builder
 COPY --from=builder /elearning/backend/dist ./dist
 COPY --from=builder /elearning/backend/src/config ./src/config
-COPY --from=builder /elearning/backend/src/seeders ./src/seeders
-COPY --from=builder /elearning/backend/.sequelizerc ./.sequelizerc
-COPY --from=builder /elearning/backend/src/migrations ./src/migrations
+COPY --from=builder /elearning/backend/.env ./.env
+# COPY --from=builder /elearning/backend/.sequelizerc ./.sequelizerc
+# Nếu cần migrations, bỏ comment dòng dưới
+# COPY --from=builder /elearning/backend/src/migrations ./src/migrations
 
 # Command khởi chạy ứng dụng
 CMD ["/bin/bash", "-c", "\
-  /wait-for-it.sh database-mysql:3306 --timeout=60 --strict && \
-  npx sequelize-cli db:migrate --migrations-path src/migrations --debug && \
-  npx sequelize-cli db:seed:all --seeders-path src/seeders --debug && \
+  /wait-for-it.sh hosythao.mysql.database.azure.com:3306 --timeout=60 --strict && \
   node dist/server.js"]
-

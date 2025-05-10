@@ -42,6 +42,12 @@ export default (sequelize: Sequelize) => {
       sequelize,
       tableName: 'search_history',
       timestamps: false,
+      indexes: [
+        {
+          unique: true,
+          fields: ["history_id"]
+        }
+      ]
     }
   );
 

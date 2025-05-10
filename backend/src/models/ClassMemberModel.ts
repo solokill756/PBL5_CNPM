@@ -6,20 +6,21 @@ interface ClassMemberAttributes {
   joined_at: Date;
   last_accessed: Date;
   id: String;
+  reminder_status: boolean;
 }
 
 interface ClassMemberCreationAttributes
-  extends Partial<Pick<ClassMemberAttributes, "joined_at" | "id">> {}
+  extends Partial<Pick<ClassMemberAttributes, "joined_at" | "id" | "reminder_status">> { }
 
 class ClassMember
   extends Model<ClassMemberAttributes, ClassMemberCreationAttributes>
-  implements ClassMemberAttributes
-{
+  implements ClassMemberAttributes {
   declare id: string;
   declare class_id: string;
   declare user_id: string;
   declare joined_at: Date;
   declare last_accessed: Date;
+  declare reminder_status: boolean;
 }
 
 export default (sequelize: Sequelize) => {
@@ -48,12 +49,23 @@ export default (sequelize: Sequelize) => {
         allowNull: false,
         defaultValue: DataTypes.NOW,
       },
+      reminder_status: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+        defaultValue: false,
+      },
     },
     {
       sequelize,
       tableName: "class_member",
       timestamps: false,
-     
+      indexes: [
+        {
+          unique: true,
+          fields: ["class_id", "user_id"]
+        }
+      ]
+
     }
   );
   return ClassMember;

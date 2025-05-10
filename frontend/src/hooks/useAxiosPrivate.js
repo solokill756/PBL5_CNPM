@@ -1,14 +1,14 @@
 // axiosPrivate.js (hoặc tùy file bạn đang để hook này)
-import { useEffect } from 'react';
-import { axiosPrivate } from '../api/axios';
-import useRefreshToken from './useRefreshToken';
-import useAuth from './useAuth';
+import { useEffect } from "react";
+import { axiosPrivate } from "../api/axios";
+import useRefreshToken from "./useRefreshToken";
+import { useAuthStore } from "@/store/useAuthStore";
 
 let isRefreshing = false;
 let failedQueue = [];
 
 const processQueue = (error, token = null) => {
-  failedQueue.forEach(prom => {
+  failedQueue.forEach((prom) => {
     if (error) prom.reject(error);
     else prom.resolve(token);
   });
@@ -17,24 +17,24 @@ const processQueue = (error, token = null) => {
 
 const useAxiosPrivate = () => {
   const refresh = useRefreshToken();
-  const { auth } = useAuth();
+  const accessToken = useAuthStore(state => state.accessToken);
 
   useEffect(() => {
     // intercept request để gắn token
     const reqInterceptor = axiosPrivate.interceptors.request.use(
-      config => {
-        if (!config.headers['Authorization']) {
-          config.headers['Authorization'] = `Bearer ${auth?.accessToken}`;
+      (config) => {
+        if (!config.headers["Authorization"]) {
+          config.headers["Authorization"] = `Bearer ${accessToken}`;
         }
         return config;
       },
-      err => Promise.reject(err)
+      (err) => Promise.reject(err)
     );
 
     // intercept response để bắt 403 và queue các request chờ
     const resInterceptor = axiosPrivate.interceptors.response.use(
-      res => res,
-      err => {
+      (res) => res,
+      (err) => {
         const prevReq = err.config;
         if (err.response?.status === 403 && !prevReq._retry) {
           prevReq._retry = true;
@@ -44,26 +44,27 @@ const useAxiosPrivate = () => {
             return new Promise((resolve, reject) => {
               failedQueue.push({ resolve, reject });
             })
-              .then(token => {
-                prevReq.headers['Authorization'] = 'Bearer ' + token;
+              .then((token) => {
+                prevReq.headers["Authorization"] = "Bearer " + token;
                 return axiosPrivate(prevReq);
               })
-              .catch(e => Promise.reject(e));
+              .catch((e) => Promise.reject(e));
           }
 
           // nếu chưa có refresh nào đang chạy thì khởi động 1 lần
           isRefreshing = true;
           return new Promise((resolve, reject) => {
             refresh()
-              .then(newToken => {
+              .then((newToken) => {
                 // update header mặc định và xử lý queue
-                axiosPrivate.defaults.headers.common['Authorization'] = 'Bearer ' + newToken;
+                axiosPrivate.defaults.headers.common["Authorization"] =
+                  "Bearer " + newToken;
                 processQueue(null, newToken);
                 // retry chính request này
-                prevReq.headers['Authorization'] = 'Bearer ' + newToken;
+                prevReq.headers["Authorization"] = "Bearer " + newToken;
                 resolve(axiosPrivate(prevReq));
               })
-              .catch(error => {
+              .catch((error) => {
                 processQueue(error, null);
                 reject(error);
               })
@@ -81,7 +82,7 @@ const useAxiosPrivate = () => {
       axiosPrivate.interceptors.request.eject(reqInterceptor);
       axiosPrivate.interceptors.response.eject(resInterceptor);
     };
-  }, [auth?.accessToken, refresh]);
+  }, [accessToken, refresh]);
 
   return axiosPrivate;
 };

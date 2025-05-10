@@ -1,15 +1,15 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import removeNullProperties from "../helpers/removeNullProperties.js";
+import removeNullProperties from "../utils/removeNullProperties.js";
 import {
   generateAccessToken,
   generateRefreshToken,
   saltRounds,
 } from "../helpers/tokenHelper.js";
 import { registerService, UserPayload } from "../services/authService.js";
-import { filterUserData } from "../helpers/fillData.js";
+import { filterUserData } from "../utils/fillData.js";
 import dotenv from "dotenv";
-import generateRandomPassword from "../utils/generatePassword.js";
+import generateRandomPassword from "../helpers/generatePassword.js";
 import db from "../models/index.js";
 import bcrypt from "bcrypt";
 dotenv.config();
@@ -35,7 +35,7 @@ passport.use(
             datetime_joined: Date.now(),
             password: await bcrypt.hash(generateRandomPassword(), saltRounds),
           });
-        const newUser = await registerService(userData , 1);
+          const newUser = await registerService(userData, 1);
           const userPayload: UserPayload = {
             username: newUser.username,
             email: newUser.email,
@@ -45,15 +45,15 @@ passport.use(
           return done(null, {
             accessToken: generateAccessToken(userPayload),
             refreshToken: generateRefreshToken(userPayload),
-            user: filterUserData(filterUserData(newUser)),
+            user: filterUserData(newUser),
           });
         } else {
           let userData = user.toJSON();
           const payLoad: UserPayload = {
-                username: userData.username,
-                email: userData.email,
-                user_id: userData.user_id,
-                tokenVersion: userData.tokenVersion,
+            username: userData.username,
+            email: userData.email,
+            user_id: userData.user_id,
+            tokenVersion: userData.tokenVersion,
           };
           return done(null, {
             accessToken: generateAccessToken(payLoad),

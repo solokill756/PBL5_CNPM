@@ -2,14 +2,24 @@ import React, { useState, useRef, useEffect } from "react";
 import { cloneElement } from "react";
 import Dropdown from "../Dropdown";
 
-const RoundButton = ({ icon, onClick = () => {}, border, menu = [], isDropdown = false }) => {
+const RoundButton = ({ 
+  icon, 
+  className = "", 
+  onClick = () => {}, 
+  border, 
+  menu = [], 
+  isDropdown = false, 
+  isSaved = false,
+  isActive = false,
+  label = "" 
+}) => {
   const [active, setActive] = useState(false);
   const buttonRef = useRef();
 
   const toggleDropdown = (e) => {
     e.stopPropagation();
     setActive((prev) => !prev);
-    onClick(); // vẫn gọi callback nếu có
+    onClick();
   };
 
   useEffect(() => {
@@ -25,28 +35,33 @@ const RoundButton = ({ icon, onClick = () => {}, border, menu = [], isDropdown =
   const styledIcon = icon
     ? cloneElement(icon, {
         className: `${icon.props.className || ""} ${
-          active ? "text-red-400" : ""
-        } size-5 text-gray-600`,
+          isSaved ? "text-red-400" : isActive ? "text-red-400" : ""
+        } size-5 font-semibold text-gray-600`,
       })
     : null;
 
+  const displayLabel = label || (isSaved ? "Đã lưu" : "");
+
   return (
-    <div className="relative inline-block text-left" ref={buttonRef}>
+    <div className={`relative inline-block text-left ${className}`} ref={buttonRef}>
       <button
         className={`flex border-2 ${border} ${
-          active
-            ? "bg-red-50 hover:bg-red-100 border-red-300"
+          isSaved
+            ? "bg-red-50 hover:bg-red-100 text-red-500 border-red-300"
+            : isActive
+            ? "bg-red-50 hover:bg-red-100 text-red-500 border-red-300"
             : "border-gray-300 bg-white hover:bg-zinc-100"
         } items-center text-sm font-medium gap-2 p-2 text-gray-600 rounded-full`}
         onClick={toggleDropdown}
       >
         {styledIcon}
+        {displayLabel && <span>{displayLabel}</span>}
       </button>
 
       {isDropdown && active && (
         <Dropdown
           menu={menu}
-          onSelect={() => setActive(false)} // đóng dropdown khi chọn
+          onSelect={() => setActive(false)} 
         />
       )}
     </div>

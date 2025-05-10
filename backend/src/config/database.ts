@@ -24,7 +24,7 @@ dotenv.config();
 console.log("process.env.DB_NAME : " + process.env.DB_HOST);
 export default {
   HOST: process.env.DB_HOST as string,
-  USER: "root",
+  USER: process.env.DB_USER as string,
   PASSWORD: process.env.DB_PASSWORD as string,
   DB: process.env.DB_NAME as string,
   dialect: "mysql",
@@ -35,4 +35,5 @@ export default {
     acquire: 30000,
     idle: 10000,
   },
+  
 };

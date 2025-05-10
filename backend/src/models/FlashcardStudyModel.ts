@@ -6,20 +6,23 @@ interface FlashcardStudyAttributes {
   last_accessed: Date;
   number_word_forget: number;
   id: string;
+  rate: number;
+  comment: string;
 }
 
 interface FlashcardStudyCreationAttributes
-  extends Partial<Pick<FlashcardStudyAttributes, "last_accessed" | "id">> {}
+  extends Partial<Pick<FlashcardStudyAttributes, "last_accessed" | "id">> { }
 
 class FlashcardStudy
   extends Model<FlashcardStudyAttributes, FlashcardStudyCreationAttributes>
-  implements FlashcardStudyAttributes
-{
+  implements FlashcardStudyAttributes {
   declare last_accessed: Date;
   declare id: string;
   declare user_id: string;
   declare list_id: string;
   declare number_word_forget: number;
+  declare rate: number;
+  declare comment: string;
 }
 
 export default (sequelize: Sequelize) => {
@@ -46,13 +49,28 @@ export default (sequelize: Sequelize) => {
       number_word_forget: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
+      rate: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      comment: {
+        type: DataTypes.STRING,
+        allowNull: true,
       },
     },
     {
       sequelize,
       tableName: "flashcardStudy",
       timestamps: false,
+      indexes: [
+        {
+          unique: true,
+          fields: ["list_id", "user_id"]
+        }
+      ]
     }
   );
 

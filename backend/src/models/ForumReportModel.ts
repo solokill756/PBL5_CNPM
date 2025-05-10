@@ -70,6 +70,12 @@ export default (sequelize: Sequelize) => {
       sequelize,
       tableName: "forum_report",
       timestamps: false,
+      indexes: [
+        {
+          unique: true,
+          fields: ["report_id"]
+        }
+      ]
     }
   );
 

@@ -76,7 +76,7 @@ const getRecentFlashcardsService = async (userId: string): Promise<any> => {
           model: db.flashcard,
           as: "Flashcard",
           attributes: [],
-          required: false,
+          required: true,
         },
       ],
       attributes: {
@@ -155,28 +155,16 @@ const getTopTopicsByUserService = async (userId: string): Promise<any> => {
           attributes: [],
           include: [
             {
-              model: db.flashcard,
+              model: db.searchHistory,
               attributes: [],
-              include: [
-                {
-                  model: db.listFlashcard,
-                  attributes: [],
-                  include: [
-                    {
-                      model: db.flashcardStudy,
-                      attributes: [],
-                      where: {
-                        user_id: userId,
-                      },
-                    },
-                  ],
-                },
-              ],
+              where: {
+                user_id: userId,
+              },
             },
           ],
         },
       ],
-      attributes: ["topic_id", "name", "image_url" , "description"],
+      attributes: ["topic_id", "name", "image_url", "description"],
       subQuery: false,
       limit: 5,
     });

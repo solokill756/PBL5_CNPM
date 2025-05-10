@@ -7,16 +7,19 @@ import Profile from "@/pages/Profile";
 import DefaultGuest from "@/layouts/DefaultGuest";
 import Home from "@/pages/Home";
 import EmailVerification from "@/pages/EmailVerification";
-import useAuth from "@/hooks/useAuth";
 import Library from "@/pages/Library";
 import Forum from "@/pages/Forum";
 import Quiz from "@/pages/Quiz";
 import AuthSuccess from "@/components/AuthSuccess";
+import FlashCard from "@/pages/Flashcard";
+import { useAuthStore } from "@/store/useAuthStore";
 
 // Component bảo vệ route yêu cầu xác thực
 function PrivateRoute({ children }) {
-  const { auth } = useAuth();
-  return auth?.accessToken ? (
+  // const { auth } = useAuth();
+  const accessToken = useAuthStore(state => state.accessToken);
+
+  return accessToken ? (
     children
   ) : (
     <Navigate to="/accounts/login" replace />
@@ -25,8 +28,8 @@ function PrivateRoute({ children }) {
 
 // Component bảo vệ route dành cho khách
 function GuestRoute({ children }) {
-  const { auth } = useAuth();
-  return !auth?.accessToken ? children : <Navigate to="/" replace />;
+  const accessToken = useAuthStore(state => state.accessToken);
+  return !accessToken ? children : <Navigate to="/" replace />;
 }
 
 const router = createBrowserRouter([
@@ -43,7 +46,7 @@ const router = createBrowserRouter([
         element: <Home />,
       },
       {
-        path: "/accounts/:username",
+        path: "/accounts/:userId",
         element: <Profile />,
       },
       {
@@ -58,6 +61,10 @@ const router = createBrowserRouter([
         path: "/quiz",
         element: <Quiz />,
       },
+      {
+        path: "/flashcard/:flashcardId",
+        element: <FlashCard />
+      }
     ],
   },
   {
@@ -92,7 +99,15 @@ const router = createBrowserRouter([
   },
   {
     path: "/auth-success",
-    element: <AuthSuccess />
+    element: <AuthSuccess />,
+  },
+  {
+    path: "/flashcard/:flashcardId/learn",
+    // element: <LearnFlashcard />,
+  },
+  {
+    path: "/flashcard/:flashcardId/detail",
+    element: <FlashCard mode="detail"/>
   }
 ]);
 

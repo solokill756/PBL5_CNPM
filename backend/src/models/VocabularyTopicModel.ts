@@ -55,6 +55,12 @@ export default (sequelize: Sequelize) => {
       sequelize,
       tableName: "vocabulary_topic",
       timestamps: false,
+      indexes: [
+        {
+          unique: true,
+          fields: ["topic_id"]
+        }
+      ]
     }
   );
 

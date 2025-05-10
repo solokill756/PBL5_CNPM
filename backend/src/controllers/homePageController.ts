@@ -5,27 +5,28 @@ import {
   getTopAuthorService,
   getTopTopicsByUserService,
 } from "../services/homePageService";
+import { sendError, sendSuccess } from "../middleware/responseFormatter";
 const getRecentClasses = async (req: Request, res: Response): Promise<any> => {
   try {
-    const userID = req.body.user.user_id;
+    const userID = (req as any).user.user_id;
     if (!userID) {
       return res.status(403).json({ error: "Can not get Data" });
     }
     const data = await getRecentClassesService(userID);
-    return res.status(200).json(data);
+    sendSuccess(res, data);
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: "Lỗi server" });
+    sendError(res, "Lỗi server", 500);
   }
 };
 
 const getTopAuthor = async (_req: Request, res: Response): Promise<any> => {
   try {
     const data = await getTopAuthorService();
-    res.status(200).json(data);
+    sendSuccess(res, data);
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: "Lỗi server" });
+    sendError(res, "Lỗi server", 500);
   }
 };
 
@@ -34,12 +35,12 @@ const getRecentFlashcards = async (
   res: Response
 ): Promise<any> => {
   try {
-    const userID = req.body.user.user_id;
+    const userID = (req as any).user.user_id;
     const data = await getRecentFlashcardsService(userID);
-    res.status(200).json(data);
+    sendSuccess(res, data);
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: "Lỗi server" });
+    sendError(res, "Lỗi server", 500);
   }
 };
 const getTopTopicsByUser = async (
@@ -47,12 +48,12 @@ const getTopTopicsByUser = async (
   res: Response
 ): Promise<any> => {
   try {
-    const userID = req.body.user.user_id;
+    const userID = (req as any).user.user_id;
     const data = await getTopTopicsByUserService(userID);
-    res.status(200).json(data);
+    sendSuccess(res, data);
   } catch (error) {
     console.log("lỗi lấy topic :", error);
-    res.status(500).json({ error: "Lỗi server" });
+    sendError(res, "Lỗi server", 500);
   }
 };
 

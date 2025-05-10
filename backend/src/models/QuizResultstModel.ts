@@ -52,7 +52,15 @@ export default (sequelize: Sequelize) => {
       sequelize,
       tableName: "quiz_result",
       timestamps: false,
+      indexes: [
+        {
+          unique: true,
+          fields: ["result_id"]
+        }
+      ]
     }
+
+      
   );
 
   return QuizResult;

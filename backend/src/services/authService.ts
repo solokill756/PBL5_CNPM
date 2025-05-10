@@ -4,7 +4,6 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../helpers/tokenHelper.js";
-import { filterUserData } from "../helpers/fillData.js";
 import db from "../models/index.js";
 dotenv.config();
 interface UserPayload {
@@ -47,7 +46,7 @@ const registerService = async (
       { transaction }
     );
     await transaction.commit();
-    return filterUserData(newUser);
+    return newUser;
   } catch (error) {
     transaction.rollback();
     throw error;

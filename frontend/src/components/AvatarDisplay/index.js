@@ -1,11 +1,11 @@
-import React from 'react';
+import React from "react";
 import { BsFire } from "react-icons/bs";
-import { ReactComponent as StreakIcon } from '@/assets/icons/streak.svg';
+import { ReactComponent as StreakIcon } from "@/assets/icons/streak.svg";
 
 const AvatarDisplay = ({ avatar, streak, username, onClick }) => (
   <div className="flex w-full items-center">
     <div className="w-2/4 h-full flex flex-col items-start text-sm font-semibold text-gray-500">
-      <span className='h-1/2'>{username}</span>
+      <span className="h-1/2">{username}</span>
       <span className="flex flex-1 items-center gap-1">
         <div className="relative flex items-center">
           <StreakIcon className="w-6 h-6" />
@@ -15,7 +15,7 @@ const AvatarDisplay = ({ avatar, streak, username, onClick }) => (
         </div>
       </span>
     </div>
-    <div className='flex-1'>
+    <div className="flex-1">
       <img
         className="size-12 cursor-pointer rounded-full"
         onClick={onClick}

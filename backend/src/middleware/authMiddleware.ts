@@ -44,7 +44,7 @@ const authenticateToken = (
         res.status(403).json({ error: "Token không hợp lệ" });
         return;
       }
-      req.body.user = userCurrent;
+      (req as any).user = userCurrent;
       next();
     }
   );

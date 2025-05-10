@@ -1,16 +1,17 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import AuthContext from '@/context/AuthProvider';
 import AvatarDisplay from '../AvatarDisplay';
 import DropdownMenu from '../DropdownMenu';
 import { fetchLogout } from '@/api/logout';
 import useAxiosPrivate from '@/hooks/useAxiosPrivate';
+import { useAuthStore } from '@/store/useAuthStore';
 
 const UserMenu = () => {
   const [active, setActive] = useState(false);
   const avatarRef = useRef(null);
-  const { auth, logout } = useContext(AuthContext);
   const axiosPrivate = useAxiosPrivate();
-  const user = auth.user;
+
+  const user = useAuthStore(state => state.user);
+  const logout = useAuthStore(state => state.logout);
 
   const handleClickOutside = (event) => {
     if (avatarRef.current && !avatarRef.current.contains(event.target)) {
