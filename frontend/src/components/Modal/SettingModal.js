@@ -23,6 +23,9 @@ export default function SettingModal() {
   const setShowOnlyStarred = useFlashcardStore(
     (state) => state.setShowOnlyStarred
   );
+  const hasStarredFlashcards = useFlashcardStore(
+    (state) => state.hasStarredFlashcards
+  );
 
   // Memoize menu items
   const menuItems = useMemo(
@@ -51,6 +54,7 @@ export default function SettingModal() {
         <h2 className="text-3xl pb-4 font-bold">Tùy chọn</h2>
 
         {/* Chỉ học thuật ngữ có gắn sao */}
+        {/* Chỉ học thuật ngữ có gắn sao */}
         <div className="flex items-center w-full">
           <span className="text-base font-medium">
             Chỉ học thuật ngữ có gắn sao
@@ -58,7 +62,8 @@ export default function SettingModal() {
           <ToggleSwitch
             checked={showOnlyStarred}
             onChange={() => setShowOnlyStarred(!showOnlyStarred)}
-            className="flex-1 flex justify-end"
+            className="ml-auto" // Thay đổi từ "flex-1 flex justify-end" thành "ml-auto"
+            disabled={!hasStarredFlashcards()}
           />
         </div>
         <hr />
