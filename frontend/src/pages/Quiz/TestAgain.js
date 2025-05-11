@@ -6,7 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import { useFlashcardStore } from "@/store/useflashcardStore";
 
-function Quiz() {
+function TestAgain() {
   const { flashcardId } = useParams();
   const [open, setOpen] = useState(true);
   const navigate = useNavigate();
@@ -60,7 +60,6 @@ function Quiz() {
       <div className="flex-1 pt-16 mt-4"> 
         {open && (
           <QuizModal
-            isOpen={open}
             onClose={() => setOpen(false)}
             title={"Unit08-動詞B_N2語彙_耳から覚える"}
             maxQuestions={displayDeck.length}
@@ -75,4 +74,4 @@ function Quiz() {
   );
 }
 
-export default Quiz;
+export default TestAgain;
