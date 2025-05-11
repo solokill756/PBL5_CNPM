@@ -46,3 +46,4 @@ app.*.map.json
 /.vscode
 /backend/.env
 .qodo
+/AlServer
