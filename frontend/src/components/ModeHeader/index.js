@@ -63,17 +63,23 @@ const ModeHeader = ({
         }
         menu={modeOptions}
       />
-  
+
       {/* Đoạn giữa căn giữa màn hình */}
       <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center font-semibold text-base">
         <span>
-          {currentIndex} / {totalCard}
+          {typeof currentIndex !== "undefined" &&
+          typeof totalCard !== "undefined" &&
+          flashcardTitle
+            ? `${currentIndex} / ${totalCard}`
+            : ""}
         </span>
-        <Link to={`/flashcard/${flashcardId}`} className="hover:text-red-400">
-          {flashcardTitle}
-        </Link>
+        {flashcardTitle && (
+          <Link to={`/flashcard/${flashcardId}`} className="hover:text-red-400">
+            {flashcardTitle}
+          </Link>
+        )}
       </div>
-  
+
       <div className="flex items-center gap-2">
         <RoundButton
           icon={<IoSettingsOutline className="!size-6 " />}
@@ -88,7 +94,6 @@ const ModeHeader = ({
       </div>
     </div>
   );
-  
 };
 
 export default ModeHeader;
