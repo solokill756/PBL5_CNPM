@@ -1,6 +1,7 @@
 import { sendLinkListFlashCard } from './../utils/sendLinkListFlashCard';
 import db from "../models";
 import dotenv from 'dotenv';
+import { addFlashcardToLearn } from './learnService';
 
 dotenv.config();
 
@@ -84,13 +85,15 @@ const getFlashcardByListId = async (list_id: string, user_id: string) => {
             }, {where: {list_id, user_id}});
         }
         else {
+            const number_flashcard = await db.flashcard.count({where: {list_id}});
             await db.flashcardStudy.create({
                 list_id,
                 user_id,
                 review_count: 1,
+                number_word_forget: number_flashcard,
                 last_review: new Date(),
             });
-            
+            await addFlashcardToLearn(list_id, user_id);
         }
       
         const listFlashcard = await db.flashcard.findAll({

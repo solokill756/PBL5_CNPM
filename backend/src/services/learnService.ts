@@ -150,6 +150,7 @@ const getFlashCardLearn = async (list_id: string, user_id: string) => {
           attributes: ["last_review"],
           where: {
             remember_status: false,
+            user_id: user_id,
           },
         },
       ],
