@@ -2,37 +2,40 @@ import React, { useState } from "react";
 import Modal from "./Modal";
 import { Listbox } from "@headlessui/react";
 import { RiArrowDropDownLine } from "react-icons/ri";
+import { useFlashcardStore } from "@/store/useflashcardStore";
+import useAxiosPrivate from "@/hooks/useAxiosPrivate";
+import { useQuizStore } from "@/store/useQuizStore";
+import { useNavigate } from "react-router-dom";
 
-const QuizModal = ({ isOpen, onClose, onSubmit, maxQuestions, title }) => {
-
+const QuizModal = ({ isOpen, onClose, maxQuestions, title, list_id }) => {
   const answerOptions = [
     { label: "Tiếng Việt", value: "1" },
     { label: "Tiếng Nhật", value: "2" },
   ];
 
+  const axiosPrivate = useAxiosPrivate();
+  const navigate = useNavigate();
+  const { fetchQuestions } = useQuizStore();
+  const displayDeck = useFlashcardStore((state) => state.displayDeck);
+  const [numberOfQuestions, setNumberOfQuestions] = useState("");
+  const [answerType, setAnswerType] = useState(answerOptions[0]);
+  const numQuestions = numberOfQuestions === "" ? "" : Number(numberOfQuestions);
+  const isInvalidQuestionCount = numQuestions === "" || numQuestions <= 0 || numQuestions > displayDeck.length;
 
-  const [questionCount, setQuestionCount] = useState(20);
-  const [answerType, setAnswerType] = useState(answerOptions[0]); 
+  const handleSubmit = async () => {
+    if (isInvalidQuestionCount) return;
 
-  const [questionTypes, setQuestionTypes] = useState({
-    trueFalse: false,
-    multipleChoice: true,
-    match: false,
-    written: false,
-  });
-
-  const toggleQuestionType = (type) => {
-    setQuestionTypes((prev) => ({ ...prev, [type]: !prev[type] }));
-  };
-
-  const handleSubmit = () => {
-    const payload = {
-      questionCount,
-      answerType: answerType.value,
-      questionTypes,
-    };
-    onSubmit(payload);
-    onClose();
+    try {
+      await fetchQuestions(
+        list_id || displayDeck[0]?.list_id,
+        answerType.value,
+        Number(numberOfQuestions),
+        axiosPrivate
+      );
+      onClose();
+    } catch (error) {
+      console.error("Error generating quiz:", error);
+    }
   };
 
   return (
@@ -42,20 +45,29 @@ const QuizModal = ({ isOpen, onClose, onSubmit, maxQuestions, title }) => {
         <h2 className="text-3xl font-extrabold text-gray-800">Thiết lập bài kiểm tra</h2>
 
         <div className="flex justify-between items-center">
-          <span className="text-base text-gray-800 font-semibold">Câu hỏi (tối đa {maxQuestions})</span>
+          <span className="text-base text-gray-800 font-semibold">
+            Câu hỏi (tối đa {maxQuestions})
+          </span>
           <input
             type="number"
             min={1}
             max={maxQuestions}
-            value={questionCount}
-            onChange={(e) => setQuestionCount(Number(e.target.value))}
+            value={numberOfQuestions}
+            onChange={(e) => setNumberOfQuestions(e.target.value)}
             className="w-36 border-2 border-gray-200 rounded-3xl px-2 py-1"
           />
         </div>
+        {isInvalidQuestionCount && numberOfQuestions !== "" && (
+          <span className="text-sm text-red-500 ml-auto">
+            {Number(numberOfQuestions) <= 0 
+              ? "Số câu hỏi phải lớn hơn 0" 
+              : `Số câu hỏi không được vượt quá số thẻ (${displayDeck.length})`}
+          </span>
+        )}
 
         <div className="flex justify-between items-center">
           <span className="text-base text-gray-800 font-semibold">Trả lời bằng</span>
-          <div className="">
+          <div>
             <Listbox value={answerType} onChange={setAnswerType}>
               <div className="relative">
                 <Listbox.Button className="relative w-36 cursor-pointer rounded-3xl border-2 border-gray-200 py-2 pl-4 pr-10 text-left text-gray-600 font-semibold hover:bg-gray-100 focus:outline-none">
@@ -84,11 +96,16 @@ const QuizModal = ({ isOpen, onClose, onSubmit, maxQuestions, title }) => {
             </Listbox>
           </div>
         </div>
-                
+
         <div className="flex justify-end">
           <button
             onClick={handleSubmit}
-            className="w-48 bg-red-700 hover:bg-red-800 text-white font-medium py-2 rounded-3xl "
+            className={`w-48 font-medium py-2 rounded-3xl ${
+              isInvalidQuestionCount || numberOfQuestions === ""
+                ? "bg-gray-200 cursor-not-allowed"
+                : "bg-red-700 hover:bg-red-800 text-white"
+            }`}
+            disabled={isInvalidQuestionCount || numberOfQuestions === ""}
           >
             Bắt đầu làm kiểm tra
           </button>

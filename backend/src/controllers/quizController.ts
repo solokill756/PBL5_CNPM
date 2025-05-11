@@ -1,12 +1,13 @@
+import { sendError, sendSuccess } from "../middleware/responseFormatter";
 import { GenerateQuiz, saveResultQuiz } from "../services/quizSevice";
 import { Request , Response } from "express";
 const generateQuizController = async (req : Request , res : Response) => {
    try {
      const { list_id , type_quiz , number_of_questions } = req.body;
      const quiz = await GenerateQuiz(list_id , Number(type_quiz) , Number(number_of_questions));
-     res.status(200).json(quiz);
+     sendSuccess(res , quiz);
    } catch (error) {
-    res.status(500).json({message : (error as Error).message});
+     sendError(res, "Internal server error", 500);
    }
 }
 
@@ -18,9 +19,9 @@ const saveResultQuizController = async (req : Request , res : Response) => {
     }
     try {
         const result = await saveResultQuiz(Number(score) , user_id);
-        res.status(200).json(result);
+        sendSuccess(res , result);
     } catch (error) {
-        res.status(500).json({message : (error as Error).message});
+       sendError(res, "Internal server error", 500);
     }
 }
 
