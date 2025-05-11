@@ -12,6 +12,7 @@ const RoundButton = ({
   isDropdown = false, 
   isSaved = false,
   isActive = false,
+  loading = false,
   label = "" 
 }) => {
   const [active, setActive] = useState(false);
@@ -54,6 +55,7 @@ const RoundButton = ({
             : "border-gray-300 bg-white hover:bg-zinc-100"
         } items-center text-sm font-medium gap-2 p-2 text-gray-600 rounded-full`}
         onClick={toggleDropdown}
+        disabled={loading}
       >
         {styledIcon}
         {displayLabel && <span>{displayLabel}</span>}
