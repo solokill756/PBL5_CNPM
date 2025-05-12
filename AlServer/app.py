@@ -2,6 +2,7 @@ import os
 import time
 import logging
 import json
+import uuid
 from flask import Flask, request, jsonify
 import google.generativeai as genai
 from datetime import datetime
@@ -20,66 +21,35 @@ logger = logging.getLogger(__name__)
 # Prompt builder for translation dictionary
 def create_prompt(word, language="Japanese"):
     prompts = {
-        "Japanese": f"""
+        "Vietnamese": f"""
 Hãy dịch từ tiếng Việt "{word}" sang tiếng Nhật và cung cấp thông tin chi tiết.
 Trả lời theo định dạng JSON với các trường sau:
 {{
-  "vietnamese": "{word}",
-  "japanese_word": "Từ tương ứng trong tiếng Nhật",
-  "kanji": "Dạng chữ Kanji (nếu có)",
-  "hiragana": "Cách viết bằng hiragana",
-  "katakana": "Cách viết bằng katakana (nếu phù hợp)",
-  "romaji": "Phiên âm La-tinh",
-  "vietnamese_pronunciation": "Cách đọc theo phiên âm tiếng Việt",
-  "meaning": "Giải thích ngắn gọn về ý nghĩa và cách dùng",
-  "jlpt_level": "Cấp độ JLPT nếu biết (N5-N1)",
+  "word": "{word}",
+  "meaning": "Từ tương ứng trong tiếng Nhật",
+  "pronunciation": "Phiên âm La-tinh",
   "example": "Một câu ví dụ bằng tiếng Nhật",
-  "example_meaning": "Nghĩa của câu ví dụ bằng tiếng Việt"
+  "usage": "Giải thích ngắn gọn về ý nghĩa và cách dùng",
+  "example_meaning": "Nghĩa của câu ví dụ bằng tiếng Việt",
+  "level": "Cấp độ JLPT nếu biết (N5-N1)",
+  "type": "Loại từ (danh từ, động từ, tính từ, v.v.)"
 }}
 Chỉ trả về JSON, không thêm văn bản giới thiệu hay giải thích.
 """,
-        "Vietnamese": f"""
+        "Japanese": f"""
 Hãy dịch từ tiếng Nhật "{word}" sang tiếng Việt và cung cấp thông tin chi tiết.
 Trả lời theo định dạng JSON với các trường sau:
 {{
-  "japanese_word": "{word}",
-  "vietnamese": "Từ tương ứng trong tiếng Việt",
-  "kanji": "Dạng chữ Kanji gốc (nếu có và nếu khác với input)",
-  "hiragana": "Cách viết bằng hiragana",
-  "romaji": "Phiên âm La-tinh",
-  "vietnamese_pronunciation": "Cách đọc theo âm tiếng Việt",
-  "meaning": "Giải thích nghĩa và cách dùng bằng tiếng Việt",
-  "part_of_speech": "Loại từ (danh từ, động từ, tính từ, v.v.)",
+  "word": "{word}",
+  "meaning": "Từ tương ứng trong tiếng Việt",
+  "pronunciation": "Phiên âm La-tinh và hiragana nếu khác với input",
   "example": "Một câu ví dụ bằng tiếng Nhật",
-  "example_meaning": "Nghĩa của câu ví dụ bằng tiếng Việt"
+  "usage": "Giải thích nghĩa và cách dùng bằng tiếng Việt",
+  "example_meaning": "Nghĩa của câu ví dụ bằng tiếng Việt",
+  "level": "Cấp độ JLPT nếu biết (N5-N1)",
+  "type": "Loại từ (danh từ, động từ, tính từ, v.v.)"
 }}
 Chỉ trả về JSON, không thêm văn bản giới thiệu hay giải thích.
-"""
-    }
-    return prompts.get(language, prompts["Japanese"])
-
-# Prompt builder for vocabulary analysis
-def create_analysis_prompt(word, language="Japanese"):
-    prompts = {
-        "Japanese": f"""
-Giải thích ngắn gọn từ vựng tiếng Nhật: {word}
-Yêu cầu trả lời đúng định dạng JSON gồm 4 mục:
-{{
-  "meaning": "",
-  "pronunciation": "",
-  "example": "",
-  "usage": ""
-}}
-""",
-        "Vietnamese": f"""
-Giải thích ngắn gọn từ tiếng Việt: {word}
-Yêu cầu trả lời đúng định dạng JSON gồm 4 mục:
-{{
-  "meaning": "",
-  "pronunciation": "",
-  "example": "",
-  "usage": ""
-}}
 """
     }
     return prompts.get(language, prompts["Japanese"])
@@ -98,13 +68,13 @@ def extract_json_from_response(text):
         except (json.JSONDecodeError, ValueError):
             return {
                 "meaning": "Failed to parse response",
-                "vietnamese_pronunciation": "",
+                "pronunciation": "",
                 "example": "",
                 "example_meaning": text
             }
 
 # Call Gemini and process response for translation
-def generate_response(prompt, word, language):
+def generate_response(prompt, word, language, topic_id="default"):
     try:
         logger.info(f"Calling Gemini with prompt for word: {word}")
         start_time = time.time()
@@ -115,84 +85,63 @@ def generate_response(prompt, word, language):
         content = response.text.strip()
         parsed = extract_json_from_response(content)
 
-        # Define required fields based on language
-        required_fields = (
-            ["vietnamese", "japanese_word", "kanji", "hiragana", "katakana", "romaji",
-             "vietnamese_pronunciation", "meaning", "jlpt_level", "example", "example_meaning"]
-            if language == "Japanese" else
-            ["japanese_word", "vietnamese", "kanji", "hiragana", "romaji",
-             "vietnamese_pronunciation", "meaning", "part_of_speech", "example", "example_meaning"]
-        )
-
-        # Ensure all required fields exist
+        # Ensure all required fields exist (matching Vocabulary model structure)
+        required_fields = [
+            "word", "meaning", "pronunciation", "example", "usage", 
+            "example_meaning", "level", "type"
+        ]
+        
         for field in required_fields:
             parsed.setdefault(field, "")
 
-        # Add metadata
-        parsed.update({
-            "input_word": word,
-            "translation_direction": language,
-            "query_timestamp": datetime.now().isoformat(),
-            "processing_time_seconds": round(duration, 2)
-        })
-
-        return parsed
-    except Exception as e:
-        logger.error(f"Error calling Gemini: {str(e)}")
-        return {
-            "input_word": word,
-            "translation_direction": language,
-            "japanese_word": "",
-            "vietnamese": "",
-            "meaning": "",
-            "example": "",
-            "example_meaning": "",
-            "error": str(e),
-            "query_timestamp": datetime.now().isoformat(),
-            "processing_time_seconds": 0,
-            "status": "error"
+        # Create response matching Vocabulary model structure
+        vocabulary_response = {
+            "vocab_id": str(uuid.uuid4()),
+            "word": word if not parsed.get("word") else parsed.get("word"),
+            "meaning": parsed.get("meaning", ""),
+            "pronunciation": parsed.get("pronunciation", ""),
+            "example": parsed.get("example", ""),
+            "topic_id": topic_id,
+            "usage": parsed.get("usage", ""),
+            "example_meaning": parsed.get("example_meaning", ""),
+            "ai_suggested": "true",
+            "created_at": datetime.now().isoformat(),
+            "language": language,
+            "level": parsed.get("level", "N5"),  # Default to N5 if not specified
+            "type": parsed.get("type", "")
         }
 
-# Call Gemini and process response for vocabulary analysis
-def generate_analysis_response(prompt, word, language):
-    try:
-        logger.info(f"Calling Gemini with analysis prompt for word: {word}")
-        start_time = time.time()
-        response = model.generate_content(prompt)
-        duration = time.time() - start_time
-        logger.info(f"Gemini responded in {duration:.2f}s")
+        # Add metadata for debugging (not part of the Vocabulary model)
+        metadata = {
+            "processing_time_seconds": round(duration, 2),
+            "total_api_time_seconds": round(duration, 2)
+        }
 
-        content = response.text.strip()
-        parsed = extract_json_from_response(content)
-
-        # Ensure all required fields exist
-        required_fields = ["meaning", "pronunciation", "example", "usage"]
-        for field in required_fields:
-            parsed.setdefault(field, "")
-
-        # Add metadata
-        parsed.update({
-            "word": word,
-            "language": language,
-            "query_timestamp": datetime.now().isoformat(),
-            "processing_time_seconds": round(duration, 2)
-        })
-
-        return parsed
+        return vocabulary_response, metadata
     except Exception as e:
         logger.error(f"Error calling Gemini: {str(e)}")
-        return {
+        error_response = {
+            "vocab_id": str(uuid.uuid4()),
             "word": word,
-            "language": language,
             "meaning": "",
             "pronunciation": "",
             "example": "",
+            "topic_id": topic_id,
             "usage": "",
+            "example_meaning": f"Error: {str(e)}",
+            "ai_suggested": "true",
+            "created_at": datetime.now().isoformat(),
+            "language": language,
+            "level": "N5",
+            "type": ""
+        }
+        
+        metadata = {
             "error": str(e),
-            "query_timestamp": datetime.now().isoformat(),
-            "processing_time_seconds": 0,
             "status": "error"
         }
+        
+        return error_response, metadata
 
 # API route for translation dictionary
 @app.route('/generate', methods=['POST'])
@@ -205,59 +154,34 @@ def generate():
             return jsonify({
                 "status": "error",
                 "error": "Missing required 'word' parameter",
-                "query_timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat()
             }), 400
 
         word = data['word']
         language = data.get('language', 'Japanese')
+        topic_id = data.get('topic_id', str(uuid.uuid4()))
 
         prompt = create_prompt(word, language)
-        result = generate_response(prompt, word, language)
+        vocabulary_response, metadata = generate_response(prompt, word, language, topic_id)
 
-        result["status"] = "success" if not result.get("error") else "error"
-        result["total_api_time_seconds"] = round(time.time() - start_time, 2)
+        # Add status to the metadata
+        metadata["status"] = "success" if not metadata.get("error") else "error"
+        metadata["total_api_time_seconds"] = round(time.time() - start_time, 2)
 
-        return jsonify(result), 200
+        # Return the vocabulary response matching the model structure
+        response = {
+            "data": vocabulary_response,
+            "metadata": metadata
+        }
 
-    except Exception as e:
-        logger.error(f"Server error: {str(e)}")
-        return jsonify({
-            "status": "error",
-            "error": f"Server error: {str(e)}",
-            "query_timestamp": datetime.now().isoformat()
-        }), 500
-
-# API route for vocabulary analysis
-@app.route('/analyze', methods=['POST'])
-def analyze():
-    try:
-        start_time = time.time()
-        data = request.get_json()
-
-        if not data or 'word' not in data:
-            return jsonify({
-                "status": "error",
-                "error": "Missing required 'word' parameter",
-                "query_timestamp": datetime.now().isoformat()
-            }), 400
-
-        word = data['word']
-        language = data.get('language', 'Japanese')
-
-        prompt = create_analysis_prompt(word, language)
-        result = generate_analysis_response(prompt, word, language)
-
-        result["status"] = "success" if not result.get("error") else "error"
-        result["total_api_time_seconds"] = round(time.time() - start_time, 2)
-
-        return jsonify(result), 200
+        return jsonify(response), 200
 
     except Exception as e:
         logger.error(f"Server error: {str(e)}")
         return jsonify({
             "status": "error",
             "error": f"Server error: {str(e)}",
-            "query_timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat()
         }), 500
 
 # Health check endpoint
