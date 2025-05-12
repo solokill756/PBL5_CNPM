@@ -86,6 +86,39 @@ const getAlToFindVocabulary = async (word: string , language: string) => {
   }
 }
 
+const getHistorySearch = async (user_id: string) => {
+  try {
+    const history = await db.searchHistory.findAll({
+      where: { user_id },
+      attributes: ['searched_at'],
+      include: [{
+        model: db.vocabulary,
+        attributes: ['word', 'pronunciation', 'meaning', 'example', 'usage']
+      }],
+      order: [['searched_at', 'DESC']]
+    });
+    return history;
+  } catch (error) {
+    throw error;
+  }
+}
 
-export default { getSimilarVocabulary, getVocabularyByTopic, getAlToFindVocabulary , requestNewVocabulary , getAllTopic };
+const addHistorySearch = async (user_id: string, vocabulary_id: string) => {
+  try {
+    const vocabulary = await db.vocabulary.findByPk(vocabulary_id);
+    if (!vocabulary) {
+      throw new Error("Vocabulary not found");
+    }
+    const history = await db.searchHistory.create({
+      user_id,
+      vocab_id : vocabulary_id,
+      searched_at: new Date()
+    });
+    return history;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export default { getSimilarVocabulary, getVocabularyByTopic, getAlToFindVocabulary , requestNewVocabulary , getAllTopic , getHistorySearch , addHistorySearch };
 
