@@ -27,9 +27,6 @@ const FlashcardElement = ({ text, onClick, star, flashcardId, isJapanese = false
   };
 
   const hintContent = aiExplainCache[flashcardId];
-  console.log('Cache content:', hintContent);
-  console.log('Loading state:', aiExplainLoading[flashcardId]);
-  console.log('Error state:', aiExplainError[flashcardId]);
 
   return (
     <div className="relative h-full w-full flex flex-col justify-center">

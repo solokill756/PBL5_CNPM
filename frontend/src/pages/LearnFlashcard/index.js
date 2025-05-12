@@ -376,11 +376,6 @@ export default function LearnFlashcard() {
 
   // REVIEW MODE - Show review screen
   if (reviewMode && reviewList && reviewList.length > 0) {
-    console.log("====================================");
-    console.log("reviewList: " + reviewList.length);
-    console.log("Round: " + getRound());
-    console.log("Current round known count: " + currentRoundKnownCount());
-    console.log("====================================");
 
     return (
       <ReviewLearnRound
