@@ -26,7 +26,7 @@ export default function LearnFlashcard() {
     isRestoring: true,
     isDataReady: false,
     isFullyLoaded: false,
-    isResetInProgress: false // Thêm state để track quá trình reset
+    isResetInProgress: false, // Thêm state để track quá trình reset
   });
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [slideDirection, setSlideDirection] = useState(null);
@@ -47,7 +47,6 @@ export default function LearnFlashcard() {
     handleKnow,
     handleDontKnow,
     sendPendingProgress,
-    addToPendingProgress,
     handleLearningComplete,
     knownCount,
     total,
@@ -65,7 +64,7 @@ export default function LearnFlashcard() {
     currentRoundKnownCount,
   } = useLearnStore();
 
-  // Fetch flashcards if not loaded or if ID changed
+  // Modify the useEffect for initial loading
   useEffect(() => {
     const checkAndRestoreLearningState = async () => {
       try {
@@ -73,36 +72,35 @@ export default function LearnFlashcard() {
           isRestoring: true,
           isDataReady: false,
           isFullyLoaded: false,
-          isResetInProgress: false
+          isResetInProgress: false,
         });
-        
+
         const restored = await restoreLearningState(axios, flashcardId);
 
         if (!restored && (!isDataLoaded || lastLoadedId !== flashcardId)) {
           await fetchFlashcardList(axios, flashcardId);
         }
+
+        // Add a small delay to ensure smooth transition
+        setTimeout(() => {
+          setLoadingState({
+            isRestoring: false,
+            isDataReady: true,
+            isFullyLoaded: true,
+            isResetInProgress: false,
+          });
+        }, 300);
       } catch (error) {
         console.error("Error checking learning state:", error);
         if (!isDataLoaded || lastLoadedId !== flashcardId) {
           await fetchFlashcardList(axios, flashcardId);
         }
-      } finally {
-        // Chỉ cập nhật trạng thái hoàn tất nếu không đang trong quá trình reset
-        if (!loadingState.isResetInProgress) {
-          setLoadingState(prev => ({
-            ...prev,
-            isRestoring: false
-          }));
-          
-          // Add a small delay to ensure smooth transition
-          setTimeout(() => {
-            setLoadingState(prev => ({
-              ...prev,
-              isDataReady: true,
-              isFullyLoaded: true
-            }));
-          }, 300);
-        }
+        setLoadingState({
+          isRestoring: false,
+          isDataReady: true,
+          isFullyLoaded: true,
+          isResetInProgress: false,
+        });
       }
     };
 
@@ -214,23 +212,38 @@ export default function LearnFlashcard() {
   useEffect(() => {
     if (shouldResetAfterReview) {
       console.log("Checking if round needs reset after review");
-      
+
       if (isEndOfRound() && !isAllKnown() && unlearnedCards().length > 0) {
         console.log("Resetting for next round after review");
         resetUnlearned();
       }
-      
+
       setShouldResetAfterReview(false);
-      
+
       setTimeout(() => {
         console.log("After review reset - Round:", getRound());
-        console.log("After review reset - Current round known count:", currentRoundKnownCount());
+        console.log(
+          "After review reset - Current round known count:",
+          currentRoundKnownCount()
+        );
       }, 100);
     }
-  }, [shouldResetAfterReview, isEndOfRound, isAllKnown, unlearnedCards, resetUnlearned, getRound, currentRoundKnownCount]);
+  }, [
+    shouldResetAfterReview,
+    isEndOfRound,
+    isAllKnown,
+    unlearnedCards,
+    resetUnlearned,
+    getRound,
+    currentRoundKnownCount,
+  ]);
 
   // Loading state with skeleton
-  if (loadingState.isRestoring || !loadingState.isDataReady || !loadingState.isFullyLoaded) {
+  if (
+    loadingState.isRestoring ||
+    !loadingState.isDataReady ||
+    !loadingState.isFullyLoaded
+  ) {
     return (
       <main className="flex flex-col items-center flex-grow scrollbar-hide">
         <div className="flex w-full justify-start">
@@ -277,40 +290,40 @@ export default function LearnFlashcard() {
   }
 
   const handleResetLearn = async () => {
-    // Đánh dấu đang trong quá trình reset
-    setLoadingState({
-      isRestoring: true,
-      isDataReady: false,
-      isFullyLoaded: false,
-      isResetInProgress: true
-    });
-    
-    await handleLearningComplete(axios, flashcardId);
-    const restored = await restoreLearningState(axios, flashcardId);
-    
-    // Nếu không restore được thì fetch lại data
-    if (!restored) {
-      await fetchFlashcardList(axios, flashcardId);
-    }
-    
-    // Hoàn tất quá trình reset
-    setLoadingState({
-      isRestoring: false,
-      isDataReady: false,
-      isFullyLoaded: false,
-      isResetInProgress: false
-    });
-    
-    // Đợi một chút trước khi set hoàn toàn xong
-    setTimeout(() => {
+    try {
+      setLoadingState({
+        isRestoring: true,
+        isDataReady: false,
+        isFullyLoaded: false,
+        isResetInProgress: true
+      });
+      
+      await handleLearningComplete(axios, flashcardId);
+      const restored = await restoreLearningState(axios, flashcardId);
+      
+      if (!restored) {
+        await fetchFlashcardList(axios, flashcardId);
+      }
+      
+      // Add a small delay before completing the reset
+      setTimeout(() => {
+        setLoadingState({
+          isRestoring: false,
+          isDataReady: true,
+          isFullyLoaded: true,
+          isResetInProgress: false
+        });
+      }, 300);
+    } catch (error) {
+      console.error("Error in handleResetLearn:", error);
       setLoadingState({
         isRestoring: false,
         isDataReady: true,
         isFullyLoaded: true,
         isResetInProgress: false
       });
-    }, 300);
-  }
+    }
+  };
 
   // ALL FINISHED - Show completion message
   if (isAllKnown())
@@ -328,32 +341,38 @@ export default function LearnFlashcard() {
   // LEARN MODE - Show next card
   const card = currentCard();
 
-  const handleReviewNextWithLog = () => {
-    setLoadingState(prev => ({
-      ...prev,
-      isDataReady: false,
-      isFullyLoaded: false
-    }));
-    
-    handleReviewNext(axios, flashcardId);
-  
-    setTimeout(() => {
+  const handleReviewNextWithLog = async () => {
+    try {
+      setLoadingState(prev => ({
+        ...prev,
+        isDataReady: false,
+        isFullyLoaded: false
+      }));
+      
+      await handleReviewNext(axios, flashcardId);
+      
+      // Check if we need to reset for next round
       if (isEndOfRound() && !isAllKnown() && unlearnedCards().length > 0) {
-        console.log("End of round detected, resetting for next round");
         resetUnlearned();
       }
       
+      // Add a small delay before updating loading state
       setTimeout(() => {
         setLoadingState(prev => ({
           ...prev,
           isDataReady: true,
           isFullyLoaded: true
         }));
-        console.log("After reset - Round:", getRound());
-        console.log("After reset - Current round known count:", currentRoundKnownCount());
       }, 300);
-    }, 50);
-  }
+    } catch (error) {
+      console.error("Error in handleReviewNext:", error);
+      setLoadingState(prev => ({
+        ...prev,
+        isDataReady: true,
+        isFullyLoaded: true
+      }));
+    }
+  };
 
   // REVIEW MODE - Show review screen
   if (reviewMode && reviewList && reviewList.length > 0) {
@@ -411,48 +430,51 @@ export default function LearnFlashcard() {
         />
 
         <div className="flex flex-col items-center justify-center w-full mt-8">
-          {card && loadingState.isDataReady && loadingState.isFullyLoaded && !loadingState.isRestoring && (
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={card.flashcard_id}
-                initial={{
-                  x: entranceDirection === "right" ? 1000 : -1000,
-                  opacity: 0,
-                }}
-                animate={{
-                  x: 0,
-                  opacity: 1,
-                }}
-                exit={{
-                  x: slideDirection === "right" ? 1000 : -1000,
-                  opacity: 0,
-                }}
-                transition={{
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 30,
-                }}
-                className="w-full"
-              >
-                <Flashcard
-                  frontHTML={card.front_text}
-                  backHTML={card.back_text}
-                  style={{
-                    width: "100%",
-                    height: "450px",
-                    borderRadius: "16px",
-                    borderColor: "inherit",
-                    border: isAnimating
-                      ? slideDirection === "right"
-                        ? "3px solid #22c55e"
-                        : "3px solid #f97316"
-                      : "none",
-                    transition: "border 0.3s ease-in-out",
+          {card &&
+            loadingState.isDataReady &&
+            loadingState.isFullyLoaded &&
+            !loadingState.isRestoring && (
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={card.flashcard_id}
+                  initial={{
+                    x: entranceDirection === "right" ? 1000 : -1000,
+                    opacity: 0,
                   }}
-                />
-              </motion.div>
-            </AnimatePresence>
-          )}
+                  animate={{
+                    x: 0,
+                    opacity: 1,
+                  }}
+                  exit={{
+                    x: slideDirection === "right" ? 1000 : -1000,
+                    opacity: 0,
+                  }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 30,
+                  }}
+                  className="w-full"
+                >
+                  <Flashcard
+                    frontHTML={card.front_text}
+                    backHTML={card.back_text}
+                    style={{
+                      width: "100%",
+                      height: "450px",
+                      borderRadius: "16px",
+                      borderColor: "inherit",
+                      border: isAnimating
+                        ? slideDirection === "right"
+                          ? "3px solid #22c55e"
+                          : "3px solid #f97316"
+                        : "none",
+                      transition: "border 0.3s ease-in-out",
+                    }}
+                  />
+                </motion.div>
+              </AnimatePresence>
+            )}
         </div>
       </div>
 
