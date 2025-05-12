@@ -15,7 +15,7 @@ const UserMenu = () => {
   const profile_picture = useAuthStore((state) => state.user?.profile_picture);
   const avatarURL = profile_picture ? `${profile_picture}?t=${new Date().getTime()}` : null;
 
-  const username = useAuthStore((state) => state.user?.username);
+  // const username = useAuthStore((state) => state.user?.username);
 
   
 
@@ -40,7 +40,7 @@ const UserMenu = () => {
       console.log(err);
     }
   };
-
+    if (!user) return null;
   return (
     <div className='flex-1 flex justify-center p-2 relative' ref={avatarRef}>
       <AvatarDisplay

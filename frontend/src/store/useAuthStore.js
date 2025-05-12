@@ -19,12 +19,19 @@ export const useAuthStore = create((set, get) => ({
   accessToken: Cookies.get('accessToken') || null,
   refreshToken: Cookies.get('refreshToken') || null,
   user: (() => {
+  try {
     const stored = Cookies.get('user');
     if (!stored) return null;
-    const u = JSON.parse(stored);
-    if (!u.profile_picture) u.profile_picture = defaultAvatar;
-    return u;
-  })(),
+    const parsed = JSON.parse(stored);
+    return {
+      ...parsed,
+      profile_picture: parsed.profile_picture || defaultAvatar
+    };
+  } catch (e) {
+    console.error('Failed to parse user from cookies', e);
+    return null;
+  }
+})(),
 
   login: ({ accessToken, refreshToken, user }) => {
     const profileUser = {
