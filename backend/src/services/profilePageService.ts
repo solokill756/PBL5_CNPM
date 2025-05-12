@@ -1,5 +1,6 @@
 import db from "../models/index.js";
 import { filterUserData, UserClientData } from "../utils/fillData.js";
+import removeNullProperties from "../utils/removeNullProperties.js";
 
 const getProfile = async (userId: string): Promise<UserClientData> => {
     try {
@@ -15,7 +16,7 @@ const getProfile = async (userId: string): Promise<UserClientData> => {
     }
 }
 
-const updateProfile = async (userId: string, updateProfile: any): Promise<UserClientData> => {
+const updateProfile = async (userId: string, updateProfile: any): Promise<boolean> => {
     try {
         const user = await db.user.findByPk(userId);
         if (!user) {
@@ -25,7 +26,7 @@ const updateProfile = async (userId: string, updateProfile: any): Promise<UserCl
         const profile = filterUserData(userData);
         const updatedProfile = { ...profile, ...updateProfile };
         await db.user.update(updatedProfile, { where: { user_id: userId } });
-        return updatedProfile;
+        return true;
     } catch (error) {
         throw new Error("User not found");
     }

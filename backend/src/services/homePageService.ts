@@ -54,7 +54,6 @@ const getRecentFlashcardsService = async (userId: string): Promise<any> => {
       where: { user_id: userId },
       attributes: ["list_id"],
       order: [["last_accessed", "DESC"]],
-      limit: 10,
     });
 
     const listFlashCardID = await listFlashcard.map(
@@ -66,7 +65,6 @@ const getRecentFlashcardsService = async (userId: string): Promise<any> => {
       where: {
         list_id: listFlashCardID,
       },
-      limit: 10,
       include: [
         {
           model: db.user,

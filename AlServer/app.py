@@ -3,10 +3,12 @@ from flask_cors import CORS
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 import os
+import gc  # Để giải phóng bộ nhớ khi cần
 import logging
 from huggingface_hub import snapshot_download
 import time
 import json
+import threading
 
 # Cấu hình logging
 logging.basicConfig(level=logging.INFO)
@@ -14,6 +16,11 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app)
+
+# Biến global lưu trữ model và tokenizer
+global_model = None
+global_tokenizer = None
+model_lock = threading.Lock()
 
 # Định nghĩa các hàm trước khi sử dụng
 def create_prompt(word, language="Japanese"):
@@ -43,26 +50,27 @@ def generate_response(prompt, max_length=200):
         if not prompt or len(prompt.strip()) == 0:
             raise ValueError("Prompt không được để trống")
 
-        # Tokenize input
-        inputs = tokenizer(prompt, return_tensors="pt")
-        
-        # Generate response với các tham số tối ưu
-        outputs = model.generate(
-            **inputs,
-            max_length=max_length,
-            num_return_sequences=1,
-            temperature=0.7,
-            do_sample=True,
-            pad_token_id=tokenizer.eos_token_id,
-            max_new_tokens=150,
-            early_stopping=True,
-            min_length=50,
-            no_repeat_ngram_size=3,
-            length_penalty=1.0,
-            repetition_penalty=1.2
-        )
-        
-        response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        # Sử dụng lock để đảm bảo chỉ có một request sử dụng model tại một thời điểm
+        with model_lock:
+            # Tokenize input
+            inputs = global_tokenizer(prompt, return_tensors="pt")
+            
+            # Generate response với các tham số tối ưu cho CPU
+            with torch.no_grad():  # Tắt tính toán gradient cho inference
+                outputs = global_model.generate(
+                    **inputs,
+                    max_new_tokens=150,  # Giới hạn số token mới để tăng tốc
+                    do_sample=True,
+                    temperature=0.7,
+                    top_p=0.9,  # Thêm top_p để tăng tốc và duy trì chất lượng
+                    pad_token_id=global_tokenizer.eos_token_id,
+                    repetition_penalty=1.1,
+                    no_repeat_ngram_size=2,
+                    early_stopping=True,
+                    use_cache=True
+                )
+            
+            response = global_tokenizer.decode(outputs[0], skip_special_tokens=True)
         
         if not response or len(response.strip()) == 0:
             raise ValueError("Model không tạo được câu trả lời")
@@ -75,36 +83,61 @@ def generate_response(prompt, max_length=200):
         logger.error(f"Lỗi khi generate response: {str(e)}")
         raise
 
-# Tạo thư mục để lưu model trong ổ D
-model_dir = "D:/mistral_model"
-os.makedirs(model_dir, exist_ok=True)
+def load_model_and_tokenizer():
+    global global_model, global_tokenizer
+    
+    # Tạo thư mục để lưu model trong ổ D
+    model_dir = "D:/mistral_model"
+    os.makedirs(model_dir, exist_ok=True)
 
-# Tải model và tokenizer từ Hugging Face và lưu vào ổ D
-model_path = "mistralai/Mistral-7B-Instruct-v0.2"
+    # Sử dụng mô hình nhỏ hơn Mistral-7B
+    # Có thể thay thế bằng mô hình nhỏ hơn nếu cần
+    model_path = "mistralai/Mistral-7B-Instruct-v0.2"
 
+    try:
+        # Kiểm tra xem đã tải model chưa
+        if global_model is None or global_tokenizer is None:
+            print("Đang tải model và tokenizer...")
+            
+            # Đảm bảo model đã được download
+            snapshot_download(
+                repo_id=model_path,
+                local_dir=model_dir,
+                local_dir_use_symlinks=False,
+                cache_dir=model_dir
+            )
+
+            print("Đang tải tokenizer...")
+            global_tokenizer = AutoTokenizer.from_pretrained(model_dir)
+
+            print("Đang tải model cho CPU...")
+            # Tải model với chế độ tối ưu cho CPU
+            global_model = AutoModelForCausalLM.from_pretrained(
+                model_dir,
+                torch_dtype=torch.float32,  # Sử dụng float32 cho CPU
+                low_cpu_mem_usage=True,
+                device_map="cpu"  # Chỉ định chạy trên CPU
+            )
+            
+            # Giải phóng bộ nhớ cache
+            torch.cuda.empty_cache() if torch.cuda.is_available() else None
+            gc.collect()
+            
+            print(f"Đã tải xong model và tokenizer vào thư mục: {model_dir}")
+            return True
+        else:
+            print("Model và tokenizer đã được tải trước đó")
+            return True
+    except Exception as e:
+        logger.error(f"Lỗi khi tải model: {str(e)}")
+        raise
+
+# Tải model ngay khi khởi động server
 try:
-    print("Đang tải model và tokenizer...")
-    snapshot_download(
-        repo_id=model_path,
-        local_dir=model_dir,
-        local_dir_use_symlinks=False,
-        cache_dir=model_dir
-    )
-
-    print("Đang tải tokenizer...")
-    tokenizer = AutoTokenizer.from_pretrained(model_dir)
-
-    print("Đang tải model...")
-    model = AutoModelForCausalLM.from_pretrained(
-        model_dir,
-        torch_dtype=torch.float16,
-        device_map="auto",
-        low_cpu_mem_usage=True
-    )
-    print(f"Đã tải xong model và tokenizer vào thư mục: {model_dir}")
+    load_model_and_tokenizer()
 except Exception as e:
-    logger.error(f"Lỗi khi tải model: {str(e)}")
-    raise
+    logger.error(f"Không thể tải model khi khởi động: {str(e)}")
+    print(f"Lỗi khi tải model: {str(e)}")
 
 @app.route('/generate', methods=['POST'])
 def generate():
@@ -126,6 +159,13 @@ def generate():
 
         language = data.get('language', 'Japanese')
         max_length = min(data.get('max_length', 200), 200)
+
+        # Đảm bảo model đã được tải
+        if global_model is None or global_tokenizer is None:
+            try:
+                load_model_and_tokenizer()
+            except Exception as e:
+                return jsonify({'error': f'Không thể tải model: {str(e)}'}), 500
 
         # Tạo prompt ngắn gọn
         prompt = create_prompt(word, language)
