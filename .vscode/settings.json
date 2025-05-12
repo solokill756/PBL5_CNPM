@@ -1,5 +1,10 @@
 {
-  "postman.settings.dotenv-detection-notification-visibility": false,
+
+    "postman.settings.dotenv-detection-notification-visibility": false,
+    "editor.codeActionsOnSave": {
+
+    },
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   "C_Cpp_Runner.cCompilerPath": "gcc",
   "C_Cpp_Runner.cppCompilerPath": "g++",
   "C_Cpp_Runner.debuggerPath": "gdb",

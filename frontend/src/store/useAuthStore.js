@@ -40,13 +40,21 @@ export const useAuthStore = create((set, get) => ({
     syncCookies(get());
   },
   
-  updateUser: (updates) => {
+    updateUser: (updates) => {
     set((state) => {
       const merged = { ...state.user, ...updates };
+ 
       if (!merged.profile_picture) merged.profile_picture = defaultAvatar;
+      if (updates.password) merged.password = updates.password;
+      if (updates.username) merged.username = updates.username;
+      if (updates.email) merged.email = updates.email;
+      if (updates.full_name) merged.full_name = updates.full_name;
+
       return { user: merged };
     });
+ 
     syncCookies(get());
+    return get().user;
   },
 
   setTokens: ({ accessToken, refreshToken }) => {

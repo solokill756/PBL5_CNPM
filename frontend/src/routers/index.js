@@ -13,6 +13,7 @@ import Quiz from "@/pages/Quiz";
 import AuthSuccess from "@/components/AuthSuccess";
 import FlashCard from "@/pages/Flashcard";
 import { useAuthStore } from "@/store/useAuthStore";
+import Achievement from "@/pages/Achievement";
 import QuizResult from "@/pages/QuizResult";
 import TestAgain from "@/pages/Quiz/TestAgain";
 
@@ -38,9 +39,9 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: (
-      <PrivateRoute>
+      // <PrivateRoute>
         <DefaultLayout />
-      </PrivateRoute>
+      // </PrivateRoute>
     ),
     children: [
       {
@@ -50,6 +51,10 @@ const router = createBrowserRouter([
       {
         path: "/accounts/:userId",
         element: <Profile />,
+      },
+      {
+        path: "/achievement/:username",
+        element: <Achievement />,
       },
       {
         path: "/library",

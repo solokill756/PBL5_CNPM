@@ -1,10 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 
-const Class = ({ title, infor, link }) => {
-  const [isOn, setIsOn] = useState(false);
-  const toggle = () => setIsOn(!isOn);
-
+const Class = ({ title, infor, link, reminderStatus, onToggle }) => {
   return (
     <div className="flex justify-between items-center py-2">
       <div>
@@ -17,14 +14,14 @@ const Class = ({ title, infor, link }) => {
       </div>
       <div className="w-11 flex justify-end">
         <div
-          onClick={toggle}
+          onClick={onToggle}
           className={`w-10 h-5 flex items-center rounded-full cursor-pointer transition-all duration-300 ${
-            isOn ? 'bg-red-200' : 'bg-gray-200'
+            reminderStatus ? 'bg-red-200' : 'bg-gray-200'
           }`}
         >
           <div
             className={`w-5 h-5 rounded-full shadow-md transform transition-transform duration-300 ${
-              isOn ? 'translate-x-5 bg-red-800' : 'translate-x-0 bg-white'
+              reminderStatus ? 'translate-x-5 bg-red-800' : 'translate-x-0 bg-white'
             }`}
           ></div>
         </div>
