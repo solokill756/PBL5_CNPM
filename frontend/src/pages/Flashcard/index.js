@@ -43,8 +43,6 @@ export default function FlashCard({ mode = "" }) {
     const fetchData = async () => {
       if (mode !== "detail") setLoading(true);
       try {
-        await addFlashcardToLearn(axios, flashcardId);
-
         if (!isDataLoaded || lastLoadedId !== flashcardId) {
           setAxios(axios);
           await fetchFlashcardList(axios, flashcardId);

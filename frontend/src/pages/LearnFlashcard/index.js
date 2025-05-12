@@ -8,35 +8,29 @@ import { Flashcard } from "react-quizlet-flashcard";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import RoundButton from "@/components/RoundButton";
 import { IoCheckmark, IoCloseOutline } from "react-icons/io5";
-import ReviewLearnRound from "@/components/ReviewLearnRound";
+import ReviewLearnRound from "@/components/Review/ReviewLearnRound";
 import { AnimatePresence, motion } from "framer-motion";
-import Skeleton from "react-loading-skeleton";
 import { LearnHeaderSkeleton } from "@/components/Skeleton/LearnHeaderSkeleton";
 import { LearnSkeleton } from "@/components/Skeleton/LearnSkeleton";
 import { CompletedState } from "@/components/State/CompletedState";
 import { LoadingState } from "@/components/State/LoadingState";
-
-// Loading skeleton component
-const FlashcardSkeleton = () => (
-  <div className="animate-pulse flex flex-col w-full">
-    <div className="h-[450px] w-full bg-gray-200 rounded-lg mb-4"></div>
-    <div className="flex justify-center gap-8 mt-4">
-      <div className="w-44 h-14 bg-gray-200 rounded-full"></div>
-      <div className="w-44 h-14 bg-gray-200 rounded-full"></div>
-    </div>
-  </div>
-);
+import { postForgetCard } from "@/api/postForgetCard";
+import { postRememberCard } from "@/api/postRememberCard";
 
 export default function LearnFlashcard() {
   const { flashcardId } = useParams();
   const navigate = useNavigate();
   const axios = useAxiosPrivate();
-  const batchTimerRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isRestoring, setIsRestoring] = useState(true);
-  const [isDataReady, setIsDataReady] = useState(false);
-  const [slideDirection, setSlideDirection] = useState(null); // 'left' or 'right'
-  const [entranceDirection, setEntranceDirection] = useState(null); // Direction for next card to enter from
+  const [loadingState, setLoadingState] = useState({
+    isRestoring: true,
+    isDataReady: false,
+    isFullyLoaded: false,
+    isResetInProgress: false // Thêm state để track quá trình reset
+  });
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [slideDirection, setSlideDirection] = useState(null);
+  const [entranceDirection, setEntranceDirection] = useState(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [markedFlashcards, setMarkedFlashcards] = useState({
     known: [],
@@ -52,33 +46,36 @@ export default function LearnFlashcard() {
     restoreLearningState,
     handleKnow,
     handleDontKnow,
-    sendLearningProgress,
-    resetLearning,
+    sendPendingProgress,
+    addToPendingProgress,
+    handleLearningComplete,
     knownCount,
     total,
-    isFinished,
     currentCard,
     reviewMode,
     reviewList,
     handleReviewNext,
-    resetUnlearned,
-    learned,
-    flashcards,
     nextReviewThreshold,
     getRound,
     isAllKnown,
+    currentIndex,
+    resetUnlearned,
     isEndOfRound,
     unlearnedCards,
-    getLastAction,
-    currentIndex,
+    currentRoundKnownCount,
   } = useLearnStore();
 
   // Fetch flashcards if not loaded or if ID changed
   useEffect(() => {
     const checkAndRestoreLearningState = async () => {
       try {
-        setIsRestoring(true);
-        setIsDataReady(false); // Reset data ready state
+        setLoadingState({
+          isRestoring: true,
+          isDataReady: false,
+          isFullyLoaded: false,
+          isResetInProgress: false
+        });
+        
         const restored = await restoreLearningState(axios, flashcardId);
 
         if (!restored && (!isDataLoaded || lastLoadedId !== flashcardId)) {
@@ -90,11 +87,22 @@ export default function LearnFlashcard() {
           await fetchFlashcardList(axios, flashcardId);
         }
       } finally {
-        setIsRestoring(false);
-        // Add a small delay to ensure smooth transition
-        setTimeout(() => {
-          setIsDataReady(true);
-        }, 100);
+        // Chỉ cập nhật trạng thái hoàn tất nếu không đang trong quá trình reset
+        if (!loadingState.isResetInProgress) {
+          setLoadingState(prev => ({
+            ...prev,
+            isRestoring: false
+          }));
+          
+          // Add a small delay to ensure smooth transition
+          setTimeout(() => {
+            setLoadingState(prev => ({
+              ...prev,
+              isDataReady: true,
+              isFullyLoaded: true
+            }));
+          }, 300);
+        }
       }
     };
 
@@ -110,108 +118,53 @@ export default function LearnFlashcard() {
 
   // When displayDeck has data, set it in the learn store
   useEffect(() => {
-    if (displayDeck && displayDeck.length > 0 && !isRestoring) {
+    if (displayDeck && displayDeck.length > 0 && !loadingState.isRestoring) {
       setFlashcards(displayDeck);
     }
-  }, [displayDeck, setFlashcards, isRestoring]);
+  }, [displayDeck, setFlashcards, loadingState.isRestoring]);
 
-  const sendBatchProgress = async () => {
-    if (
-      markedFlashcards.known.length === 0 &&
-      markedFlashcards.unknown.length === 0
-    ) {
-      return;
-    }
-
-    try {
-      await sendLearningProgress(axios, {
-        known: markedFlashcards.known,
-        unknown: markedFlashcards.unknown,
-      });
-
-      // Reset marked flashcards after successful send
-      setMarkedFlashcards({ known: [], unknown: [] });
-      setLastSendTime(Date.now());
-    } catch (error) {
-      console.error("Error sending batch progress:", error);
-    }
-  };
-
-  // Batch progress sending
   useEffect(() => {
-    const startBatchTimer = () => {
-      if (batchTimerRef.current) {
-        clearTimeout(batchTimerRef.current);
-      }
-
-      batchTimerRef.current = setTimeout(() => {
-        sendBatchProgress();
-        batchTimerRef.current = null;
-      }, 5000);
-    };
-
-    if (
-      (markedFlashcards.known.length > 0 ||
-        markedFlashcards.unknown.length > 0) &&
-      !batchTimerRef.current
-    ) {
-      startBatchTimer();
-    }
+    const axiosInstance = axios;
 
     return () => {
-      if (batchTimerRef.current) {
-        clearTimeout(batchTimerRef.current);
-      }
-
-      if (
-        markedFlashcards.known.length > 0 ||
-        markedFlashcards.unknown.length > 0
-      ) {
-        sendBatchProgress();
+      if (axiosInstance) {
+        setTimeout(() => {
+          sendPendingProgress(axiosInstance, flashcardId);
+        }, 0);
       }
     };
-  }, [markedFlashcards]);
-
-  // Handle before unload
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (
-        markedFlashcards.known.length > 0 ||
-        markedFlashcards.unknown.length > 0
-      ) {
-        sendBatchProgress();
-      }
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [markedFlashcards]);
+  }, [axios, sendPendingProgress, flashcardId]);
 
   // Reset learning when all cards are known
   useEffect(() => {
     if (isAllKnown() && !reviewMode && reviewList.length === 0) {
-      resetLearning(axios, flashcardId);
+      handleLearningComplete(axios, flashcardId);
     }
-  }, [isAllKnown, reviewMode, reviewList, axios, flashcardId, resetLearning]);
+  }, [
+    isAllKnown,
+    reviewMode,
+    reviewList,
+    axios,
+    flashcardId,
+    handleLearningComplete,
+  ]);
 
   // Handle known card
   const handleKnowWithLog = () => {
+    if (!loadingState.isFullyLoaded) return;
+
     try {
       setIsLoading(true);
-      setSlideDirection("right"); // Current card slides right
-      setEntranceDirection("left"); // Next card enters from left
+      setSlideDirection("right");
+      setEntranceDirection("left");
       setIsAnimating(true);
 
       const card = currentCard();
       if (card) {
-        setTimeout(() => {
-          handleKnow(axios, flashcardId);
-          setMarkedFlashcards((prev) => ({
-            ...prev,
-            known: [...prev.known, card.flashcard_id],
-          }));
+        setTimeout(async () => {
+          await handleKnow(axios, flashcardId);
+          await postRememberCard(axios, [card.flashcard_id], flashcardId);
+          setCurrentCardIndex((prev) => prev + 1);
         }, 300);
       }
     } catch (error) {
@@ -223,20 +176,19 @@ export default function LearnFlashcard() {
 
   // Handle unknown card
   const handleDontKnowWithLog = () => {
+    if (!loadingState.isFullyLoaded) return;
     try {
       setIsLoading(true);
-      setSlideDirection("left"); // Current card slides left
-      setEntranceDirection("right"); // Next card enters from right
+      setSlideDirection("left");
+      setEntranceDirection("right");
       setIsAnimating(true);
 
       const card = currentCard();
       if (card) {
-        setTimeout(() => {
-          handleDontKnow(axios, flashcardId);
-          setMarkedFlashcards((prev) => ({
-            ...prev,
-            unknown: [...prev.unknown, card.flashcard_id],
-          }));
+        setTimeout(async () => {
+          await handleDontKnow(axios, flashcardId);
+          await postForgetCard(axios, [card.flashcard_id], flashcardId);
+          setCurrentCardIndex((prev) => prev + 1);
         }, 300);
       }
     } catch (error) {
@@ -257,13 +209,28 @@ export default function LearnFlashcard() {
     }
   }, [isAnimating]);
 
-  // Handle review next
-  const handleReviewNextWithLog = () => {
-    handleReviewNext(axios, flashcardId);
-  };
+  const [shouldResetAfterReview, setShouldResetAfterReview] = useState(false);
+
+  useEffect(() => {
+    if (shouldResetAfterReview) {
+      console.log("Checking if round needs reset after review");
+      
+      if (isEndOfRound() && !isAllKnown() && unlearnedCards().length > 0) {
+        console.log("Resetting for next round after review");
+        resetUnlearned();
+      }
+      
+      setShouldResetAfterReview(false);
+      
+      setTimeout(() => {
+        console.log("After review reset - Round:", getRound());
+        console.log("After review reset - Current round known count:", currentRoundKnownCount());
+      }, 100);
+    }
+  }, [shouldResetAfterReview, isEndOfRound, isAllKnown, unlearnedCards, resetUnlearned, getRound, currentRoundKnownCount]);
 
   // Loading state with skeleton
-  if (isRestoring || !isDataReady) {
+  if (loadingState.isRestoring || !loadingState.isDataReady || !loadingState.isFullyLoaded) {
     return (
       <main className="flex flex-col items-center flex-grow scrollbar-hide">
         <div className="flex w-full justify-start">
@@ -271,7 +238,9 @@ export default function LearnFlashcard() {
             mode="learn"
             flashcardId={flashcardId}
             onSetting={() => {}}
-            onClose={() => {}}
+            onClose={() => {
+              navigate(`/flashcard/${flashcardId}`);
+            }}
           />
         </div>
         <div className="w-full max-w-[850px] flex flex-col items-center px-4">
@@ -292,7 +261,9 @@ export default function LearnFlashcard() {
             mode="learn"
             flashcardId={flashcardId}
             onSetting={() => {}}
-            onClose={() => {}}
+            onClose={() => {
+              navigate(`/flashcard/${flashcardId}`);
+            }}
           />
         </div>
         <div className="w-full max-w-[850px] flex flex-col items-center px-4">
@@ -305,38 +276,111 @@ export default function LearnFlashcard() {
     );
   }
 
-  // REVIEW MODE - Show review screen
-  if (reviewMode && reviewList && reviewList.length > 0) {
-    return (
-      <ReviewLearnRound
-        correct={knownCount()}
-        total={total()}
-        nextReview={nextReviewThreshold()}
-        reviewList={reviewList}
-        onContinue={handleReviewNextWithLog}
-      />
-    );
+  const handleResetLearn = async () => {
+    // Đánh dấu đang trong quá trình reset
+    setLoadingState({
+      isRestoring: true,
+      isDataReady: false,
+      isFullyLoaded: false,
+      isResetInProgress: true
+    });
+    
+    await handleLearningComplete(axios, flashcardId);
+    const restored = await restoreLearningState(axios, flashcardId);
+    
+    // Nếu không restore được thì fetch lại data
+    if (!restored) {
+      await fetchFlashcardList(axios, flashcardId);
+    }
+    
+    // Hoàn tất quá trình reset
+    setLoadingState({
+      isRestoring: false,
+      isDataReady: false,
+      isFullyLoaded: false,
+      isResetInProgress: false
+    });
+    
+    // Đợi một chút trước khi set hoàn toàn xong
+    setTimeout(() => {
+      setLoadingState({
+        isRestoring: false,
+        isDataReady: true,
+        isFullyLoaded: true,
+        isResetInProgress: false
+      });
+    }, 300);
   }
 
   // ALL FINISHED - Show completion message
   if (isAllKnown())
     return (
-      <CompletedState flashcardId={flashcardId}/>  
+      <CompletedState
+        flashcardId={flashcardId}
+        loading={loadingState.isRestoring}
+        onReset={handleResetLearn}
+        onTest={() => {
+          navigate(`/flashcard/${flashcardId}/quiz`);
+        }}
+      />
     );
 
   // LEARN MODE - Show next card
   const card = currentCard();
 
-  // No current card (could be at end of list) - Show loading between rounds
+  const handleReviewNextWithLog = () => {
+    setLoadingState(prev => ({
+      ...prev,
+      isDataReady: false,
+      isFullyLoaded: false
+    }));
+    
+    handleReviewNext(axios, flashcardId);
+  
+    setTimeout(() => {
+      if (isEndOfRound() && !isAllKnown() && unlearnedCards().length > 0) {
+        console.log("End of round detected, resetting for next round");
+        resetUnlearned();
+      }
+      
+      setTimeout(() => {
+        setLoadingState(prev => ({
+          ...prev,
+          isDataReady: true,
+          isFullyLoaded: true
+        }));
+        console.log("After reset - Round:", getRound());
+        console.log("After reset - Current round known count:", currentRoundKnownCount());
+      }, 300);
+    }, 50);
+  }
+
+  // REVIEW MODE - Show review screen
+  if (reviewMode && reviewList && reviewList.length > 0) {
+    console.log("====================================");
+    console.log("reviewList: " + reviewList.length);
+    console.log("Round: " + getRound());
+    console.log("Current round known count: " + currentRoundKnownCount());
+    console.log("====================================");
+
+    return (
+      <ReviewLearnRound
+        correct={currentRoundKnownCount()}
+        total={total()}
+        nextReview={nextReviewThreshold()}
+        reviewList={reviewList}
+        flashcardId={flashcardId}
+        onContinue={handleReviewNextWithLog}
+      />
+    );
+  }
+
   if (!card) {
-    // Check if we're between rounds
     if (isEndOfRound() && !isAllKnown() && unlearnedCards().length > 0) {
       resetUnlearned();
     }
 
-    return (
-      <LoadingState message="Đang chuẩn bị thẻ tiếp theo..." />
-    );
+    return <LoadingState message="Đang chuẩn bị thẻ tiếp theo..." />;
   }
 
   // Show current card for learning
@@ -347,28 +391,27 @@ export default function LearnFlashcard() {
           mode="learn"
           flashcardId={flashcardId}
           onSetting={() => {}}
-          onClose={() => {}}
+          onClose={() => {
+            navigate(`/flashcard/${flashcardId}`);
+          }}
         />
       </div>
 
       <div className="w-full flex max-w-[850px] flex-col items-center">
-        {/* Show round number if beyond round 1 */}
         {getRound() > 1 && (
           <div className="w-full text-right text-gray-600 mb-2">
             Vòng học: {getRound()}
           </div>
         )}
 
-        {/* Progress bar */}
         <LearnProgressBar
           correct={knownCount()}
           total={total()}
           nextReview={nextReviewThreshold()}
         />
 
-        {/* Flashcard */}
         <div className="flex flex-col items-center justify-center w-full mt-8">
-          {card && isDataReady && (
+          {card && loadingState.isDataReady && loadingState.isFullyLoaded && !loadingState.isRestoring && (
             <AnimatePresence mode="wait">
               <motion.div
                 key={card.flashcard_id}
@@ -413,7 +456,6 @@ export default function LearnFlashcard() {
         </div>
       </div>
 
-      {/* Action buttons */}
       <div className="flex justify-center gap-8 mt-4">
         <RoundButton
           buttonClassName="w-44 min-w-[180px] p-3.5 !text-base !font-semibold justify-center"
