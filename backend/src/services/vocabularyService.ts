@@ -7,9 +7,18 @@ const getSimilarVocabulary = async (word: string, language: string) => {
     if (language == "Japanese") {
       const vocabularies = await db.vocabulary.findAll({
         where: {
-          word: {
-            [db.Sequelize.Op.like]: `%${word}%`
-          }
+          [db.Sequelize.Op.or]: [
+            {
+              word: {
+                [db.Sequelize.Op.like]: `%${word}%`
+              }
+            },
+            {
+              pronunciation: {
+                [db.Sequelize.Op.like]: `%${word}%`
+              }
+            }
+          ]
         }
       });
       return vocabularies;

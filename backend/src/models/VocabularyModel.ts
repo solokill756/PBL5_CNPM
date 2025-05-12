@@ -3,13 +3,15 @@ import { Sequelize, DataTypes, Model } from "sequelize";
 interface VocabularyAttributes {
   vocab_id: string;
   word: string;
-  meaning?: string;
-  pronunciation?: string;
+  meaning: string;
+  pronunciation: string;
   example?: string;
   topic_id: string;
-  image_url?: string;
-  ai_suggested: boolean;
+  usage?: string;
+  example_meaning?: string;
+  ai_suggested?: string;
   created_at: Date;
+  language: string;
 }
 
 interface VocabularyCreationAttributes
@@ -17,11 +19,14 @@ interface VocabularyCreationAttributes
     Pick<
       VocabularyAttributes,
       | "vocab_id"
+      | "created_at"
+      | "usage"
+      | "example_meaning"
+      | "ai_suggested"
+      | "word"
       | "meaning"
       | "pronunciation"
       | "example"
-      | "image_url"
-      | "created_at"
     >
   > {}
 
@@ -31,13 +36,15 @@ class Vocabulary
 {
   declare vocab_id: string;
   declare word: string;
-  declare meaning?: string;
-  declare pronunciation?: string;
+  declare meaning: string;
+  declare pronunciation: string;
   declare example?: string;
   declare topic_id: string;
-  declare image_url?: string;
-  declare ai_suggested: boolean;
+  declare usage: string;
+  declare example_meaning: string;
+  declare ai_suggested: string;
   declare created_at: Date;
+  declare language: string;
 }
 
 export default (sequelize: Sequelize) => {
@@ -69,10 +76,6 @@ export default (sequelize: Sequelize) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
-      image_url: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-      },
       ai_suggested: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
@@ -83,6 +86,18 @@ export default (sequelize: Sequelize) => {
         allowNull: false,
         defaultValue: DataTypes.NOW,
       },
+      usage: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      example_meaning: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      language: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+      },
     },
     {
       sequelize,
@@ -92,6 +107,10 @@ export default (sequelize: Sequelize) => {
         {
           unique: true,
           fields: ["vocab_id"]
+        },
+        {
+          unique: true,
+          fields: ["word"]
         }
       ]
     }
