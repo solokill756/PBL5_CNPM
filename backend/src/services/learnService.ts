@@ -240,7 +240,7 @@ const resetLearn = async (list_id: string, user_id: string) => {
     // Cập nhật flashcardStudy
     await db.flashcardStudy.update(
       {
-        number_word_forget: flashCardIds.length, // Đặt lại number_word_forget bằng số flashcard
+        number_word_forget: flashCardIds.length, 
         last_review_flashcard_id: null,
       },
       {
