@@ -35,3 +35,18 @@ code {
     scrollbar-width: none;     /* Firefox */
   }
   
+  @keyframes blink {
+    0% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.4;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  
+  .animate-blink {
+    animation: blink 1s ease-in-out infinite;
+  }

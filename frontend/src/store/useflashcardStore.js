@@ -353,16 +353,15 @@ export const useFlashcardStore = create(
       aiExplainLoading: {}, // Loading state cho từng flashcard
       aiExplainError: {}, // Error state cho từng flashcard
 
-      // Thêm actions mới
-      fetchAIExplain: async (flashcardId, text) => {
+      fetchAIExplain: async (axios, flashcardId) => {
         const store = get();
 
-        // Kiểm tra cache trước
+        // Check cache first
         if (store.aiExplainCache[flashcardId]) {
           return store.aiExplainCache[flashcardId];
         }
 
-        // Kiểm tra nếu đang loading
+        // Check if loading
         if (store.aiExplainLoading[flashcardId]) {
           return null;
         }
@@ -376,22 +375,39 @@ export const useFlashcardStore = create(
         }));
 
         try {
-          const data = await fetchAIExplain(store.axios, flashcardId, text);
+          const response = await fetchAIExplain(axios, flashcardId);
 
-          // Lưu vào cache
-          set((state) => ({
-            aiExplainCache: {
-              ...state.aiExplainCache,
-              [flashcardId]: data,
-            },
-            aiExplainLoading: {
-              ...state.aiExplainLoading,
-              [flashcardId]: false,
-            },
-          }));
+          // Kiểm tra response có đúng cấu trúc không
+          if (response) {
+            const data = {
+              meaning: response.meaning,
+              pronunciation: response.pronunciation,
+              example: response.example,
+              usage: response.usage,
+            };
 
-          return data;
+            // Save to cache
+            set((state) => ({
+              aiExplainCache: {
+                ...state.aiExplainCache,
+                [flashcardId]: data,
+              },
+              aiExplainLoading: {
+                ...state.aiExplainLoading,
+                [flashcardId]: false,
+              },
+              aiExplainError: {
+                ...state.aiExplainError,
+                [flashcardId]: null, // Clear any previous errors
+              },
+            }));
+
+            return data;
+          } else {
+            throw new Error("Invalid response format");
+          }
         } catch (error) {
+          console.error("Error fetching AI explain:", error);
           set((state) => ({
             aiExplainError: {
               ...state.aiExplainError,
