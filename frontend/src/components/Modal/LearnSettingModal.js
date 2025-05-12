@@ -4,7 +4,7 @@ import Modal from './Modal'
 const LearnSettingModal = () => {
   return (
     <Modal size='max-w-3xl'>
-
+      
     </Modal>
   )
 }

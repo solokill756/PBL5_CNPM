@@ -56,7 +56,7 @@ export const useLearnStore = create(
       // Hàm để trộn thẻ (chỉ gọi khi người dùng yêu cầu)
       shuffleCards: () => {
         const { fullDeck, isShuffled } = get();
-        
+
         // Chỉ shuffle nếu chưa shuffle
         if (!isShuffled) {
           const newOrder = Array.from({ length: fullDeck.length }, (_, i) => i);
@@ -154,7 +154,6 @@ export const useLearnStore = create(
       flashcardsInGroup: 3, // Giá trị mặc định
       totalGroups: 1, // Giá trị mặc định
 
-      // Handle when user marks a card as known
       handleKnow: async (axios, list_id) => {
         const {
           flashcards,
@@ -166,15 +165,15 @@ export const useLearnStore = create(
           cardOrder,
           round,
         } = get();
-
+      
         // Skip if in review mode or no valid card
         if (reviewMode || !flashcards || currentIndex >= cardOrder.length)
           return;
-
+      
         const actualIndex = cardOrder[currentIndex];
         const currentCard = flashcards[actualIndex];
         if (!currentCard) return;
-
+      
         try {
           // Add to remembered cards batch
           set((state) => ({
@@ -184,16 +183,16 @@ export const useLearnStore = create(
             ],
             lastActionTime: Date.now(),
           }));
-
+      
           // Find existing learned item for this card
           const existingLearnedItem = learned.find(
             (item) => item.flashcard_id === currentCard.flashcard_id
           );
-
-          // Only count this card for review if it's being learned for first time in this round
-          const isFirstTimeInRound = !existingLearnedItem || 
-            (existingLearnedItem && existingLearnedItem.learnedInRound !== round);
-
+      
+          // Only count this card for review if it's being learned for first time
+          const isFirstTimeInRound = !existingLearnedItem ||
+                                    !existingLearnedItem.isKnown;
+      
           // Update learned status for this card
           const newLearned = [
             ...learned.filter(
@@ -203,52 +202,58 @@ export const useLearnStore = create(
               flashcard_id: currentCard.flashcard_id,
               isKnown: true,
               learnedInRound: round,
-              // Track if this is first time learning in this round
               isFirstTimeInRound: isFirstTimeInRound,
             },
           ];
-
-          // Only count cards that are being learned for FIRST TIME in this round
-          const currentRoundNewKnownCards = newLearned.filter(
-            (item) => 
-              item.isKnown && 
+      
+          // Count ALL known cards (not just current round)
+          const totalKnownCount = newLearned.filter(item => item.isKnown).length;
+          
+          // Count cards that were learned for first time in current round
+          const currentRoundNewKnownCount = newLearned.filter(
+            (item) =>
+              item.isKnown &&
               item.learnedInRound === round &&
               item.isFirstTimeInRound === true
-          );
-          const currentRoundNewKnownCount = currentRoundNewKnownCards.length;
-
-          // Enter review mode if we've reached a multiple of flashcardsInGroup
-          if (
-            currentRoundNewKnownCount > 0 &&
-            currentRoundNewKnownCount % flashcardsInGroup === 0 &&
-            !reviewMode &&
-            isFirstTimeInRound // Only enter review if this card is new in this round
-          ) {
+          ).length;
+      
+          // Enter review mode based on total known count
+          const shouldEnterReview = totalKnownCount > 0 &&
+                                    totalKnownCount % flashcardsInGroup === 0 &&
+                                    !reviewMode &&
+                                    totalKnownCount < fullDeck.length;
+      
+          if (shouldEnterReview) {
             const justFinishedReview = get().lastAction === "handleReviewNext";
-
+      
             if (!justFinishedReview) {
-              // Only get cards that were learned for FIRST TIME in current round
-              const currentRoundReviewCards = fullDeck.filter((card) => {
+              // Get the last batch of cards for review
+              const startIndex = Math.floor(totalKnownCount / flashcardsInGroup - 1) * flashcardsInGroup;
+              const reviewCards = [];
+              
+              // Get all known cards sorted by when they were learned
+              const knownCards = fullDeck.filter((card) => {
                 const learnedItem = newLearned.find(
-                  (item) =>
-                    item.flashcard_id === card.flashcard_id &&
-                    item.isKnown &&
-                    item.learnedInRound === round &&
-                    item.isFirstTimeInRound === true
+                  (item) => item.flashcard_id === card.flashcard_id && item.isKnown
                 );
                 return !!learnedItem;
               });
-
+              
+              // Take the last batch
+              for (let i = startIndex; i < totalKnownCount && i < knownCards.length; i++) {
+                reviewCards.push(knownCards[i]);
+              }
+      
               set({
                 learned: newLearned,
                 reviewMode: true,
-                reviewList: currentRoundReviewCards,
+                reviewList: reviewCards,
                 lastAction: "handleKnow-reviewMode",
               });
               return;
             }
           }
-
+      
           // Move to next card
           set({
             learned: newLearned,
@@ -259,6 +264,7 @@ export const useLearnStore = create(
           console.error("Error in handleKnow:", error);
         }
       },
+      
 
       // Handle when user marks a card as not known
       handleDontKnow: async (axios, list_id) => {
@@ -333,20 +339,27 @@ export const useLearnStore = create(
 
       // Handle finishing a review session
       handleReviewNext: async (axios, list_id) => {
-        const { reviewList, learned, fullDeck, flashcards, currentIndex, round, cardOrder } =
-          get();
+        const {
+          reviewList,
+          learned,
+          fullDeck,
+          flashcards,
+          currentIndex,
+          round,
+          cardOrder,
+        } = get();
 
         // Find the next card in order that hasn't been learned yet
         let nextIndex = currentIndex;
         while (
           nextIndex < cardOrder.length &&
-          learned.find(
-            (item) => {
-              const actualIndex = cardOrder[nextIndex];
-              return item.flashcard_id === flashcards[actualIndex].flashcard_id &&
-                item.isKnown;
-            }
-          )
+          learned.find((item) => {
+            const actualIndex = cardOrder[nextIndex];
+            return (
+              item.flashcard_id === flashcards[actualIndex].flashcard_id &&
+              item.isKnown
+            );
+          })
         ) {
           nextIndex++;
         }
@@ -363,7 +376,7 @@ export const useLearnStore = create(
       // Reset session with only the unlearned cards
       resetUnlearned: () => {
         const { fullDeck, learned, round } = get();
-      
+
         // Get list of cards not yet learned
         const unlearned = fullDeck.filter((card) => {
           const found = learned.find(
@@ -371,30 +384,30 @@ export const useLearnStore = create(
           );
           return !found || !found.isKnown;
         });
-      
+
         // If all cards are learned, nothing to do
         if (unlearned.length === 0) {
           set({ lastAction: "resetUnlearned-allKnown" });
           return;
         }
-      
+
         // Reset learned flags for next round - clear isFirstTimeInRound for all cards
-        const updatedLearned = learned.map(item => ({
+        const updatedLearned = learned.map((item) => ({
           ...item,
           // Reset isFirstTimeInRound flag completely for new round
-          isFirstTimeInRound: false
+          isFirstTimeInRound: false,
         }));
-      
+
         // Tạo cardOrder mới cho những card chưa học
         const newOrder = Array.from({ length: unlearned.length }, (_, i) => i);
-      
+
         // Start a new round with unlearned cards
         set({
           flashcards: unlearned,
           cardOrder: newOrder,
           currentIndex: 0,
           reviewMode: false,
-          reviewList: [], 
+          reviewList: [],
           round: round + 1,
           learned: updatedLearned,
           lastAction: `resetUnlearned-round${round + 1}`,
@@ -419,15 +432,20 @@ export const useLearnStore = create(
       // Count known cards
       knownCount: () => get().learned.filter((item) => item.isKnown).length,
 
-      // Thêm selector để đếm card đã biết LẦN ĐẦU trong round hiện tại
       currentRoundKnownCount: () => {
         const { learned, round } = get();
         return learned.filter(
-          (item) => 
-            item.isKnown && 
+          (item) =>
+            item.isKnown &&
             item.learnedInRound === round &&
             item.isFirstTimeInRound === true
         ).length;
+      },
+      
+      // Add a new selector for total known count
+      totalKnownCount: () => {
+        const { learned } = get();
+        return learned.filter(item => item.isKnown).length;
       },
 
       // Get total number of cards
@@ -447,7 +465,7 @@ export const useLearnStore = create(
       currentCard: () => {
         const { flashcards, currentIndex, cardOrder } = get();
         if (!flashcards || flashcards.length === 0) return null;
-        
+
         // Sử dụng card order để lấy card
         const actualIndex = cardOrder[currentIndex];
         return actualIndex < flashcards.length ? flashcards[actualIndex] : null;
@@ -468,7 +486,7 @@ export const useLearnStore = create(
       nextReviewThreshold: () => {
         const { currentRoundKnownCount, flashcardsInGroup } = get();
         const count = currentRoundKnownCount(); // Dùng count của round hiện tại
-        
+
         // Tính threshold dựa trên flashcardsInGroup từ API
         return Math.ceil((count + 1) / flashcardsInGroup) * flashcardsInGroup;
       },
@@ -496,64 +514,104 @@ export const useLearnStore = create(
         );
       },
 
-      // Restore previous learning state
       restoreLearningState: async (axios, list_id) => {
         try {
           const response = await getForgetCard(axios, list_id);
-          const { listStudyInfor, flashcards, flashcardInGroup, total_groups } =
-            response;
-
+          const { listStudyInfor, flashcards, flashcardInGroup, total_groups } = response;
+      
           if (!flashcards || flashcards.length === 0) return false;
-
-          // Create learned list from FlashCardUsers data
-          const learned = flashcards.map((card) => ({
-            flashcard_id: card.flashcard_id,
-            isKnown: card.FlashCardUsers?.[0]?.remember_status || false,
-            learnedInRound: 1, // Default to round 1 when restoring
-          }));
-
-          // Find position of last reviewed card
-          const lastReviewedCardId = listStudyInfor.last_review_flashcard_id;
-          let currentIndex = 0;
-
-          if (lastReviewedCardId) {
-            currentIndex =
-              flashcards.findIndex(
-                (card) => card.flashcard_id === lastReviewedCardId
-              ) + 1;
-
-            if (currentIndex >= flashcards.length) currentIndex = 0;
+      
+          // Properly restore learned state from API data
+          const learned = flashcards.map((card) => {
+            // Check if card is marked as learned in the API response
+            const isLearned = card.is_learned || false; // Assuming API provides this
+            
+            return {
+              flashcard_id: card.flashcard_id,
+              isKnown: isLearned,
+              learnedInRound: 1,
+              isFirstTimeInRound: !isLearned, // Only new cards should be first time
+            };
+          });
+      
+          // Calculate how many cards are already known
+          const knownCards = learned.filter(item => item.isKnown);
+          const knownCount = knownCards.length;
+          
+          // Check if we should be in review mode based on known count
+          const shouldBeInReviewMode = knownCount > 0 && 
+                                       knownCount % flashcardInGroup === 0 &&
+                                       knownCount < flashcards.length;
+          
+          // If we should be in review mode, prepare review list
+          let reviewList = [];
+          if (shouldBeInReviewMode) {
+            // Get the last batch of learned cards for review
+            const startIndex = Math.floor(knownCount / flashcardInGroup - 1) * flashcardInGroup;
+            reviewList = flashcards.filter((card) => {
+              const learnedItem = learned.find(
+                item => item.flashcard_id === card.flashcard_id && item.isKnown
+              );
+              if (!learnedItem) return false;
+              
+              // Get the index of this card in the known cards list
+              const knownIndex = knownCards.findIndex(
+                item => item.flashcard_id === card.flashcard_id
+              );
+              
+              return knownIndex >= startIndex && knownIndex < knownCount;
+            });
           }
-
-          // Tạo card order (không shuffle khi restore)
+      
+          // Find position of last reviewed card
+          const lastReviewedCardId = listStudyInfor?.last_review_flashcard_id;
+          let currentIndex = 0;
+      
+          if (lastReviewedCardId) {
+            const foundIndex = flashcards.findIndex(
+              (card) => card.flashcard_id === lastReviewedCardId
+            );
+      
+            if (foundIndex >= 0) {
+              currentIndex = foundIndex + 1;
+              if (currentIndex >= flashcards.length) currentIndex = 0;
+            }
+          }
+      
+          // If in review mode, current index should be 0 for review
+          if (shouldBeInReviewMode) {
+            currentIndex = 0;
+          }
+      
+          // Create card order (no shuffle when restoring)
           const cardOrder = Array.from(
             { length: flashcards.length },
             (_, i) => i
           );
-
-          // Update state
+      
+          // Update state with proper review mode status
           set({
             fullDeck: flashcards,
             flashcards: flashcards,
             cardOrder: cardOrder,
             currentIndex: currentIndex,
             learned: learned,
-            reviewMode: false,
-            reviewList: [],
+            reviewMode: shouldBeInReviewMode,
+            reviewList: reviewList,
             round: 1,
-            // Lưu giá trị mới từ API
-            flashcardsInGroup: flashcardInGroup || 3,
-            totalGroups: total_groups || 1,
+            flashcardsInGroup: flashcardInGroup > 0 ? flashcardInGroup : 3,
+            totalGroups: total_groups > 0 ? total_groups : 1,
             lastAction: "restoreLearningState",
-            isShuffled: false, // Reset shuffle status khi restore
+            isShuffled: false,
           });
-
+      
           return true;
         } catch (error) {
           console.error("Error restoring learning state:", error);
           return false;
         }
       },
+      
 
       // Get current round
       getRound: () => get().round,
