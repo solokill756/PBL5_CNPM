@@ -1,6 +1,5 @@
 import db from "../models/index.js";
 import { filterUserData, UserClientData } from "../utils/fillData.js";
-import removeNullProperties from "../utils/removeNullProperties.js";
 
 const getProfile = async (userId: string): Promise<UserClientData> => {
     try {

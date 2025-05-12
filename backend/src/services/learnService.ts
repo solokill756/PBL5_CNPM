@@ -29,7 +29,11 @@ const addFlashcardToLearn = async (list_id: string, user_id: string) => {
   }
 };
 
-const remenberFlashcard = async (flashcard_ids: string[], user_id: string) => {
+const remenberFlashcard = async (
+  flashcard_ids: string[],
+  user_id: string,
+  list_id: string
+) => {
   try {
     for (const flashcard_id of flashcard_ids) {
       await db.flashcardUser.update(
@@ -45,6 +49,13 @@ const remenberFlashcard = async (flashcard_ids: string[], user_id: string) => {
         }
       );
     }
+    await db.flashcardStudy.update(
+      {
+        number_word_forget:
+          db.flashcardStudy.number_word_forget - flashcard_ids.length,
+      },
+      { where: { list_id: list_id, user_id: user_id } }
+    );
     return true;
   } catch (error) {
     throw new Error("Error remembering flashcard");
@@ -53,7 +64,8 @@ const remenberFlashcard = async (flashcard_ids: string[], user_id: string) => {
 
 const notRemenberFlashcard = async (
   flashcard_ids: string[],
-  user_id: string
+  user_id: string,
+  list_id: string
 ) => {
   try {
     for (const flashcard_id of flashcard_ids) {
@@ -80,6 +92,13 @@ const notRemenberFlashcard = async (
         }
       );
     }
+    await db.flashcardStudy.update(
+      {
+        number_word_forget:
+          db.flashcardStudy.number_word_forget + flashcard_ids.length,
+      },
+      { where: { list_id: list_id, user_id: user_id } }
+    );
     return true;
   } catch (error) {
     throw new Error("Error not remembering flashcard");
@@ -240,7 +259,7 @@ const resetLearn = async (list_id: string, user_id: string) => {
     // Cập nhật flashcardStudy
     await db.flashcardStudy.update(
       {
-        number_word_forget: flashCardIds.length, 
+        number_word_forget: flashCardIds.length,
         last_review_flashcard_id: null,
       },
       {

@@ -22,9 +22,9 @@ const addFlashcardToLearnController = async (req: Request, res: Response) => {
 
 const remenberFlashcardController = async (req: Request, res: Response) => {
   try {
-    const { flashcard_ids } = req.body;
+    const { flashcard_ids, list_id } = req.body;
     const user_id = (req as any).user.user_id;
-    const flashcard = await remenberFlashcard(flashcard_ids, user_id);
+    const flashcard = await remenberFlashcard(flashcard_ids, user_id, list_id);
     sendSuccess(res, flashcard);
   } catch (error: any) {
     sendError(res, error.message, 500);
@@ -33,9 +33,13 @@ const remenberFlashcardController = async (req: Request, res: Response) => {
 
 const notRemenberFlashcardController = async (req: Request, res: Response) => {
   try {
-    const { flashcard_ids } = req.body;
+    const { flashcard_ids, list_id } = req.body;
     const user_id = (req as any).user.user_id;
-    const flashcard = await notRemenberFlashcard(flashcard_ids, user_id);
+    const flashcard = await notRemenberFlashcard(
+      flashcard_ids,
+      user_id,
+      list_id
+    );
     sendSuccess(res, flashcard);
   } catch (error: any) {
     sendError(res, error.message, 500);
