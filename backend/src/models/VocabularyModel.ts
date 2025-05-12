@@ -12,6 +12,8 @@ interface VocabularyAttributes {
   ai_suggested?: string;
   created_at: Date;
   language: string;
+  level: string;
+  type: string;
 }
 
 interface VocabularyCreationAttributes
@@ -45,6 +47,8 @@ class Vocabulary
   declare ai_suggested: string;
   declare created_at: Date;
   declare language: string;
+  declare level: string;
+  declare type: string;
 }
 
 export default (sequelize: Sequelize) => {
@@ -95,6 +99,14 @@ export default (sequelize: Sequelize) => {
         allowNull: true,
       },
       language: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+      },
+      level: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+      },
+      type: {
         type: DataTypes.STRING(100),
         allowNull: false,
       },
