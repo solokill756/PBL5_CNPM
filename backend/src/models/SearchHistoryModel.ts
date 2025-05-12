@@ -45,8 +45,8 @@ export default (sequelize: Sequelize) => {
       indexes: [
         {
           unique: true,
-          fields: ["history_id"]
-        }
+          fields: ["history_id" , "user_id"]
+        } 
       ]
     }
   );
