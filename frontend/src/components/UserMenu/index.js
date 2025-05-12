@@ -12,6 +12,12 @@ const UserMenu = () => {
 
   const user = useAuthStore(state => state.user);
   const logout = useAuthStore(state => state.logout);
+  const profile_picture = useAuthStore((state) => state.user?.profile_picture);
+  const avatarURL = profile_picture ? `${profile_picture}?t=${new Date().getTime()}` : null;
+
+  const username = useAuthStore((state) => state.user?.username);
+
+  
 
   const handleClickOutside = (event) => {
     if (avatarRef.current && !avatarRef.current.contains(event.target)) {
@@ -42,14 +48,15 @@ const UserMenu = () => {
         isActive={active}
         username={user.username}
         streak={'8'}
-        avatar={user.profile_picture}
+        avatar={avatarURL}
       />
       {active && (
         <DropdownMenu
           username={user.username}
           email={user.email}
-          avatar={user.profile_picture}
+           avatar={avatarURL}
           onLogout={handleLogout}
+          userId={user.id}
         />
       )}
     </div>
