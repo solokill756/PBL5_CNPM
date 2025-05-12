@@ -1,208 +1,161 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-from transformers import AutoModelForCausalLM, AutoTokenizer
-import torch
 import os
-import gc  # Để giải phóng bộ nhớ khi cần
-import logging
-from huggingface_hub import snapshot_download
 import time
+import logging
 import json
-import threading
+from flask import Flask, request, jsonify
+import google.generativeai as genai
+from datetime import datetime
 
-# Cấu hình logging
-logging.basicConfig(level=logging.INFO)
+# Setup Google Gemini
+genai.configure(api_key="AIzaSyB-Lo8xrP1vuMgoKTu37c-b20DgRYLEOHw")  # Replace with your actual API key
+model = genai.GenerativeModel("gemini-1.5-flash")
+
+# Setup Flask app
+app = Flask(__name__)
+
+# Setup Logger
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__)
-CORS(app)
-
-# Biến global lưu trữ model và tokenizer
-global_model = None
-global_tokenizer = None
-model_lock = threading.Lock()
-
-# Định nghĩa các hàm trước khi sử dụng
+# Prompt builder
 def create_prompt(word, language="Japanese"):
-    """Tạo prompt ngắn gọn hơn"""
     prompts = {
-        "Japanese": f"""Giải thích ngắn gọn về từ vựng tiếng Nhật: {word}
-Format:
-1. Ý nghĩa
-2. Cách đọc
-3. Ví dụ ngắn
-Trả lời bằng tiếng Việt.""",
-        
-        "English": f"""Explain briefly the English word: {word}
-Format:
-1. Meaning
-2. Pronunciation
-3. Short example
-Answer in Vietnamese."""
+        "Japanese": f"""
+Giải thích ngắn gọn từ vựng tiếng Nhật: {word}
+Yêu cầu trả lời đúng định dạng JSON gồm 4 mục:
+{{
+  "meaning": "",
+  "pronunciation": "",
+  "example": "",
+  "usage": ""
+}}
+""",
+        "English": f"""
+Giải thích ngắn gọn từ tiếng Anh: {word}
+Yêu cầu trả lời đúng định dạng JSON gồm 4 mục:
+{{
+  "meaning": "",
+  "pronunciation": "",
+  "example": "",
+  "usage": ""
+}}
+"""
     }
     return prompts.get(language, prompts["Japanese"])
 
-def generate_response(prompt, max_length=200):
+# Extract JSON from Gemini response
+def extract_json_from_response(text):
+    # Try to find JSON content within the text
     try:
-        logger.info(f"Bắt đầu generate với prompt dài {len(prompt)} ký tự")
+        # First try to parse the entire text as JSON
+        return json.loads(text)
+    except json.JSONDecodeError:
+        # If that fails, try to extract JSON from text that might contain other content
+        try:
+            # Look for content between curly braces
+            start_idx = text.find('{')
+            end_idx = text.rfind('}')
+            
+            if start_idx >= 0 and end_idx > start_idx:
+                json_str = text[start_idx:end_idx+1]
+                return json.loads(json_str)
+        except (json.JSONDecodeError, ValueError):
+            pass
+        
+        # If all parsing attempts fail, create a structured response with the raw text
+        return {
+            "meaning": "Failed to parse response",
+            "pronunciation": "",
+            "example": "",
+            "usage": text  # Store the original text here for debugging
+        }
+
+# Call Gemini and process response
+def generate_response(prompt, word, language):
+    try:
+        logger.info(f"Calling Gemini with prompt for word: {word}")
         start_time = time.time()
+        response = model.generate_content(prompt)
+        duration = time.time() - start_time
+        logger.info(f"Gemini responded in {duration:.2f}s")
         
-        if not prompt or len(prompt.strip()) == 0:
-            raise ValueError("Prompt không được để trống")
-
-        # Sử dụng lock để đảm bảo chỉ có một request sử dụng model tại một thời điểm
-        with model_lock:
-            # Tokenize input
-            inputs = global_tokenizer(prompt, return_tensors="pt")
-            
-            # Generate response với các tham số tối ưu cho CPU
-            with torch.no_grad():  # Tắt tính toán gradient cho inference
-                outputs = global_model.generate(
-                    **inputs,
-                    max_new_tokens=150,  # Giới hạn số token mới để tăng tốc
-                    do_sample=True,
-                    temperature=0.7,
-                    top_p=0.9,  # Thêm top_p để tăng tốc và duy trì chất lượng
-                    pad_token_id=global_tokenizer.eos_token_id,
-                    repetition_penalty=1.1,
-                    no_repeat_ngram_size=2,
-                    early_stopping=True,
-                    use_cache=True
-                )
-            
-            response = global_tokenizer.decode(outputs[0], skip_special_tokens=True)
+        content = response.text.strip()
         
-        if not response or len(response.strip()) == 0:
-            raise ValueError("Model không tạo được câu trả lời")
+        # Try to parse JSON from the response
+        parsed = extract_json_from_response(content)
         
-        process_time = time.time() - start_time
-        logger.info(f"Hoàn thành generate trong {process_time:.2f}s")
-            
-        return response
+        # Ensure all required fields exist
+        required_fields = ["meaning", "pronunciation", "example", "usage"]
+        for field in required_fields:
+            if field not in parsed:
+                parsed[field] = ""
+        
+        # Add metadata for database storage
+        parsed["word"] = word
+        parsed["language"] = language
+        parsed["query_timestamp"] = datetime.now().isoformat()
+        parsed["processing_time_seconds"] = round(duration, 2)
+        
+        return parsed
     except Exception as e:
-        logger.error(f"Lỗi khi generate response: {str(e)}")
-        raise
+        logger.error(f"Error calling Gemini: {str(e)}")
+        
+        # Return a structured error response that can still be stored in the database
+        return {
+            "word": word,
+            "language": language,
+            "meaning": "",
+            "pronunciation": "",
+            "example": "",
+            "usage": "",
+            "error": str(e),
+            "query_timestamp": datetime.now().isoformat(),
+            "processing_time_seconds": 0,
+            "status": "error"
+        }
 
-def load_model_and_tokenizer():
-    global global_model, global_tokenizer
-    
-    # Tạo thư mục để lưu model trong ổ D
-    model_dir = "D:/mistral_model"
-    os.makedirs(model_dir, exist_ok=True)
-
-    # Sử dụng mô hình nhỏ hơn Mistral-7B
-    # Có thể thay thế bằng mô hình nhỏ hơn nếu cần
-    model_path = "mistralai/Mistral-7B-Instruct-v0.2"
-
-    try:
-        # Kiểm tra xem đã tải model chưa
-        if global_model is None or global_tokenizer is None:
-            print("Đang tải model và tokenizer...")
-            
-            # Đảm bảo model đã được download
-            snapshot_download(
-                repo_id=model_path,
-                local_dir=model_dir,
-                local_dir_use_symlinks=False,
-                cache_dir=model_dir
-            )
-
-            print("Đang tải tokenizer...")
-            global_tokenizer = AutoTokenizer.from_pretrained(model_dir)
-
-            print("Đang tải model cho CPU...")
-            # Tải model với chế độ tối ưu cho CPU
-            global_model = AutoModelForCausalLM.from_pretrained(
-                model_dir,
-                torch_dtype=torch.float32,  # Sử dụng float32 cho CPU
-                low_cpu_mem_usage=True,
-                device_map="cpu"  # Chỉ định chạy trên CPU
-            )
-            
-            # Giải phóng bộ nhớ cache
-            torch.cuda.empty_cache() if torch.cuda.is_available() else None
-            gc.collect()
-            
-            print(f"Đã tải xong model và tokenizer vào thư mục: {model_dir}")
-            return True
-        else:
-            print("Model và tokenizer đã được tải trước đó")
-            return True
-    except Exception as e:
-        logger.error(f"Lỗi khi tải model: {str(e)}")
-        raise
-
-# Tải model ngay khi khởi động server
-try:
-    load_model_and_tokenizer()
-except Exception as e:
-    logger.error(f"Không thể tải model khi khởi động: {str(e)}")
-    print(f"Lỗi khi tải model: {str(e)}")
-
+# API route
 @app.route('/generate', methods=['POST'])
 def generate():
     try:
         start_time = time.time()
-        
-        # Log request data
-        logger.info("Received request data: %s", request.get_data())
-        
         data = request.get_json()
-        if not data:
-            logger.error("No JSON data received")
-            return jsonify({'error': 'Không có dữ liệu đầu vào'}), 400
-
-        word = data.get('word', '')
-        if not word:
-            logger.error("Empty word received")
-            return jsonify({'error': 'Từ vựng không được để trống'}), 400
-
+        
+        if not data or 'word' not in data:
+            error_response = {
+                "status": "error",
+                "error": "Missing required 'word' parameter",
+                "query_timestamp": datetime.now().isoformat()
+            }
+            return jsonify(error_response), 400
+        
+        word = data['word']
         language = data.get('language', 'Japanese')
-        max_length = min(data.get('max_length', 200), 200)
-
-        # Đảm bảo model đã được tải
-        if global_model is None or global_tokenizer is None:
-            try:
-                load_model_and_tokenizer()
-            except Exception as e:
-                return jsonify({'error': f'Không thể tải model: {str(e)}'}), 500
-
-        # Tạo prompt ngắn gọn
+        
         prompt = create_prompt(word, language)
-        logger.info("Generated prompt: %s", prompt)
+        result = generate_response(prompt, word, language)
         
-        # Generate response
-        response = generate_response(prompt, max_length)
-        logger.info("Generated response: %s", response)
+        # Add status for database tracking
+        result["status"] = result.get("error", "") == "" and "success" or "error"
+        result["total_api_time_seconds"] = round(time.time() - start_time, 2)
         
-        process_time = time.time() - start_time
-        logger.info(f"Tổng thời gian xử lý request: {process_time:.2f}s")
-        
-        # Tạo response với headers phù hợp
-        response_data = {
-            'response': response,
-            'processing_time': f"{process_time:.2f}s"
-        }
-        
-        # Log response data
-        logger.info("Sending response: %s", json.dumps(response_data))
-        
-        return jsonify(response_data), 200, {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-cache',
-            'Connection': 'close'
-        }
-    except ValueError as ve:
-        logger.error(f"Lỗi giá trị: {str(ve)}")
-        return jsonify({'error': str(ve)}), 400
+        return jsonify(result), 200
+    
     except Exception as e:
-        logger.error(f"Lỗi không xác định: {str(e)}")
-        return jsonify({'error': f'Lỗi server: {str(e)}'}), 500
+        logger.error(f"Server error: {str(e)}")
+        error_response = {
+            "status": "error",
+            "error": f"Server error: {str(e)}",
+            "query_timestamp": datetime.now().isoformat()
+        }
+        return jsonify(error_response), 500
 
+# Health check endpoint
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "ok", "timestamp": datetime.now().isoformat()}), 200
+
+# Run Flask
 if __name__ == '__main__':
-    app.run(
-        host='0.0.0.0',
-        port=5000,
-        threaded=True,
-        debug=False
-    )
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
