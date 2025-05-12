@@ -34,7 +34,8 @@ const updateProfile = async (req: Request, res: Response) => {
             full_name: req.body.full_name,
             password: req.body.password ? await bcrypt.hash(req.body.password as string, saltRounds) : undefined,
             profile_picture: req.body.profile_picture,
-            username : req.body.username
+            username: req.body.username,
+            
         }
         const updateProfileFitter = removeNullProperties(updateProfile);
         try {
