@@ -59,7 +59,7 @@ const requestNewVocabulary = async (word: string, email: string , comment: strin
 
 const getAlToFindVocabulary = async (word: string , language: string) => {
   try {
-    const response = await fetch('http://itkotoba-al-server.azurewebsites.net/analyze', {
+    const response = await fetch('http://itkotoba-al-server.azurewebsites.net/generate', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
