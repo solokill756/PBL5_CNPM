@@ -12,4 +12,6 @@ vocabularyRouter.get('/topic/:topic_id', vocabularyController.getVocabularyByTop
 vocabularyRouter.post('/al', vocabularyController.getAlToFindVocabulary);
 vocabularyRouter.post('/requestNewVocabulary', vocabularyController.requestNewVocabulary);
 vocabularyRouter.get('/allTopic', vocabularyController.getAllTopic);
+vocabularyRouter.get('/historySearch', vocabularyController.getHistorySearch);
+vocabularyRouter.post('/addHistorySearch', vocabularyController.addHistorySearch);
 export default vocabularyRouter;
