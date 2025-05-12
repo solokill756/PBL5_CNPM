@@ -222,7 +222,7 @@ const getAllExplanation = async (flashcard_id: string) => {
         
         // If no valid explanation exists, call the Flask API
         console.log(`Generating new AI explanation for flashcard: ${flashcard_id}`);
-        const response = await fetch('http://localhost:5000/generate', {
+        const response = await fetch('http://itkotoba-al-server.azurewebsites.net/generate', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -33,7 +33,6 @@ module.exports = {
         meaning: "Kiểm thử đơn vị (Unit test)",
         pronunciation: "たんたいてすと",
         example: "単体テストを行って、バグを早期に発見します。",
-
         image_url: "https://example.com/images/unit_test.jpg",
         ai_suggested: true,
         created_at: new Date("2025-04-01T10:05:00"),
@@ -45,7 +44,6 @@ module.exports = {
         meaning: "Tài liệu thiết kế",
         pronunciation: "せっけいしょ",
         example: "設計書に従ってプログラムを作成します。",
-
         image_url: "https://example.com/images/design_doc.jpg",
         ai_suggested: false,
         created_at: new Date("2025-04-01T10:10:00"),
