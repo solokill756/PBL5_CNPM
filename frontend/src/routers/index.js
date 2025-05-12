@@ -14,7 +14,8 @@ import AuthSuccess from "@/components/AuthSuccess";
 import FlashCard from "@/pages/Flashcard";
 import { useAuthStore } from "@/store/useAuthStore";
 import Achievement from "@/pages/Achievement";
-
+import QuizResult from "@/pages/QuizResult";
+import TestAgain from "@/pages/Quiz/TestAgain";
 
 // Component bảo vệ route yêu cầu xác thực
 function PrivateRoute({ children }) {
@@ -108,12 +109,20 @@ const router = createBrowserRouter([
     element: <AuthSuccess />,
   },
   {
-    path: "/flashcard/:flashcardId/learn",
-    // element: <LearnFlashcard />,
-  },
-  {
     path: "/flashcard/:flashcardId/detail",
     element: <FlashCard mode="detail"/>
+  },
+  {
+    path: "/flashcard/:flashcardId/quiz",
+    element: <Quiz/>
+  },
+  {
+    path: "/flashcard/:flashcardId/quizResult",
+    element: <QuizResult/>
+  },
+    {
+    path: "/flashcard/:flashcardId/testAgain",
+    element: <TestAgain/>
   }
 ]);
 

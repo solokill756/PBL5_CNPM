@@ -20,7 +20,7 @@ const Mention = ({ title, infor, options, onChangeTime, onToggleStatus, selected
             const matched = options.find(opt => opt.value === selectedValue);
             if (matched) setSelectedOption(matched);
         }
-        setIsOn(status); // đồng bộ từ ngoài vào
+        setIsOn(status); 
     }, [selectedValue, status, options]);
 
     return (

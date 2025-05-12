@@ -1,5 +1,5 @@
+import db from '../models'
 import { sendLinkListFlashCard } from './../utils/sendLinkListFlashCard';
-import db from "../models";
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -200,7 +200,8 @@ const getAllExplanation = async (flashcard_id: string) => {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                text: flashcard.front_text
+                word: flashcard.front_text,
+             
             })
         });
         

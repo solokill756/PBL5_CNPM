@@ -3,7 +3,7 @@ import { Sequelize, DataTypes, Model } from "sequelize";
 interface QuizResultAttributes {
   result_id: string;
   user_id: string;
-  quiz_id: string;
+
   score: number;
   completed_at: Date;
 }
@@ -17,7 +17,6 @@ class QuizResult
 {
   declare result_id: string;
   declare user_id: string;
-  declare quiz_id: string;
   declare score: number;
   declare completed_at: Date;
 }
@@ -34,10 +33,7 @@ export default (sequelize: Sequelize) => {
         type: DataTypes.UUID,
         allowNull: false,
       },
-      quiz_id: {
-        type: DataTypes.UUID,
-        allowNull: false,
-      },
+     
       score: {
         type: DataTypes.FLOAT,
         allowNull: false,
