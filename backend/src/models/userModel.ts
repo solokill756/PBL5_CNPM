@@ -8,7 +8,7 @@ interface UserAttributes {
   profile_picture?: string;
   datetime_joined: Date;
   username: string;
-  reminder_time?: Date;
+  reminder_time?: string;
   reminder_status?: boolean;
   tokenVersion?: number;
 }
@@ -25,7 +25,7 @@ class User
   declare profile_picture?: string;
   declare datetime_joined: Date;
   declare username: string;
-  declare reminder_time?: Date;
+  declare reminder_time?: string;
   declare reminder_status?: boolean;
   declare tokenVersion?: number;
 }
@@ -66,7 +66,7 @@ export default (sequelize: Sequelize) => {
         unique: false,
       },
       reminder_time: {
-        type: DataTypes.DATE,
+        type: DataTypes.STRING,
         allowNull: true,
       },
       reminder_status: {
