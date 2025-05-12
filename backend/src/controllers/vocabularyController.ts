@@ -22,6 +22,15 @@ const getVocabularyByTopic = async (req: Request, res: Response) => {
     }
 }
 
+const getHistorySearch = async (req: Request, res: Response) => {
+    try {
+        const user_id = (req as any).user.user_id;
+        const history = await vocabularyService.getHistorySearch(user_id);
+        sendSuccess(res, history);
+    } catch (error) {
+        sendError(res, "Lỗi server", 500);
+    }
+}
 const getAlToFindVocabulary = async (req: Request, res: Response) => {
     try {
         const { word, language } = req.body;
@@ -52,4 +61,15 @@ const getAllTopic = async (_req: Request, res: Response) => {
    }
 }
 
-export default { getSimilarVocabulary, getVocabularyByTopic, getAlToFindVocabulary , requestNewVocabulary , getAllTopic };
+const addHistorySearch = async (req: Request, res: Response) => {
+    try {
+        const user_id = (req as any).user.user_id;
+        const { vocabulary_id } = req.body;
+        const history = await vocabularyService.addHistorySearch(user_id, vocabulary_id);   
+        sendSuccess(res, history);
+    } catch (error) {
+        sendError(res, "Lỗi server", 500);
+    }
+}
+
+export default { getSimilarVocabulary, getVocabularyByTopic, getAlToFindVocabulary , requestNewVocabulary , getAllTopic , getHistorySearch , addHistorySearch };
