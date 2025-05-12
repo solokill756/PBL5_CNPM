@@ -65,12 +65,13 @@ const getReminderClass = async (userId: string): Promise<any> => {
             },
             attributes: [
                 "reminder_status",
+                
 
             ],
             include: [
                 {
                     model: db.class,
-                    attributes: ["class_name"]
+                    attributes: ["class_name" , "class_id"]
                 }
             ]
 
