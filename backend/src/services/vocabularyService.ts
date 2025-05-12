@@ -90,7 +90,7 @@ const getHistorySearch = async (user_id: string) => {
   try {
     const history = await db.searchHistory.findAll({
       where: { user_id },
-      attributes: ['searched_at'],
+      attributes: ['searched_at' , 'vocab_id'],
       include: [{
         model: db.vocabulary,
         attributes: ['word', 'pronunciation', 'meaning', 'example', 'usage']
