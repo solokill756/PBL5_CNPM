@@ -49,10 +49,19 @@ const remenberFlashcard = async (
         }
       );
     }
+    const flashcardStudy = await db.flashcardStudy.findOne({
+      where: {
+        list_id: list_id,
+        user_id: user_id,
+      },
+    });
+    if (!flashcardStudy) {
+      throw new Error("Flashcard study not found");
+    }
+    const number_word_forget = flashcardStudy.number_word_forget;
     await db.flashcardStudy.update(
       {
-        number_word_forget:
-          db.flashcardStudy.number_word_forget - flashcard_ids.length,
+        number_word_forget: number_word_forget - flashcard_ids.length,
       },
       { where: { list_id: list_id, user_id: user_id } }
     );
