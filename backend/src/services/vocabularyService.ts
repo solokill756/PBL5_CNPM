@@ -109,12 +109,23 @@ const addHistorySearch = async (user_id: string, vocabulary_id: string) => {
     if (!vocabulary) {
       throw new Error("Vocabulary not found");
     }
-    const history = await db.searchHistory.create({
-      user_id,
-      vocab_id : vocabulary_id,
-      searched_at: new Date()
+    const existingHistory = await db.searchHistory.findOne({
+      where: { user_id, vocab_id: vocabulary_id }
     });
-    return history;
+    if (existingHistory) {
+      await db.searchHistory.update({
+        searched_at: new Date()
+      }, {
+        where: { user_id, vocab_id: vocabulary_id }
+      });
+    } else {
+      await db.searchHistory.create({
+        user_id,
+        vocab_id : vocabulary_id,
+        searched_at: new Date()
+      });
+    }
+    return true;
   } catch (error) {
     throw error;
   }
