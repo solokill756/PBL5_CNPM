@@ -54,6 +54,9 @@ function Quiz() {
         <ModeHeader
           flashcardId={flashcardId}
           flashcardTitle={flashcardMetadata.title}
+          onClose={() => {
+            navigate(`/flashcard/${flashcardId}`);
+          }}
         />
       </div>
       

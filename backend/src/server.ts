@@ -10,7 +10,11 @@ import homePageRoutes from "./routes/homePageRoute.js";
 import profileRoutes from "./routes/profileRoute.js";
 import { responseFormatter } from "./middleware/responseFormatter.js";
 import flashCardRoutes from "./routes/flashCardRoute.js";
+import learnRouter from "./routes/learnRoutes.js";
 import quizRoutes from "./routes/quizRoute.js";
+import learnRouter from "./routes/learnRoutes.js";
+import vocabularyRoutes from "./routes/vocabularyRoute.js";
+
 dotenv.config();
 
 const app: Application = express();
@@ -48,7 +52,11 @@ app.use("/api/auth", authRoutes);
 app.use("/api/homePage", homePageRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/flashcard", flashCardRoutes);
+app.use("/api/learn", learnRouter);
 app.use("/api/quiz", quizRoutes); 
+app.use("/api/learn", learnRouter);
+app.use("/api/vocabulary", vocabularyRoutes);
+
 app.listen(port, hostname, () => {
   console.log(`Example app listening on port ${hostname}/${port}`);
 });

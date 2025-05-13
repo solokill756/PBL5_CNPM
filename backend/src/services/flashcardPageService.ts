@@ -1,6 +1,7 @@
 import db from '../models'
 import { sendLinkListFlashCard } from './../utils/sendLinkListFlashCard';
 import dotenv from 'dotenv';
+import { addFlashcardToLearn } from './learnService';
 
 dotenv.config();
 
@@ -84,13 +85,15 @@ const getFlashcardByListId = async (list_id: string, user_id: string) => {
             }, {where: {list_id, user_id}});
         }
         else {
+            const number_flashcard = await db.flashcard.count({where: {list_id}});
             await db.flashcardStudy.create({
                 list_id,
                 user_id,
                 review_count: 1,
+                number_word_forget: number_flashcard,
                 last_review: new Date(),
             });
-            
+            await addFlashcardToLearn(list_id, user_id);
         }
       
         const listFlashcard = await db.flashcard.findAll({
@@ -188,20 +191,45 @@ const getClassOfUser = async (user_id : string) => {
 
 const getAllExplanation = async (flashcard_id: string) => {
     try {
+        // Find the flashcard
         const flashcard = await db.flashcard.findOne({ where: { flashcard_id } });
         if (!flashcard) {
             throw new Error("Flashcard not found");
         }
         
-        // Gọi đến Flask API
-        const response = await fetch('http://localhost:5000/generate', {
+        // Check if ai_explanation already exists in the database
+        if (flashcard.ai_explanation) {
+            try {
+                // Parse the existing explanation
+                const existingExplanation = JSON.parse(flashcard.ai_explanation);
+                
+                // Validate that the existing explanation has all required fields
+                if (existingExplanation && 
+                    existingExplanation.meaning && 
+                    existingExplanation.pronunciation && 
+                    existingExplanation.example && 
+                    existingExplanation.usage) {
+                    
+                    console.log(`Using cached AI explanation for flashcard: ${flashcard_id}`);
+                    return existingExplanation;
+                }
+                // If validation fails, proceed to generate a new explanation
+            } catch (parseError) {
+                console.warn(`Invalid JSON in ai_explanation for flashcard ${flashcard_id}, generating new explanation`);
+                // Continue with API call if parsing fails
+            }
+        }
+        
+        // If no valid explanation exists, call the Flask API
+        console.log(`Generating new AI explanation for flashcard: ${flashcard_id}`);
+        const response = await fetch('http://itkotoba-al-server.azurewebsites.net/analyze', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
             body: JSON.stringify({
                 word: flashcard.front_text,
-             
             })
         });
         
@@ -212,15 +240,22 @@ const getAllExplanation = async (flashcard_id: string) => {
         
         const result = await response.json();
         
-        if (!result.success) {
-            throw new Error(result.error || 'Failed to generate explanation');
+        // Validate API response
+        if (!result || !result.meaning || !result.pronunciation || !result.example || !result.usage) {
+            throw new Error('Failed to parse explanation from API');
         }
         
-        const explanation = result.response;
+        // Extract the relevant explanation fields
+        const explanation = {
+            meaning: result.meaning,
+            pronunciation: result.pronunciation,
+            example: result.example,
+            usage: result.usage
+        };
         
-        // Update the flashcard with the explanation
+        // Update flashcard with the new explanation
         await db.flashcard.update(
-            { ai_explanation: explanation },
+            { ai_explanation: JSON.stringify(explanation) },
             { where: { flashcard_id } }
         );
         
@@ -230,6 +265,7 @@ const getAllExplanation = async (flashcard_id: string) => {
         throw new Error(`Error getting AI explanation: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 };
+
 
 
 

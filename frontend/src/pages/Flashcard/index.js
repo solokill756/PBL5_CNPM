@@ -14,6 +14,7 @@ import "./index.css";
 import ModeHeader from "@/components/ModeHeader";
 import { getTimeAgo } from "@/utils/getTimeAgo";
 import defaultAvatar from "@/assets/images/avatar.jpg";
+import { addFlashcardToLearn } from "@/api/addFlashcardToLearn";
 
 export default function FlashCard({ mode = "" }) {
   const { flashcardId } = useParams();
@@ -40,19 +41,18 @@ export default function FlashCard({ mode = "" }) {
 
   useEffect(() => {
     const fetchData = async () => {
-      // Chỉ gọi API nếu chưa load data hoặc đang load data cho flashcard khác
-      if (!isDataLoaded || lastLoadedId !== flashcardId) {
-        try {
-          setLoading(true);
+      if (mode !== "detail") setLoading(true);
+      try {
+        if (!isDataLoaded || lastLoadedId !== flashcardId) {
           setAxios(axios);
-
           await fetchFlashcardList(axios, flashcardId);
           await fetchIsRated(axios, flashcardId);
-        } catch (error) {
-          setError(error);
-        } finally {
-          setLoading(false);
         }
+      } catch (error) {
+        console.log(error);
+      }
+      finally {
+        setLoading(false);
       }
     };
 

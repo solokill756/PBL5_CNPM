@@ -10,7 +10,7 @@ import { fetchAIExplain } from "@/api/getAIExplain";
 const getValidIndex = (deck, currentId) => {
   if (!deck.length) return 0;
   if (!currentId) return 0;
-  const index = deck.findIndex(card => card.flashcard_id === currentId);
+  const index = deck.findIndex((card) => card.flashcard_id === currentId);
   return index >= 0 ? index : 0;
 };
 
@@ -50,7 +50,7 @@ export const useFlashcardStore = create(
 
       fetchFlashcardList: async (axios, id) => {
         const store = get();
-        
+
         // Kiểm tra nếu đã load data cho flashcard này rồi
         if (store.isDataLoaded && store.lastLoadedId === id) {
           return;
@@ -60,13 +60,13 @@ export const useFlashcardStore = create(
         try {
           const response = await fetchFlashcardList(axios, id);
           const cards = response.flashcard || []; // Lấy mảng Flashcard từ response
-      
+
           const newStarredMap = {};
           cards.forEach((item) => {
             newStarredMap[item.flashcard_id] =
               item.FlashCardUsers?.[0]?.like_status || false;
           });
-      
+
           // Lưu thông tin metadata của flashcard list
           set({
             originalDeck: cards,
@@ -80,7 +80,7 @@ export const useFlashcardStore = create(
             flashcardMetadata: response.inforListFlashcard,
             authorInfor: response.userInfor,
             isDataLoaded: true,
-            lastLoadedId: id
+            lastLoadedId: id,
           });
         } catch (err) {
           set({ error: err });
@@ -102,7 +102,7 @@ export const useFlashcardStore = create(
           showOnlyStarred: false,
           flashcardMetadata: [],
           authorInfor: [],
-          error: null
+          error: null,
         });
       },
 
@@ -123,8 +123,8 @@ export const useFlashcardStore = create(
           flashcardMetadata: {
             ...state.flashcardMetadata,
             rate: newRate,
-            number_rate: newNumberRate
-          }
+            number_rate: newNumberRate,
+          },
         }));
       },
 
@@ -132,24 +132,31 @@ export const useFlashcardStore = create(
 
       // Actions
       shuffle: () => {
-        const { isShuffled, originalDeck, showOnlyStarred, starredMap, displayDeck, currentIndex } = get();
-        
+        const {
+          isShuffled,
+          originalDeck,
+          showOnlyStarred,
+          starredMap,
+          displayDeck,
+          currentIndex,
+        } = get();
+
         // Get current card ID before shuffling
         const currentCardId = displayDeck[currentIndex]?.flashcard_id;
-        
+
         // Toggle shuffle state
         const nextShuffled = !isShuffled;
-        
+
         // Filter deck based on showOnlyStarred setting
-        const filteredDeck = showOnlyStarred 
-          ? originalDeck.filter(card => starredMap[card.flashcard_id])
+        const filteredDeck = showOnlyStarred
+          ? originalDeck.filter((card) => starredMap[card.flashcard_id])
           : originalDeck;
 
         if (nextShuffled) {
           // Generate a fresh shuffle each time
           const newShuffled = shuffleArray(filteredDeck);
           const newIndex = getValidIndex(newShuffled, currentCardId);
-          
+
           set({
             isShuffled: true,
             shuffledDeck: newShuffled,
@@ -160,7 +167,7 @@ export const useFlashcardStore = create(
         } else {
           // Revert to original order
           const newIndex = getValidIndex(filteredDeck, currentCardId);
-          
+
           set({
             isShuffled: false,
             displayDeck: filteredDeck,
@@ -278,6 +285,12 @@ export const useFlashcardStore = create(
         }
       }, 1500), // Delay 1.5 giây trước khi xử lý queue
 
+      // Check if there are any starred flashcards
+      hasStarredFlashcards: () => {
+        const starredMap = get().starredMap;
+        return Object.values(starredMap).some((isStarred) => isStarred);
+      },
+
       // Modal
       isModalOpen: false,
       modalType: null,
@@ -306,25 +319,25 @@ export const useFlashcardStore = create(
 
       setShowOnlyStarred: (value) => {
         const { originalDeck, starredMap, currentIndex, displayDeck } = get();
-        
+
         // Get current card ID before filtering
         const currentCardId = displayDeck[currentIndex]?.flashcard_id;
-        
+
         // Filter the deck based on starred status
-        const filteredDeck = value 
-          ? originalDeck.filter(card => starredMap[card.flashcard_id])
+        const filteredDeck = value
+          ? originalDeck.filter((card) => starredMap[card.flashcard_id])
           : originalDeck;
 
         // Get valid index for the filtered deck
         const newIndex = getValidIndex(filteredDeck, currentCardId);
 
-        set({ 
+        set({
           showOnlyStarred: value,
           displayDeck: filteredDeck,
           currentIndex: newIndex,
           // Reset shuffle state when filtering
           isShuffled: false,
-          shuffledDeck: []
+          shuffledDeck: [],
         });
       },
 
@@ -340,16 +353,15 @@ export const useFlashcardStore = create(
       aiExplainLoading: {}, // Loading state cho từng flashcard
       aiExplainError: {}, // Error state cho từng flashcard
 
-      // Thêm actions mới
-      fetchAIExplain: async (flashcardId, text) => {
+      fetchAIExplain: async (axios, flashcardId) => {
         const store = get();
-        
-        // Kiểm tra cache trước
+
+        // Check cache first
         if (store.aiExplainCache[flashcardId]) {
           return store.aiExplainCache[flashcardId];
         }
 
-        // Kiểm tra nếu đang loading
+        // Check if loading
         if (store.aiExplainLoading[flashcardId]) {
           return null;
         }
@@ -358,36 +370,53 @@ export const useFlashcardStore = create(
         set((state) => ({
           aiExplainLoading: {
             ...state.aiExplainLoading,
-            [flashcardId]: true
-          }
+            [flashcardId]: true,
+          },
         }));
 
         try {
-          const data = await fetchAIExplain(store.axios, flashcardId, text);
-          
-          // Lưu vào cache
-          set((state) => ({
-            aiExplainCache: {
-              ...state.aiExplainCache,
-              [flashcardId]: data
-            },
-            aiExplainLoading: {
-              ...state.aiExplainLoading,
-              [flashcardId]: false
-            }
-          }));
+          const response = await fetchAIExplain(axios, flashcardId);
 
-          return data;
+          // Kiểm tra response có đúng cấu trúc không
+          if (response) {
+            const data = {
+              meaning: response.meaning,
+              pronunciation: response.pronunciation,
+              example: response.example,
+              usage: response.usage,
+            };
+
+            // Save to cache
+            set((state) => ({
+              aiExplainCache: {
+                ...state.aiExplainCache,
+                [flashcardId]: data,
+              },
+              aiExplainLoading: {
+                ...state.aiExplainLoading,
+                [flashcardId]: false,
+              },
+              aiExplainError: {
+                ...state.aiExplainError,
+                [flashcardId]: null, // Clear any previous errors
+              },
+            }));
+
+            return data;
+          } else {
+            throw new Error("Invalid response format");
+          }
         } catch (error) {
+          console.error("Error fetching AI explain:", error);
           set((state) => ({
             aiExplainError: {
               ...state.aiExplainError,
-              [flashcardId]: error
+              [flashcardId]: error,
             },
             aiExplainLoading: {
               ...state.aiExplainLoading,
-              [flashcardId]: false
-            }
+              [flashcardId]: false,
+            },
           }));
           throw error;
         }
@@ -399,7 +428,7 @@ export const useFlashcardStore = create(
           const newCache = { ...state.aiExplainCache };
           const newLoading = { ...state.aiExplainLoading };
           const newError = { ...state.aiExplainError };
-          
+
           if (flashcardId) {
             delete newCache[flashcardId];
             delete newLoading[flashcardId];
@@ -408,17 +437,17 @@ export const useFlashcardStore = create(
             return {
               aiExplainCache: {},
               aiExplainLoading: {},
-              aiExplainError: {}
+              aiExplainError: {},
             };
           }
 
           return {
             aiExplainCache: newCache,
             aiExplainLoading: newLoading,
-            aiExplainError: newError
+            aiExplainError: newError,
           };
         });
-      }
+      },
     }),
     {
       name: "flashcard-storage", // key trong localStorage

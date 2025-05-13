@@ -1,3 +1,4 @@
+import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import { useFlashcardStore } from "@/store/useflashcardStore";
 import React, { useEffect, useState } from "react";
 import { FaStar } from "react-icons/fa";
@@ -5,6 +6,7 @@ import { MdLightbulbOutline } from "react-icons/md";
 
 const FlashcardElement = ({ text, onClick, star, flashcardId, isJapanese = false }) => {
   const [showHint, setShowHint] = useState(false);
+  const axiosPrivate = useAxiosPrivate();
   const {
     fetchAIExplain,
     aiExplainCache,
@@ -16,7 +18,7 @@ const FlashcardElement = ({ text, onClick, star, flashcardId, isJapanese = false
     e.stopPropagation();
     if (!showHint && isJapanese) {
       try {
-        await fetchAIExplain(flashcardId, text);
+        await fetchAIExplain(axiosPrivate, flashcardId);
       } catch (error) {
         console.error("Failed to fetch AI explain:", error);
       }
@@ -24,10 +26,7 @@ const FlashcardElement = ({ text, onClick, star, flashcardId, isJapanese = false
     setShowHint(!showHint);
   };
 
-  const hintContent = aiExplainCache[flashcardId] || {
-    usage: "Đang tải gợi ý...",
-    example: "Vui lòng đợi trong giây lát"
-  };
+  const hintContent = aiExplainCache[flashcardId];
 
   return (
     <div className="relative h-full w-full flex flex-col justify-center">
@@ -45,7 +44,11 @@ const FlashcardElement = ({ text, onClick, star, flashcardId, isJapanese = false
             disabled={aiExplainLoading[flashcardId]}
           >
             <MdLightbulbOutline 
-              className={`size-4 ${aiExplainLoading[flashcardId] ? 'animate-pulse' : ''}`} 
+              className={`size-4 ${
+                aiExplainLoading[flashcardId] 
+                  ? 'animate-blink text-yellow-400' 
+                  : 'text-gray-600'
+              }`} 
             />
           </button>
         )}
@@ -79,6 +82,10 @@ const FlashcardElement = ({ text, onClick, star, flashcardId, isJapanese = false
             </div>
           ) : (
             <div className="space-y-2">
+              <div className="text-base font-semibold">
+                <span className="text-gray-700">Phát âm:</span>
+                <p className="text-sm text-gray-600">{hintContent.pronunciation}</p>
+              </div>
               <div className="text-base font-semibold">
                 <span className="text-gray-700">Cách dùng:</span>
                 <p className="text-sm text-gray-600">{hintContent.usage}</p>

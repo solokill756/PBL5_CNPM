@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import Class from '../CardItems/Class';
 import useAxiosPrivate from '../../hooks/useAxiosPrivate';
