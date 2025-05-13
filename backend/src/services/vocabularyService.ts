@@ -80,7 +80,7 @@ const getAlToFindVocabulary = async (word: string , language: string) => {
             })
         });
         const data = await response.json();
-        return data;
+        return data.data;
   } catch (error) {
     throw error;
   }
@@ -93,7 +93,7 @@ const getHistorySearch = async (user_id: string) => {
       attributes: ['searched_at' , 'vocab_id'],
       include: [{
         model: db.vocabulary,
-        attributes: ['word', 'pronunciation', 'meaning', 'example', 'usage']
+        attributes: ['word', 'pronunciation', 'meaning', 'example', 'usage' , 'example_meaning']
       }],
       order: [['searched_at', 'DESC']]
     });

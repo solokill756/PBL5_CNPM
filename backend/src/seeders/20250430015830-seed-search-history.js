@@ -41,25 +41,25 @@ module.exports = {
       {
         history_id: historyIds[1][0].id,
         user_id: '2e05b974-f0d3-4bb2-9625-bb8bc9c0c5c7',
-        vocab_id: vocabularies[0].vocab_id,
+        vocab_id: vocabularies[1].vocab_id,
         searched_at: new Date('2025-04-20T09:15:00'),
       },
       {
         history_id: historyIds[2][0].id,
         user_id: '2e05b974-f0d3-4bb2-9625-bb8bc9c0c5c7',
-        vocab_id: vocabularies[0].vocab_id,
+        vocab_id: vocabularies[2].vocab_id,
         searched_at: new Date('2025-04-21T10:30:00'),
       },
       {
         history_id: historyIds[3][0].id,
         user_id: '2e05b974-f0d3-4bb2-9625-bb8bc9c0c5c7',
-        vocab_id: vocabularies[0].vocab_id,
+        vocab_id: vocabularies[3].vocab_id,
         searched_at: new Date('2025-04-22T11:45:00'),
       },
       {
         history_id: historyIds[4][0].id,
         user_id: '2e05b974-f0d3-4bb2-9625-bb8bc9c0c5c7',
-        vocab_id: vocabularies[0].vocab_id,
+        vocab_id: vocabularies[4].vocab_id,
         searched_at: new Date('2025-04-23T13:00:00'),
       },
     ];
