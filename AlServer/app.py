@@ -54,6 +54,33 @@ Chỉ trả về JSON, không thêm văn bản giới thiệu hay giải thích.
     }
     return prompts.get(language, prompts["Japanese"])
 
+
+# Prompt builder for vocabulary analysis
+def create_analysis_prompt(word, language="Japanese"):
+    prompts = {
+        "Japanese": f"""
+Giải thích ngắn gọn từ vựng tiếng Nhật: {word}
+Yêu cầu trả lời đúng định dạng JSON gồm 4 mục:
+{{
+  "meaning": "",
+  "pronunciation": "",
+  "example": "",
+  "usage": ""
+}}
+""",
+        "Vietnamese": f"""
+Giải thích ngắn gọn từ tiếng Việt: {word}
+Yêu cầu trả lời đúng định dạng JSON gồm 4 mục:
+{{
+  "meaning": "",
+  "pronunciation": "",
+  "example": "",
+  "usage": ""
+}}
+"""
+    }
+    return prompts.get(language, prompts["Japanese"])
+
 # Extract JSON from Gemini response
 def extract_json_from_response(text):
     try:
@@ -142,6 +169,45 @@ def generate_response(prompt, word, language, topic_id="default"):
         }
         
         return error_response, metadata
+def generate_analysis_response(prompt, word, language):
+    try:
+        logger.info(f"Calling Gemini with analysis prompt for word: {word}")
+        start_time = time.time()
+        response = model.generate_content(prompt)
+        duration = time.time() - start_time
+        logger.info(f"Gemini responded in {duration:.2f}s")
+
+        content = response.text.strip()
+        parsed = extract_json_from_response(content)
+
+        # Ensure all required fields exist
+        required_fields = ["meaning", "pronunciation", "example", "usage"]
+        for field in required_fields:
+            parsed.setdefault(field, "")
+
+        # Add metadata
+        parsed.update({
+            "word": word,
+            "language": language,
+            "query_timestamp": datetime.now().isoformat(),
+            "processing_time_seconds": round(duration, 2)
+        })
+
+        return parsed
+    except Exception as e:
+        logger.error(f"Error calling Gemini: {str(e)}")
+        return {
+            "word": word,
+            "language": language,
+            "meaning": "",
+            "pronunciation": "",
+            "example": "",
+            "usage": "",
+            "error": str(e),
+            "query_timestamp": datetime.now().isoformat(),
+            "processing_time_seconds": 0,
+            "status": "error"
+        }
 
 # API route for translation dictionary
 @app.route('/generate', methods=['POST'])
@@ -183,7 +249,37 @@ def generate():
             "error": f"Server error: {str(e)}",
             "timestamp": datetime.now().isoformat()
         }), 500
+@app.route('/analyze', methods=['POST'])
+def analyze():
+    try:
+        start_time = time.time()
+        data = request.get_json()
 
+        if not data or 'word' not in data:
+            return jsonify({
+                "status": "error",
+                "error": "Missing required 'word' parameter",
+                "query_timestamp": datetime.now().isoformat()
+            }), 400
+
+        word = data['word']
+        language = data.get('language', 'Japanese')
+
+        prompt = create_analysis_prompt(word, language)
+        result = generate_analysis_response(prompt, word, language)
+
+        result["status"] = "success" if not result.get("error") else "error"
+        result["total_api_time_seconds"] = round(time.time() - start_time, 2)
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        logger.error(f"Server error: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "error": f"Server error: {str(e)}",
+            "query_timestamp": datetime.now().isoformat()
+        }), 500
 # Health check endpoint
 @app.route('/health', methods=['GET'])
 def health_check():
