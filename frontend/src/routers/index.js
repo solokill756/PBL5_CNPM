@@ -14,7 +14,6 @@ import FlashCard from "@/pages/Flashcard";
 import { useAuthStore } from "@/store/useAuthStore";
 import LearnFlashcard from "@/pages/LearnFlashcard";
 import Achievement from "@/pages/Achievement";
-
 import QuizResult from "@/pages/QuizResult";
 import TestAgain from "@/pages/Quiz/TestAgain";
 import Vocabulary from "@/pages/Vocabulary";
@@ -42,9 +41,9 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: (
-      <PrivateRoute>
+      // <PrivateRoute>
         <DefaultLayout />
-      </PrivateRoute>
+      // </PrivateRoute>
     ),
     children: [
       {
@@ -54,6 +53,10 @@ const router = createBrowserRouter([
       {
         path: "/accounts/:userId",
         element: <Profile />,
+      },
+      {
+        path: "/achievement/:username",
+        element: <Achievement />,
       },
       {
         path: "/library",

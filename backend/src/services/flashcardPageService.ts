@@ -230,7 +230,6 @@ const getAllExplanation = async (flashcard_id: string) => {
             },
             body: JSON.stringify({
                 word: flashcard.front_text,
-                
             })
         });
         
