@@ -12,6 +12,7 @@ import { responseFormatter } from "./middleware/responseFormatter.js";
 import flashCardRoutes from "./routes/flashCardRoute.js";
 import quizRoutes from "./routes/quizRoute.js";
 import vocabularyRoutes from "./routes/vocabularyRoute.js";
+import learnRoutes from "./routes/learnRoutes.js";
 
 dotenv.config();
 
@@ -52,6 +53,8 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/flashcard", flashCardRoutes);
 app.use("/api/quiz", quizRoutes); 
 app.use("/api/vocabulary", vocabularyRoutes);
+app.use("/api/learn", learnRoutes);
+
 
 app.listen(port, hostname, () => {
   console.log(`Example app listening on port ${hostname}/${port}`);

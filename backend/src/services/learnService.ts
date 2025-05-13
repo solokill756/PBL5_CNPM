@@ -74,7 +74,7 @@ const remenberFlashcard = async (
 const notRemenberFlashcard = async (
   flashcard_ids: string[],
   user_id: string,
-  list_id: string
+  _list_id: string
 ) => {
   try {
     for (const flashcard_id of flashcard_ids) {
@@ -101,13 +101,7 @@ const notRemenberFlashcard = async (
         }
       );
     }
-    await db.flashcardStudy.update(
-      {
-        number_word_forget:
-          db.flashcardStudy.number_word_forget + flashcard_ids.length,
-      },
-      { where: { list_id: list_id, user_id: user_id } }
-    );
+    
     return true;
   } catch (error) {
     throw new Error("Error not remembering flashcard");
