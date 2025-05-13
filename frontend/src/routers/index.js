@@ -17,7 +17,6 @@ import Achievement from "@/pages/Achievement";
 
 import QuizResult from "@/pages/QuizResult";
 import TestAgain from "@/pages/Quiz/TestAgain";
-import LearnFlashcard from "@/pages/LearnFlashcard";
 import Vocabulary from "@/pages/Vocabulary";
 import VocabularyDetail from "@/components/Vocabulary/VocabularyDetail";  
 import Quiz from "@/pages/Quiz";
