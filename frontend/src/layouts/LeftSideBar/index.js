@@ -5,8 +5,10 @@ import LogoImg from "@/assets/images/ITKotoba.png";
 import MenuItem from "../../components/MenuItem";
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { MdOutlineForum, MdOutlineNotificationsActive, MdOutlineQuiz } from "react-icons/md";
+import { MdOutlineForum, MdOutlineNotificationsActive } from "react-icons/md";
 import { LuLibraryBig } from "react-icons/lu";
+import { TbLanguageHiragana } from "react-icons/tb";
+import { FaLanguage } from "react-icons/fa6";
 
 function LeftSideBar({ onToggle }) {
   const location = useLocation();
@@ -34,7 +36,7 @@ function LeftSideBar({ onToggle }) {
     { id: "home", title: "Trang chủ", icon: <HomeIcon />, path: "/" },
     { id: "new", title: "Tạo", icon: <NewIcon /> },
     { id: "library", title: "Thư viện", icon: <LuLibraryBig className="size-6" />, path: "/library" },
-    { id: "quiz", title: "Quiz", icon: <MdOutlineQuiz className="size-6" />, path: "/quiz" },
+    { id: "vocabulary", title: "Từ vựng", icon: <FaLanguage  className="size-6" />, path: "/vocabulary" },
     { id: "forum", title: "Diễn đàn", icon: <MdOutlineForum className="size-6" />, path: "/forum" },
     { id: "notification", title: "Thông báo", icon: <MdOutlineNotificationsActive className="size-6" /> },
   ];

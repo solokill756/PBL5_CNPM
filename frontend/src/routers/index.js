@@ -9,12 +9,12 @@ import Home from "@/pages/Home";
 import EmailVerification from "@/pages/EmailVerification";
 import Library from "@/pages/Library";
 import Forum from "@/pages/Forum";
-import Quiz from "@/pages/Quiz";
 import AuthSuccess from "@/components/AuthSuccess";
 import FlashCard from "@/pages/Flashcard";
 import { useAuthStore } from "@/store/useAuthStore";
 import LearnFlashcard from "@/pages/LearnFlashcard";
-
+import Vocabulary from "@/pages/Vocabulary";
+import VocabularyDetail from "@/components/Vocabulary/VocabularyDetail";  
 // Component bảo vệ route yêu cầu xác thực
 function PrivateRoute({ children }) {
   // const { auth } = useAuth();
@@ -59,8 +59,12 @@ const router = createBrowserRouter([
         element: <Forum />,
       },
       {
-        path: "/quiz",
-        element: <Quiz />,
+        path: "/vocabulary",
+        element: <Vocabulary />,
+      },
+      {
+        path: "/vocabulary/:word",
+        element: <Vocabulary />,
       },
       {
         path: "/flashcard/:flashcardId",
