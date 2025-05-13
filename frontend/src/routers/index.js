@@ -20,6 +20,7 @@ import TestAgain from "@/pages/Quiz/TestAgain";
 import LearnFlashcard from "@/pages/LearnFlashcard";
 import Vocabulary from "@/pages/Vocabulary";
 import VocabularyDetail from "@/components/Vocabulary/VocabularyDetail";  
+import Quiz from "@/pages/Quiz";
 // Component bảo vệ route yêu cầu xác thực
 function PrivateRoute({ children }) {
   // const { auth } = useAuth();

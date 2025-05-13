@@ -6,7 +6,7 @@ import { useParams } from "react-router-dom";
 const Result = () => {
   const navigate = useNavigate();
   const { result, questions } = useQuizStore();
-  const { id: flashcardId } = useParams();
+  const { flashcardId } = useParams();
 
   useEffect(() => {
     window.scrollTo(0, 0);
