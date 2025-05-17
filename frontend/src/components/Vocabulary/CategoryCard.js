@@ -1,5 +1,5 @@
 import React from 'react';
-import useVocabularyStore from '@/store/useVocabularyStore';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 // Mảng màu gradient cho các category
@@ -49,11 +49,11 @@ const getColorByIndex = (index) => {
 };
 
 const CategoryCard = ({ topic_id, name, description, image_url, loading = false, index = 0 }) => {
-  const { fetchVocabularyByCategory } = useVocabularyStore();
+  const navigate = useNavigate();
   const colors = getColorByIndex(index);
 
   const handleClick = () => {
-    fetchVocabularyByCategory(topic_id);
+    navigate(`/vocabulary/topic/${topic_id}`);
   };
 
   return (

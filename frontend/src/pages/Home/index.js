@@ -75,6 +75,7 @@ const Home = () => {
             <BlueButton
               name={"Xem tất cả"}
               isActive={"login"}
+              path={"/vocabulary"}
               size={"w-32 h-8 !bg-red-700 hover:!bg-red-800"}
             />
           </div>

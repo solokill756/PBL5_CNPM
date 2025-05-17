@@ -5,42 +5,14 @@ import React, { useEffect } from 'react'
 import useVocabularyStore from '@/store/useVocabularyStore';
 import VocabularyDetail from '@/components/Vocabulary/VocabularyDetail';
 import useAxiosPrivate from '@/hooks/useAxiosPrivate';
-import { useParams } from 'react-router-dom';
 
 const Vocabulary = () => {
   const axios = useAxiosPrivate();
-  const { word } = useParams();
-  const { selectedWord, categories, setSelectedWord, fetchCategories, searchVocabulary, setSearchTerm, closeSearchModal, searchResults, loading, error } = useVocabularyStore();
+  const { selectedWord, categories, fetchCategories, error } = useVocabularyStore();
 
   useEffect(() => {
     fetchCategories(axios);
   }, [fetchCategories]);
-
-  useEffect(() => {
-    const handleWordParam = async () => {
-      if (word) {
-        const decodedWord = decodeURIComponent(word);
-        setSearchTerm(decodedWord);
-        
-        // try {
-        //   await searchVocabulary(axios, decodedWord);
-        //   // Đợi searchVocabulary hoàn thành và kiểm tra kết quả
-        //   if (searchResults && searchResults.length > 0) {
-        //     setSelectedWord(searchResults[0]);
-        //   }
-        // } catch (error) {
-        //   console.error('Error searching vocabulary:', error);
-        // }
-
-        // // Đóng modal sau khi xử lý xong
-        // setTimeout(() => {
-        //   closeSearchModal();
-        // }, 0);
-      }
-    };
-
-    handleWordParam();
-  }, [word]);
 
   return (
     <main className="flex flex-col items-center flex-grow scrollbar-hide">

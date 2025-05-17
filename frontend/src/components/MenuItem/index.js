@@ -3,7 +3,11 @@ import { Link, useLocation } from "react-router-dom";
 
 const MenuItem = ({ icon, title, path, textSize = "text-base", height, onClick }) => {
   const location = useLocation();
-  const isActive = location.pathname === path;
+  const isActive = path && (
+    path === '/' 
+      ? location.pathname === '/' 
+      : location.pathname.startsWith(path)
+  );
 
   return (
     <Link
