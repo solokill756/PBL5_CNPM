@@ -6,6 +6,7 @@ interface QuizResultAttributes {
 
   score: number;
   completed_at: Date;
+  result : string;
 }
 
 interface QuizResultCreationAttributes
@@ -19,7 +20,8 @@ class QuizResult
   declare user_id: string;
   declare score: number;
   declare completed_at: Date;
-}
+  declare result: string;
+  }
 
 export default (sequelize: Sequelize) => {
   QuizResult.init(
@@ -42,6 +44,10 @@ export default (sequelize: Sequelize) => {
         type: DataTypes.DATE,
         allowNull: false,
         defaultValue: DataTypes.NOW,
+      },
+      result: {
+        type: DataTypes.STRING,
+        allowNull: false,
       },
     },
     {
