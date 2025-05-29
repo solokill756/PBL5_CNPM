@@ -19,8 +19,18 @@ const QuizModal = ({ isOpen, onClose, maxQuestions, title, list_id }) => {
   const displayDeck = useFlashcardStore((state) => state.displayDeck);
   const [numberOfQuestions, setNumberOfQuestions] = useState("");
   const [answerType, setAnswerType] = useState(answerOptions[0]);
+  const [showError, setShowError] = useState(false);
+  
   const numQuestions = numberOfQuestions === "" ? "" : Number(numberOfQuestions);
   const isInvalidQuestionCount = numQuestions === "" || numQuestions <= 0 || numQuestions > displayDeck.length;
+
+  const handleClose = () => {
+    if (numberOfQuestions === "" || isInvalidQuestionCount) {
+      setShowError(true);
+      return;
+    }
+    onClose();
+  };
 
   const handleSubmit = async () => {
     if (isInvalidQuestionCount) return;
@@ -38,10 +48,22 @@ const QuizModal = ({ isOpen, onClose, maxQuestions, title, list_id }) => {
     }
   };
 
+  const handleQuestionChange = (e) => {
+    setNumberOfQuestions(e.target.value);
+    if (showError && e.target.value !== "") {
+      setShowError(false);
+    }
+  };
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="max-w-xl">
+    <Modal 
+      isOpen={isOpen} 
+      onClose={handleClose} 
+      size="max-w-xl"
+      preventClose={numberOfQuestions === "" || isInvalidQuestionCount}
+    >
       <div className="space-y-6">
-        <p className="text-base text-gray-800">{title}</p>
+        <p className="text-lg font-semibold text-gray-800">{title}</p>
         <h2 className="text-3xl font-extrabold text-gray-800">Thiết lập bài kiểm tra</h2>
 
         <div className="flex justify-between items-center">
@@ -53,12 +75,26 @@ const QuizModal = ({ isOpen, onClose, maxQuestions, title, list_id }) => {
             min={1}
             max={maxQuestions}
             value={numberOfQuestions}
-            onChange={(e) => setNumberOfQuestions(e.target.value)}
-            className="w-36 border-2 border-gray-200 rounded-3xl px-2 py-1"
+            onChange={handleQuestionChange}
+            className={`w-36 border-2 rounded-3xl px-2 py-1 ${
+              showError && numberOfQuestions === "" 
+                ? "border-red-500 focus:border-red-500" 
+                : "border-gray-200 focus:border-blue-500"
+            }`}
+            placeholder="Nhập số câu"
           />
         </div>
+        
+        {/* Error message for empty input */}
+        {showError && numberOfQuestions === "" && (
+          <span className="text-sm text-red-500 ml-auto block text-right">
+            Vui lòng nhập số câu hỏi
+          </span>
+        )}
+        
+        {/* Error message for invalid count */}
         {isInvalidQuestionCount && numberOfQuestions !== "" && (
-          <span className="text-sm text-red-500 ml-auto">
+          <span className="text-sm text-red-500 ml-auto block text-right">
             {Number(numberOfQuestions) <= 0 
               ? "Số câu hỏi phải lớn hơn 0" 
               : `Số câu hỏi không được vượt quá số thẻ (${displayDeck.length})`}
@@ -96,6 +132,15 @@ const QuizModal = ({ isOpen, onClose, maxQuestions, title, list_id }) => {
             </Listbox>
           </div>
         </div>
+
+        {/* Warning message when trying to close without input */}
+        {showError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <p className="text-red-600 text-sm font-medium">
+              ⚠️ Bạn cần nhập số câu hỏi hợp lệ trước khi tiếp tục!
+            </p>
+          </div>
+        )}
 
         <div className="flex justify-end">
           <button
