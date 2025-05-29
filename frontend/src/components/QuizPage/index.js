@@ -5,6 +5,15 @@ import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 
+const shuffleArray = (array) => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
 const QuestionNavigator = ({
   questions,
   currentQuestionIndex,
@@ -19,7 +28,7 @@ const QuestionNavigator = ({
           const isAnswered = currentAnswer && currentAnswer[index];
           return (
             <button
-              key={question.id}
+              key={`${question.id}-${index}`}
               onClick={() => onNavigate(index)}
               className={`py-2 rounded-md text-center transition-all ${
                 currentQuestionIndex === index
@@ -27,7 +36,7 @@ const QuestionNavigator = ({
                   : "hover:bg-slate-100"
               } ${isAnswered ? "text-red-700" : "text-gray-700"}`}
             >
-              {question.id}
+              {index + 1}
             </button>
           );
         })}
@@ -36,12 +45,13 @@ const QuestionNavigator = ({
   );
 };
 
-const QuizPage = () => {
+const QuizPage = ({ timeLeft, isTimeUp }) => {
   const { questions, fetchQuestions, loading, error } = useQuizStore();
   const [currentAnswer, setCurrentAnswer] = useState({});
   const [isOpen, setOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [shuffledQuestions, setShuffledQuestions] = useState([]);
   const questionRefs = useRef([]);
   const axiosPrivate = useAxiosPrivate();
   const { flashcardId } = useParams();
@@ -52,6 +62,14 @@ const QuizPage = () => {
   const { setQuestions } = useQuizStore();
 
   useEffect(() => {
+    if (questions.length > 0) {
+      const shuffled = shuffleArray(questions);
+      setShuffledQuestions(shuffled);
+      setCurrentAnswer({});
+    }
+  }, [questions]);
+
+  useEffect(() => {
     if (location.state?.retryWrongOnly && wrongQuestions.length > 0) {
       setOpen(false);
       setQuestions(wrongQuestions);
@@ -60,9 +78,17 @@ const QuizPage = () => {
     }
   }, [flashcardId, axiosPrivate, location.state?.retryWrongOnly]);
 
-  const isAllAnswered = questions.length === Object.keys(currentAnswer).length;
+  useEffect(() => {
+    if (isTimeUp && !submitted) {
+      handleSubmit();
+    }
+  }, [isTimeUp, submitted]);
+
+  const isAllAnswered = shuffledQuestions.length === Object.keys(currentAnswer).length;
 
   const handleAnswer = (qIndex, selectedOption) => {
+    if (isTimeUp) return;
+
     setCurrentAnswer((prev) => {
       const updated = { ...prev, [qIndex]: selectedOption };
       setAnswers(updated);
@@ -88,11 +114,15 @@ const QuizPage = () => {
   };
 
   const handleSubmit = async () => {
-    const { questions, answers, setResult } = useQuizStore.getState();
+    if (submitted) return; 
+    
+    setSubmitted(true);
+    
+    const { answers, setResult } = useQuizStore.getState();
     const { setWrongQuestions } = useQuizStore.getState();
 
     let correctCount = 0;
-    const answerDetails = questions.map((q, index) => {
+    const answerDetails = shuffledQuestions.map((q, index) => {
       const selected = answers[index];
       const isCorrect = selected === q.answer;
 
@@ -109,12 +139,12 @@ const QuizPage = () => {
     const wrongQs = answerDetails
       .filter((a) => !a.isCorrect)
       .map((wrong) => {
-        return questions.find((q) => q.id === wrong.questionId);
+        return shuffledQuestions.find((q) => q.id === wrong.questionId);
       });
 
     setWrongQuestions(wrongQs);
 
-    const total = questions.length;
+    const total = shuffledQuestions.length;
     const score = (correctCount / total) * 100;
 
     const result = {
@@ -137,7 +167,10 @@ const QuizPage = () => {
   };
 
   const handleCheckBeforeSubmit = () => {
-    const unansweredIndex = questions.findIndex(
+    // Không cho phép submit khi đã hết thời gian (sẽ tự động submit)
+    if (isTimeUp) return;
+
+    const unansweredIndex = shuffledQuestions.findIndex(
       (_, index) => !currentAnswer[index]
     );
     if (unansweredIndex !== -1) {
@@ -156,13 +189,13 @@ const QuizPage = () => {
 
   if (loading) return <div className="text-center">Đang tải câu hỏi...</div>;
   if (error) return <div className="text-center text-red-600">{error}</div>;
-  if (questions.length === 0) return null;
+  if (shuffledQuestions.length === 0) return null;
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
       <div className="hidden lg:block fixed left-8 top-32 w-64 z-30">
         <QuestionNavigator
-          questions={questions}
+          questions={shuffledQuestions}
           currentQuestionIndex={currentQuestionIndex}
           onNavigate={navigateToQuestion}
           currentAnswer={currentAnswer}
@@ -171,7 +204,7 @@ const QuizPage = () => {
 
       <div className="lg:hidden mb-6 mt-6">
         <QuestionNavigator
-          questions={questions}
+          questions={shuffledQuestions}
           currentQuestionIndex={currentQuestionIndex}
           onNavigate={navigateToQuestion}
           currentAnswer={currentAnswer}
@@ -180,14 +213,16 @@ const QuizPage = () => {
 
       <div className="lg:ml-72 mt-6">
         <div className="space-y-20 w-full flex-col gap-4">
-          {questions.map((q, index) => (
+          {shuffledQuestions.map((q, index) => (
             <div
-              key={q.id}
+              key={`${q.id}-${index}`}
               ref={(el) => (questionRefs.current[index] = el)}
-              className="bg-white p-10 rounded-2xl shadow-xl shadow-neutral-300 w-full max-w-4xl mx-auto space-y-6"
+              className={`bg-white p-10 rounded-2xl shadow-xl shadow-neutral-300 w-full max-w-4xl mx-auto space-y-6 ${
+                isTimeUp ? 'opacity-75 pointer-events-none' : ''
+              }`}
             >
               <div className="absolute top-4 right-6 text-sm text-gray-400 font-semibold">
-                Câu {index + 1}/{questions.length}
+                Câu {index + 1}/{shuffledQuestions.length}
               </div>
               {/* Câu hỏi */}
               <div className="">
@@ -209,18 +244,29 @@ const QuizPage = () => {
                     <button
                       key={opt}
                       onClick={() => handleAnswer(index, opt)}
-                      className={`border px-6 py-5 text-lg rounded-xl text-left transition-all duration-200
-                        ${
-                          currentAnswer[index] === opt
-                            ? "bg-blue-100 border-blue-500 text-blue-800 font-semibold"
-                            : "hover:bg-gray-50"
-                        }`}
+                      disabled={isTimeUp}
+                      className={`border px-6 py-5 text-lg rounded-xl text-left transition-all duration-200 ${
+                        isTimeUp ? 'cursor-not-allowed opacity-50' : ''
+                      } ${
+                        currentAnswer[index] === opt
+                          ? "bg-blue-100 border-blue-500 text-blue-800 font-semibold"
+                          : "hover:bg-gray-50"
+                      }`}
                     >
                       {opt}
                     </button>
                   ))}
                 </div>
               </div>
+
+              {/* Hiển thị thông báo hết thời gian trên mỗi câu hỏi */}
+              {isTimeUp && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-4">
+                  <p className="text-red-600 text-sm font-medium text-center">
+                    ⏰ Đã hết thời gian! Bài kiểm tra đang được tự động nộp...
+                  </p>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -228,18 +274,18 @@ const QuizPage = () => {
         {!submitted && (
           <div className="text-center py-16 rounded-xl mt-10 mb-20">
             <h2 className="text-3xl font-bold text-gray-800 mb-6">
-              Tất cả đã xong! Bạn đã sẵn sàng gửi bài kiểm tra?
+              {isTimeUp ? 'Đã hết thời gian!' : 'Tất cả đã xong! Bạn đã sẵn sàng gửi bài kiểm tra?'}
             </h2>
             <button
               onClick={handleCheckBeforeSubmit}
-              disabled={!isAllAnswered}
+              disabled={!isAllAnswered || isTimeUp}
               className={`${
-                !isAllAnswered
+                !isAllAnswered || isTimeUp
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-red-700 hover:bg-red-800"
               } text-white font-semibold text-xl px-10 py-4 rounded-full transition-all duration-300`}
             >
-              Gửi bài kiểm tra
+              {isTimeUp ? "Đang tự động nộp bài..." : "Gửi bài kiểm tra"}
             </button>
           </div>
         )}

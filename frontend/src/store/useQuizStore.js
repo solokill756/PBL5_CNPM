@@ -16,7 +16,6 @@ export const useQuizStore = create((set) => ({
   fetchQuestions: async (list_id, type_quiz, number_of_questions, axiosPrivate) => {
     set({ loading: true, error: null });
     try {
-      // Sử dụng axiosPrivate được truyền vào từ component
       const res = await axiosPrivate.post("http://localhost:9000/api/quiz//generateQuiz", {
         list_id, 
         type_quiz, 
