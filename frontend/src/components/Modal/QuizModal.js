@@ -6,8 +6,9 @@ import { useFlashcardStore } from "@/store/useflashcardStore";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import { useQuizStore } from "@/store/useQuizStore";
 import { useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
-const QuizModal = ({ isOpen, onClose, maxQuestions, title, list_id }) => {
+const QuizModal = ({ isOpen, onClose, maxQuestions, title, list_id}) => {
   const answerOptions = [
     { label: "Tiếng Việt", value: "1" },
     { label: "Tiếng Nhật", value: "2" },
@@ -20,6 +21,7 @@ const QuizModal = ({ isOpen, onClose, maxQuestions, title, list_id }) => {
   const [numberOfQuestions, setNumberOfQuestions] = useState("");
   const [answerType, setAnswerType] = useState(answerOptions[0]);
   const [showError, setShowError] = useState(false);
+   const { flashcardId } = useParams();
   
   const numQuestions = numberOfQuestions === "" ? "" : Number(numberOfQuestions);
   const isInvalidQuestionCount = numQuestions === "" || numQuestions <= 0 || numQuestions > displayDeck.length;
@@ -53,6 +55,10 @@ const QuizModal = ({ isOpen, onClose, maxQuestions, title, list_id }) => {
     if (showError && e.target.value !== "") {
       setShowError(false);
     }
+  };
+
+  const handleCancel = () => {
+    navigate(`/flashcard/${flashcardId}/`);
   };
 
   return (
@@ -142,7 +148,13 @@ const QuizModal = ({ isOpen, onClose, maxQuestions, title, list_id }) => {
           </div>
         )}
 
-        <div className="flex justify-end">
+        <div className="flex justify-between gap-3">
+          <button
+            onClick={handleCancel}
+            className="w-32 font-medium py-2 rounded-3xl border-2 border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors"
+          >
+            Hủy
+          </button>
           <button
             onClick={handleSubmit}
             className={`w-48 font-medium py-2 rounded-3xl ${
