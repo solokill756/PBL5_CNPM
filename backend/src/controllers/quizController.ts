@@ -3,8 +3,8 @@ import { GenerateQuiz, saveResultQuiz } from "../services/quizSevice";
 import { Request , Response } from "express";
 const generateQuizController = async (req : Request , res : Response) => {
    try {
-     const { list_id , type_quiz , number_of_questions } = req.body;
-     const quiz = await GenerateQuiz(list_id , Number(type_quiz) , Number(number_of_questions));
+     const { list_id , type_quiz , number_of_questions , topic_id } = req.body;
+     const quiz = await GenerateQuiz(list_id , Number(type_quiz) , Number(number_of_questions) , topic_id);
      sendSuccess(res , quiz);
    } catch (error) {
      sendError(res, "Internal server error", 500);
