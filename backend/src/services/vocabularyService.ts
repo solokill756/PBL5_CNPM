@@ -73,7 +73,7 @@ const getVocabularyByTopic = async (topic_id: string, user_id: string) => {
 };
 
 
-const updateVocabularyUser = async (user_id: string, vocabulary_id: string, is_saved?: boolean, had_learned?: boolean) => {
+const updateVocabularyUser = async (user_id: string, vocabulary_id: string, topic_id: string, is_saved?: boolean, had_learned?: boolean) => {
   try {
     
     const vocabularyUser = await db.vocabularyUser.findOne({ where: { user_id, vocabulary_id } });
@@ -82,7 +82,7 @@ const updateVocabularyUser = async (user_id: string, vocabulary_id: string, is_s
       await db.vocabularyTopicUser.update({
         mastered_words: db.Sequelize.literal(`mastered_words + 1`),
       }, {
-        where: { user_id, topic_id: vocabulary_id }
+        where: { user_id, topic_id: topic_id }
       });
       await checkLevelUser(user_id, 10);
     }
@@ -93,7 +93,7 @@ const updateVocabularyUser = async (user_id: string, vocabulary_id: string, is_s
         await db.vocabularyTopicUser.update({
           mastered_words: db.Sequelize.literal(`mastered_words - 1`),
         }, {
-          where: { user_id, topic_id: vocabulary_id }
+          where: { user_id, topic_id: topic_id }
         });
         await checkLevelUser(user_id, -10);
       }
@@ -101,7 +101,7 @@ const updateVocabularyUser = async (user_id: string, vocabulary_id: string, is_s
         await db.vocabularyTopicUser.update({
           mastered_words: db.Sequelize.literal(`mastered_words + 1`),
         }, {
-          where: { user_id, topic_id: vocabulary_id }
+          where: { user_id, topic_id: topic_id }
         });
         await checkLevelUser(user_id, 10);
       }
@@ -215,18 +215,18 @@ const getHistorySearch = async (user_id: string) => {
       if(!user) {
         throw new Error("User not found");
       }
-      if(user.total_points + Number(new_points) >= user.levelThreshold) {
+      if(user.total_points + new_points >= user.levelThreshold) {
         await db.user.update({
-          current_level: Number(user.current_level) + 1,
-          levelThreshold: Number(user.levelThreshold) + (Number(user.current_level) * 100 + 500),
-          total_points: Number(user.total_points) + Number(new_points) - Number(user.levelThreshold) > 0 ? Number(user.total_points) + Number(new_points) - Number(user.levelThreshold) : 0
+          current_level: user.current_level + 1,
+          levelThreshold: user.levelThreshold + (user.current_level * 100 + 500),
+          total_points: user.total_points + new_points - user.levelThreshold > 0 ? user.total_points + new_points - user.levelThreshold : 0
         }, {
           where: { user_id }
         });
       }
       else {
         await db.user.update({
-          total_points: Number(user.total_points) + Number(new_points) > 0 ? Number(user.total_points) + Number(new_points) : 0
+          total_points: user.total_points + new_points > 0 ? user.total_points + new_points : 0
         }, {
           where: { user_id }
         });

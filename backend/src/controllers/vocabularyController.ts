@@ -88,10 +88,10 @@ const checkLevelUser = async (req: Request, res: Response) => {
 const updateVocabularyUser = async (req: Request, res: Response) => {
     try {
         const user_id = (req as any).user.user_id;
-        const { vocabulary_id, is_saved, had_learned } = req.body;
+        const { vocabulary_id, is_saved, had_learned, topic_id } = req.body;
       
-        const user = await vocabularyService.updateVocabularyUser(user_id, vocabulary_id, is_saved ?? false, had_learned ?? false);       
-        sendSuccess(res, user);
+        const user = await vocabularyService.updateVocabularyUser(user_id, vocabulary_id, topic_id, is_saved, had_learned);       
+        sendSuccess(res, user); 
     } catch (error) {
         sendError(res, "Lỗi server", 500);
     }
