@@ -215,7 +215,7 @@ const getHistorySearch = async (user_id: string) => {
       if(!user) {
         throw new Error("User not found");
       }
-      if(user.total_points + new_points >= user.levelThreshold) {
+      if(user.total_points + Number(new_points) >= user.levelThreshold) {
         await db.user.update({
           current_level: Number(user.current_level) + 1,
           levelThreshold: Number(user.levelThreshold) + (Number(user.current_level) * 100 + 500),
