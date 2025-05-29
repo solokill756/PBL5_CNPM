@@ -1,3 +1,4 @@
+import { filterUserData } from "../helpers/fillData";
 import { sendRequestNewVocabularyEmail } from "../helpers/sendRequestNewVocabulary";
 import db from "../models";
 import dotenv from "dotenv";
@@ -37,9 +38,17 @@ const getSimilarVocabulary = async (word: string, language: string) => {
   }
 };
 
-const getAllTopic = async () => {
+const getAllTopic = async (user_id: string) => {
   try {
-    const topics = await db.vocabularyTopic.findAll();
+    const topics = await db.vocabularyTopic.findAll({
+      include: [{
+        model: db.vocabularyTopicUser,
+        attributes: ['mastered_words'],
+        where: { user_id },
+        required: false,
+      },
+     ],
+    });
     return topics;
   } catch (error) {
     throw error;
@@ -80,7 +89,50 @@ const getAlToFindVocabulary = async (word: string , language: string) => {
             })
         });
         const data = await response.json();
+      if(language == "Japanese") {
+        const findTopic = await db.vocabularyTopic.findOne({where: {name: data.data.topic.trim()}});
+        if(!findTopic) {
+          await db.vocabularyTopic.create({
+            name: data.data.topic.trim()
+          });
+        }
+        await db.vocabulary.create({
+          word: data.data.word,
+          pronunciation: data.data.pronunciation,
+          meaning: data.data.meaning,
+          example: data.data.example,
+          usage: data.data.usage,
+          example_meaning: data.data.example_meaning,
+          level: data.data.level,
+          type: data.data.type,
+          topic_id: findTopic.topic_id,
+          ai_suggested: "1",
+          language: "Japanese"
+        });
+      }
+      if(language == "Vietnamese") {
+          const findTopic = await db.vocabularyTopic.findOne({where: {name: data.data.topic.trim()}});
+        if(!findTopic) {
+          await db.vocabularyTopic.create({
+            name: data.data.topic.trim()
+          });
+        }
+        await db.vocabulary.create({
+          word: data.data.meaning,
+          meaning: data.data.word,
+          type: data.data.type,
+          topic_id: findTopic.topic_id,
+          pronunciation: data.data.pronunciation,
+          example: data.data.example,
+          usage: data.data.usage,
+          example_meaning: data.data.example_meaning,
+          level: data.data.level,
+          ai_suggested: "1",
+          language: "Vietnamese"
+        });
+      }
         return data.data;
+    
   } catch (error) {
     throw error;
   }
@@ -102,6 +154,34 @@ const getHistorySearch = async (user_id: string) => {
     throw error;
   }
 }
+ const checkLevelUser = async (user_id: string , new_points: number) => {
+    try {
+      const user = await db.user.findByPk(user_id);
+      if(!user) {
+        throw new Error("User not found");
+      }
+      if(user.total_points + new_points >= user.levelThreshold) {
+        await db.user.update({
+          current_level: Number(user.current_level) + 1,
+          levelThreshold: Number(user.levelThreshold) + (Number(user.current_level) * 100 + 500),
+          total_points: Number(user.total_points) + Number(new_points) - Number(user.levelThreshold)
+        }, {
+          where: { user_id }
+        });
+      }
+      else {
+        await db.user.update({
+          total_points: Number(user.total_points) + Number(new_points)
+        }, {
+          where: { user_id }
+        });
+      }
+      const userData = filterUserData(user);
+      return userData;
+    } catch (error) {
+      throw error;
+    }
+  }
 
 const addHistorySearch = async (user_id: string, vocabulary_id: string) => {
   try {
@@ -129,7 +209,8 @@ const addHistorySearch = async (user_id: string, vocabulary_id: string) => {
   } catch (error) {
     throw error;
   }
+ 
 }
 
-export default { getSimilarVocabulary, getVocabularyByTopic, getAlToFindVocabulary , requestNewVocabulary , getAllTopic , getHistorySearch , addHistorySearch };
+  export default { getSimilarVocabulary, getVocabularyByTopic, getAlToFindVocabulary , requestNewVocabulary , getAllTopic , getHistorySearch , addHistorySearch , checkLevelUser };
 

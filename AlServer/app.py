@@ -4,7 +4,7 @@ import logging
 import json
 import uuid
 from flask import Flask, request, jsonify
-import google.generativeai as genai
+import google.generativeai as genai # type: ignore
 from datetime import datetime
 
 # Setup Google Gemini
@@ -32,7 +32,9 @@ Trả lời theo định dạng JSON với các trường sau:
   "usage": "Giải thích ngắn gọn về ý nghĩa và cách dùng",
   "example_meaning": "Nghĩa của câu ví dụ bằng tiếng Việt",
   "level": "Cấp độ JLPT nếu biết (N5-N1)",
-  "type": "Loại từ (danh từ, động từ, tính từ, v.v.)"
+  "type": "Loại từ (danh từ, động từ, tính từ, v.v.)",
+  "topic": "Chủ đề phù hợp nhất cho từ này bằng tiếng Việt",
+  "topic_japanese": "Chủ đề phù hợp nhất cho từ này bằng tiếng Nhật"
 }}
 Chỉ trả về JSON, không thêm văn bản giới thiệu hay giải thích.
 """,
@@ -47,7 +49,9 @@ Trả lời theo định dạng JSON với các trường sau:
   "usage": "Giải thích nghĩa và cách dùng bằng tiếng Việt",
   "example_meaning": "Nghĩa của câu ví dụ bằng tiếng Việt",
   "level": "Cấp độ JLPT nếu biết (N5-N1)",
-  "type": "Loại từ (danh từ, động từ, tính từ, v.v.)"
+  "type": "Loại từ (danh từ, động từ, tính từ, v.v.)",
+  "topic": "Chủ đề phù hợp nhất cho từ này",
+  "topic_japanese": "Chủ đề phù hợp nhất cho từ này bằng tiếng Nhật"
 }}
 Chỉ trả về JSON, không thêm văn bản giới thiệu hay giải thích.
 """
@@ -101,7 +105,7 @@ def extract_json_from_response(text):
             }
 
 # Call Gemini and process response for translation
-def generate_response(prompt, word, language, topic_id="default"):
+def generate_response(prompt, word, language):
     try:
         logger.info(f"Calling Gemini with prompt for word: {word}")
         start_time = time.time()
@@ -128,7 +132,7 @@ def generate_response(prompt, word, language, topic_id="default"):
             "meaning": parsed.get("meaning", ""),
             "pronunciation": parsed.get("pronunciation", ""),
             "example": parsed.get("example", ""),
-            "topic_id": topic_id,
+            "topic": parsed.get("topic", ""),
             "usage": parsed.get("usage", ""),
             "example_meaning": parsed.get("example_meaning", ""),
             "ai_suggested": "true",
@@ -153,7 +157,7 @@ def generate_response(prompt, word, language, topic_id="default"):
             "meaning": "",
             "pronunciation": "",
             "example": "",
-            "topic_id": topic_id,
+            "topic": "",
             "usage": "",
             "example_meaning": f"Error: {str(e)}",
             "ai_suggested": "true",
@@ -225,10 +229,10 @@ def generate():
 
         word = data['word']
         language = data.get('language', 'Japanese')
-        topic_id = data.get('topic_id', str(uuid.uuid4()))
+        # topic_id = data.get('topic_id', str(uuid.uuid4()))
 
         prompt = create_prompt(word, language)
-        vocabulary_response, metadata = generate_response(prompt, word, language, topic_id)
+        vocabulary_response, metadata = generate_response(prompt, word, language)
 
         # Add status to the metadata
         metadata["status"] = "success" if not metadata.get("error") else "error"
