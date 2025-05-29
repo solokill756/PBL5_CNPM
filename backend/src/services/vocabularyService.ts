@@ -73,12 +73,12 @@ const getVocabularyByTopic = async (topic_id: string, user_id: string) => {
 };
 
 
-const updateVocabularyUser = async (user_id: string, vocabulary_id: string, is_saved: boolean, had_learned: boolean) => {
+const updateVocabularyUser = async (user_id: string, vocabulary_id: string, is_saved?: boolean, had_learned?: boolean) => {
   try {
     
     const vocabularyUser = await db.vocabularyUser.findOne({ where: { user_id, vocabulary_id } });
     if (!vocabularyUser) {
-      if(had_learned) {
+      if(had_learned == true) {
       await db.vocabularyTopicUser.update({
         mastered_words: db.Sequelize.literal(`mastered_words + 1`),
       }, {
@@ -86,10 +86,10 @@ const updateVocabularyUser = async (user_id: string, vocabulary_id: string, is_s
       });
       await checkLevelUser(user_id, 10);
     }
-      await db.vocabularyUser.create({ user_id, vocabulary_id, is_saved, had_learned });
+      await db.vocabularyUser.create({ user_id, vocabulary_id, is_saved: is_saved ?? false, had_learned: had_learned ?? false });
     } 
     else {
-      if(!had_learned) {
+      if(had_learned == false) {
         await db.vocabularyTopicUser.update({
           mastered_words: db.Sequelize.literal(`mastered_words - 1`),
         }, {
@@ -97,7 +97,23 @@ const updateVocabularyUser = async (user_id: string, vocabulary_id: string, is_s
         });
         await checkLevelUser(user_id, -10);
       }
-      await db.vocabularyUser.update({ is_saved, had_learned }, { where: { user_id, vocabulary_id } });
+      if(is_saved == true) {
+        await db.vocabularyTopicUser.update({
+          mastered_words: db.Sequelize.literal(`mastered_words + 1`),
+        }, {
+          where: { user_id, topic_id: vocabulary_id }
+        });
+        await checkLevelUser(user_id, 10);
+      }
+      if(is_saved != undefined && had_learned != undefined) {
+        await db.vocabularyUser.update({ is_saved, had_learned }, { where: { user_id, vocabulary_id } });
+      }
+      else if(is_saved != undefined) {
+        await db.vocabularyUser.update({ is_saved }, { where: { user_id, vocabulary_id } });
+      }
+      else if(had_learned != undefined) {
+        await db.vocabularyUser.update({ had_learned }, { where: { user_id, vocabulary_id } });
+      }
     }
     return true;
   } catch (error) {
@@ -203,14 +219,14 @@ const getHistorySearch = async (user_id: string) => {
         await db.user.update({
           current_level: Number(user.current_level) + 1,
           levelThreshold: Number(user.levelThreshold) + (Number(user.current_level) * 100 + 500),
-          total_points: Number(user.total_points) + Number(new_points) - Number(user.levelThreshold)
+          total_points: Number(user.total_points) + Number(new_points) - Number(user.levelThreshold) > 0 ? Number(user.total_points) + Number(new_points) - Number(user.levelThreshold) : 0
         }, {
           where: { user_id }
         });
       }
       else {
         await db.user.update({
-          total_points: Number(user.total_points) + Number(new_points)
+          total_points: Number(user.total_points) + Number(new_points) > 0 ? Number(user.total_points) + Number(new_points) : 0
         }, {
           where: { user_id }
         });
