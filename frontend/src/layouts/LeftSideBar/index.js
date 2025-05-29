@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { MdOutlineForum, MdOutlineNotificationsActive } from "react-icons/md";
 import { LuLibraryBig } from "react-icons/lu";
-import { TbLanguageHiragana } from "react-icons/tb";
+import { TbLanguageHiragana, TbSwords } from "react-icons/tb";
 import { FaLanguage } from "react-icons/fa6";
 
 function LeftSideBar({ onToggle }) {
@@ -37,6 +37,7 @@ function LeftSideBar({ onToggle }) {
     { id: "new", title: "Tạo", icon: <NewIcon /> },
     { id: "library", title: "Thư viện", icon: <LuLibraryBig className="size-6" />, path: "/library" },
     { id: "vocabulary", title: "Từ vựng", icon: <FaLanguage  className="size-6" />, path: "/vocabulary" },
+    { id: "battle", title: "Đối kháng", icon: <TbSwords  className="size-6" />, path: "/battle" },
     { id: "forum", title: "Diễn đàn", icon: <MdOutlineForum className="size-6" />, path: "/forum" },
     { id: "notification", title: "Thông báo", icon: <MdOutlineNotificationsActive className="size-6" /> },
   ];

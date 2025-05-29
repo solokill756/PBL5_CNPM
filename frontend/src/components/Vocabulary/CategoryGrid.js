@@ -17,7 +17,7 @@ const item = {
   show: { opacity: 1, y: 0 }
 };
 
-const CategoryGrid = ({ categories, loading = false, error = null }) => {
+const CategoryGrid = ({ categories, loading = false, error = null, userLevel = 1 }) => {
   if (loading) {
     return (
       <div className="text-center py-12">
@@ -28,6 +28,9 @@ const CategoryGrid = ({ categories, loading = false, error = null }) => {
     );
   }
 
+  // Sắp xếp chủ đề theo cấp độ yêu cầu
+  const sortedCategories = [...categories].sort((a, b) => a.required_level - b.required_level);
+
   return (
     <motion.div
       variants={container}
@@ -35,9 +38,14 @@ const CategoryGrid = ({ categories, loading = false, error = null }) => {
       animate="show"
       className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
     >
-      {categories.map((category, index) => (
+      {sortedCategories.map((category, index) => (
         <motion.div key={category.topic_id} variants={item}>
-          <CategoryCard {...category} loading={loading} index={index} />
+          <CategoryCard 
+            {...category} 
+            loading={loading} 
+            index={index} 
+            user_level={userLevel}
+          />
         </motion.div>
       ))}
     </motion.div>
