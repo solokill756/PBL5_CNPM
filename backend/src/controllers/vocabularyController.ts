@@ -15,7 +15,8 @@ const getSimilarVocabulary = async (req: Request, res: Response) => {
 const getVocabularyByTopic = async (req: Request, res: Response) => {
     try {
         const { topic_id } = req.params;
-        const vocabularies = await vocabularyService.getVocabularyByTopic(topic_id);
+        const user_id = (req as any).user.user_id;
+        const vocabularies = await vocabularyService.getVocabularyByTopic(topic_id, user_id);
         sendSuccess(res, vocabularies);
     } catch (error) {
         sendError(res, "Lỗi server", 500);
@@ -83,4 +84,19 @@ const checkLevelUser = async (req: Request, res: Response) => {
         sendError(res, "Lỗi server", 500);
     }   
 }
-export default { getSimilarVocabulary, getVocabularyByTopic, getAlToFindVocabulary , requestNewVocabulary , getAllTopic , getHistorySearch , addHistorySearch , checkLevelUser };
+
+const updateVocabularyUser = async (req: Request, res: Response) => {
+    try {
+        const user_id = (req as any).user.user_id;
+        const { vocabulary_id, is_saved, had_learned } = req.body;
+      
+        const user = await vocabularyService.updateVocabularyUser(user_id, vocabulary_id, is_saved ?? false, had_learned ?? false);       
+        sendSuccess(res, user);
+    } catch (error) {
+        sendError(res, "Lỗi server", 500);
+    }
+}
+
+
+
+export default { getSimilarVocabulary, getVocabularyByTopic, getAlToFindVocabulary , requestNewVocabulary , getAllTopic , getHistorySearch , addHistorySearch , checkLevelUser , updateVocabularyUser };

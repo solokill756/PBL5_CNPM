@@ -54,10 +54,17 @@ const getAllTopic = async (user_id: string) => {
     throw error;
   }
 };
-const getVocabularyByTopic = async (topic_id: string) => {
+const getVocabularyByTopic = async (topic_id: string, user_id: string) => {
  try {
      const vocabularies = await db.vocabulary.findAll({
        where: { topic_id },
+       include: [{
+        model: db.vocabularyUser,
+        attributes: ['is_saved', 'had_learned'],
+        where: { user_id },
+        required: false,
+      },
+     ],
      });
      return vocabularies;
  } catch (error) {
@@ -65,6 +72,38 @@ const getVocabularyByTopic = async (topic_id: string) => {
  }
 };
 
+
+const updateVocabularyUser = async (user_id: string, vocabulary_id: string, is_saved: boolean, had_learned: boolean) => {
+  try {
+    
+    const vocabularyUser = await db.vocabularyUser.findOne({ where: { user_id, vocabulary_id } });
+    if (!vocabularyUser) {
+      if(had_learned) {
+      await db.vocabularyTopicUser.update({
+        mastered_words: db.Sequelize.literal(`mastered_words + 1`),
+      }, {
+        where: { user_id, topic_id: vocabulary_id }
+      });
+      await checkLevelUser(user_id, 10);
+    }
+      await db.vocabularyUser.create({ user_id, vocabulary_id, is_saved, had_learned });
+    } 
+    else {
+      if(!had_learned) {
+        await db.vocabularyTopicUser.update({
+          mastered_words: db.Sequelize.literal(`mastered_words - 1`),
+        }, {
+          where: { user_id, topic_id: vocabulary_id }
+        });
+        await checkLevelUser(user_id, -10);
+      }
+      await db.vocabularyUser.update({ is_saved, had_learned }, { where: { user_id, vocabulary_id } });
+    }
+    return true;
+  } catch (error) {
+    throw error;
+  }
+} 
 
 const requestNewVocabulary = async (word: string, email: string , comment: string) => {
    try {
@@ -212,5 +251,5 @@ const addHistorySearch = async (user_id: string, vocabulary_id: string) => {
  
 }
 
-  export default { getSimilarVocabulary, getVocabularyByTopic, getAlToFindVocabulary , requestNewVocabulary , getAllTopic , getHistorySearch , addHistorySearch , checkLevelUser };
+  export default { getSimilarVocabulary, getVocabularyByTopic, getAlToFindVocabulary , requestNewVocabulary , getAllTopic , getHistorySearch , addHistorySearch , checkLevelUser , updateVocabularyUser   };
 
