@@ -34,7 +34,7 @@ export default (sequelize: Sequelize) => {
         type: DataTypes.UUID,
         allowNull: false,
       },
-      date_earned: {
+      date_earned: {  
         type: DataTypes.DATE,
         allowNull: false,
         defaultValue: DataTypes.NOW,

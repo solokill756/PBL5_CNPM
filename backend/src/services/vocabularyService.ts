@@ -75,7 +75,6 @@ const getVocabularyByTopic = async (topic_id: string, user_id: string) => {
 
 const updateVocabularyUser = async (user_id: string, vocabulary_id: string, topic_id: string, is_saved?: boolean, had_learned?: boolean) => {
   try {
-    
     const vocabularyUser = await db.vocabularyUser.findOne({ where: { user_id, vocabulary_id } });
     if (!vocabularyUser) {
       if(had_learned == true) {
