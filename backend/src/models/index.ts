@@ -66,7 +66,7 @@ const initializeModels = async () => {
   const { default: FlashcardUser } = await import("./FlashcardUserModel.js");
   const { default: ListFlashCardClass } = await import("./ListFlashCardClass.js");
   const { default: VocabularyTopicUser } = await import("./vocabularyTopicUserModel.js");
-
+  const { default: VocabularyUser } = await import("./vocabularyUserModel.js");
   // Khởi tạo các model
   db.vocabularyTopic = VocabularyTopic(sequelize);
   db.user = UserModel(sequelize);
@@ -91,6 +91,7 @@ const initializeModels = async () => {
   db.flashcardUser = FlashcardUser(sequelize);
   db.listFlashCardClass = ListFlashCardClass(sequelize);
   db.vocabularyTopicUser = VocabularyTopicUser(sequelize);
+  db.vocabularyUser = VocabularyUser(sequelize);
   // Xét quan hệ giữa các bảng
   db.user.belongsToMany(db.role, {
     through: db.userRole,
@@ -196,6 +197,10 @@ const initializeModels = async () => {
   db.vocabularyTopicUser.belongsTo(db.user, { foreignKey: "user_id" });
   db.vocabularyTopic.hasMany(db.vocabularyTopicUser, { foreignKey: "topic_id", onDelete: 'CASCADE' });
   db.vocabularyTopicUser.belongsTo(db.vocabularyTopic, { foreignKey: "topic_id" });
+  db.user.hasMany(db.vocabularyUser, { foreignKey: "user_id", onDelete: 'CASCADE' });
+  db.vocabularyUser.belongsTo(db.user, { foreignKey: "user_id" });
+  db.vocabulary.hasMany(db.vocabularyUser, { foreignKey: "vocabulary_id", onDelete: 'CASCADE' });
+  db.vocabularyUser.belongsTo(db.vocabulary, { foreignKey: "vocabulary_id" });
   // Đồng bộ database
   db.sequelize
     .sync({ force: false})
