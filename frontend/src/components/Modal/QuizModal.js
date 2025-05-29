@@ -8,7 +8,7 @@ import { useQuizStore } from "@/store/useQuizStore";
 import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 
-const QuizModal = ({ isOpen, onClose, maxQuestions, title, list_id}) => {
+const QuizModal = ({ isOpen, onClose, maxQuestions, title, list_id }) => {
   const answerOptions = [
     { label: "Tiếng Việt", value: "1" },
     { label: "Tiếng Nhật", value: "2" },
@@ -21,7 +21,7 @@ const QuizModal = ({ isOpen, onClose, maxQuestions, title, list_id}) => {
   const [numberOfQuestions, setNumberOfQuestions] = useState("");
   const [answerType, setAnswerType] = useState(answerOptions[0]);
   const [showError, setShowError] = useState(false);
-   const { flashcardId } = useParams();
+  const { flashcardId } = useParams();
   
   const numQuestions = numberOfQuestions === "" ? "" : Number(numberOfQuestions);
   const isInvalidQuestionCount = numQuestions === "" || numQuestions <= 0 || numQuestions > displayDeck.length;
@@ -91,14 +91,12 @@ const QuizModal = ({ isOpen, onClose, maxQuestions, title, list_id}) => {
           />
         </div>
         
-        {/* Error message for empty input */}
         {showError && numberOfQuestions === "" && (
           <span className="text-sm text-red-500 ml-auto block text-right">
             Vui lòng nhập số câu hỏi
           </span>
         )}
         
-        {/* Error message for invalid count */}
         {isInvalidQuestionCount && numberOfQuestions !== "" && (
           <span className="text-sm text-red-500 ml-auto block text-right">
             {Number(numberOfQuestions) <= 0 
@@ -139,7 +137,6 @@ const QuizModal = ({ isOpen, onClose, maxQuestions, title, list_id}) => {
           </div>
         </div>
 
-        {/* Warning message when trying to close without input */}
         {showError && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3">
             <p className="text-red-600 text-sm font-medium">
