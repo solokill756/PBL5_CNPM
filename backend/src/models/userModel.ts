@@ -11,6 +11,10 @@ interface UserAttributes {
   reminder_time?: string;
   reminder_status?: boolean;
   tokenVersion?: number;
+  total_points?: number;
+  current_level?: number;
+  is_active?: boolean;
+  levelThreshold?: number;
 }
 
 interface UserCreationAttributes extends Optional<UserAttributes, 'user_id' | 'profile_picture' | 'datetime_joined'> { }
@@ -28,6 +32,10 @@ class User
   declare reminder_time?: string;
   declare reminder_status?: boolean;
   declare tokenVersion?: number;
+  declare total_points?: number;
+  declare current_level?: number;
+  declare is_active?: boolean;
+  declare levelThreshold?: number;
 }
 
 export default (sequelize: Sequelize) => {
@@ -75,6 +83,26 @@ export default (sequelize: Sequelize) => {
         allowNull: false,
       },
       tokenVersion: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      total_points: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      current_level: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      is_active: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+      },
+      levelThreshold: {
         type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 0,
