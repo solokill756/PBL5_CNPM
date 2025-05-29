@@ -130,16 +130,16 @@ const GenerateQuiz = async (list_id: string, type_quiz: number, number_of_questi
     }
 }
 
-const saveResultQuiz = async (score: number, user_id: string) => {
+const saveResultQuiz = async (score: number, user_id: string , number_of_questions: number) => {
     try {
-        await db.quizResult.create({
+        const result = number_of_questions - score <= 2 ? "pass" : "fail";
+        const kq =  await db.quizResult.create({
             score: score,
             user_id: user_id,
+            result: result,
             completed_at: new Date()
         });
-        return {
-            score: score,
-        }
+        return kq;
     } catch (error) {
         throw new Error("Error saving quiz result");
     }

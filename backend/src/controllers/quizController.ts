@@ -12,13 +12,13 @@ const generateQuizController = async (req : Request , res : Response) => {
 }
 
 const saveResultQuizController = async (req : Request , res : Response) => {
-    const { score  } = req.body;
+    const { score , number_of_questions } = req.body;
     const user_id =(req as any).user.user_id;
     if(!user_id){
          res.status(401).json({message : "Unauthorized"});
     }
     try {
-        const result = await saveResultQuiz(Number(score) , user_id);
+        const result = await saveResultQuiz(Number(score) , user_id , Number(number_of_questions));
         sendSuccess(res , result);
     } catch (error) {
        sendError(res, "Internal server error", 500);
