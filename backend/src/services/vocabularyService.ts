@@ -97,7 +97,7 @@ const updateVocabularyUser = async (user_id: string, vocabulary_id: string, is_s
         });
         await checkLevelUser(user_id, -10);
       }
-      if(is_saved == true) {
+      else if(had_learned == true) {
         await db.vocabularyTopicUser.update({
           mastered_words: db.Sequelize.literal(`mastered_words + 1`),
         }, {
