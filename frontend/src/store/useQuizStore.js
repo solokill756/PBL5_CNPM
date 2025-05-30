@@ -4,7 +4,7 @@ export const useQuizStore = create((set) => ({
     questions: [],
     loading: false,
     error: null,
-    answers: {}, // key = question index, value = selected answer
+    answers: {}, 
     result: null,
     wrongQuestions: [],
 

@@ -5,14 +5,14 @@ const useLevelStore = create(
   persist(
     (set, get) => ({
       userLevel: {
-        level: 1,
-        points: 0,
+        current_level: 1,
+        total_points: 0,
+        levelThreshold: 0,
         total_words_mastered: 0,
         total_topics_completed: 0,
         badges: [],
       },
 
-      // Định nghĩa phần thưởng cho mỗi cấp độ
       levelRewards: {
         2: {
           topics: ["Lập trình"],
@@ -37,24 +37,16 @@ const useLevelStore = create(
       },
 
       // Lấy thông tin cấp độ
-      // Lấy thông tin cấp độ
       getLevelInfo: () => {
         const { userLevel } = get();
 
-        // Mỗi cấp cần 500 điểm
-        // Cấp 1: 0-499 điểm
-        // Cấp 2: 500-999 điểm
-        // Cấp 3: 1000-1499 điểm
-        // Cấp 4: 1500-1999 điểm
+        const pointsForCurrentLevel = (userLevel.current_level - 1) * userLevel.levelThreshold;
+        const pointsForNextLevel = userLevel.current_level * userLevel.levelThreshold;
 
-        const pointsForCurrentLevel = (userLevel.level - 1) * 500;
-        const pointsForNextLevel = userLevel.level * 500;
-
-        // Điểm cần để lên cấp tiếp theo
-        const next_level_points = pointsForCurrentLevel + 500;
+        const next_level_points = pointsForCurrentLevel + userLevel.levelThreshold;
 
         // Tính số điểm đã có trong cấp độ hiện tại
-        const pointsInCurrentLevel = userLevel.points - pointsForCurrentLevel;
+        const pointsInCurrentLevel = userLevel.total_points - pointsForCurrentLevel;
 
         // Tính phần trăm tiến trình (trong khoảng 0-100)
         const progress_percent = Math.min(
@@ -95,7 +87,6 @@ const useLevelStore = create(
         return { leveledUp: false };
       },
 
-      // Thêm điểm khi hoàn thành các hoạt động
       addPoints: (points) => {
         const { userLevel } = get();
 
@@ -173,32 +164,23 @@ const useLevelStore = create(
       },
 
       // Fetch level info từ API
-      fetchLevelInfo: async (axios) => {
+      fetchLevelInfo: async (axios, point = 0) => {
         try {
-          // const response = await axios.get('/api/user/level');
-          // const { level, points, total_words_mastered, total_topics_completed, badges } = response.data;
+          const response = await axios.get('/api/vocabulary/checkLevelUser', {
+            new_points: point,
+          });
 
-          // set({
-          //   userLevel: {
-          //     level,
-          //     points,
-          //     total_words_mastered,
-          //     total_topics_completed,
-          //     badges: badges || []
-          //   }
-          // });
-
-          // Đây là mock data, sẽ được thay thế bằng API thực tế
-          const mockData = {
-            level: 3,
-            points: 1250, // Đã sửa thành 1250 - cấp độ 3 bắt đầu từ 1000 điểm
-            total_words_mastered: 120,
-            total_topics_completed: 4,
-            badges: ["Beginner Coder", "Network Specialist"],
-          };
+          const { current_level, total_points, levelThreshold } = response.data;
 
           set({
-            userLevel: mockData,
+            userLevel: {
+              current_level: Number(current_level),
+              total_points: Number(total_points),
+              levelThreshold: Number(levelThreshold),
+              total_words_mastered: 0,
+              total_topics_completed: 0,
+              badges: [],
+            }
           });
 
           return get().getLevelInfo();
@@ -206,6 +188,34 @@ const useLevelStore = create(
           console.error("Error fetching level info:", error);
           throw error;
         }
+      },
+
+      updateMasteredWords: (count) => {
+        const { userLevel } = get();
+      
+        set({
+          userLevel: {
+            ...userLevel,
+            total_words_mastered: count,
+          }
+        });
+      },
+      
+      completeTopicProgress: (axios, progressPercent) => {
+        if (progressPercent === 100) {
+          const { userLevel } = get();
+      
+          set({
+            userLevel: {
+              ...userLevel,
+              total_topics_completed: userLevel.total_topics_completed + 1,
+            }
+          });
+      
+          return get().fetchLevelInfo(axios, 100); // Add points for completing a topic
+        }
+      
+        return { leveledUp: false };
       },
     }),
     {

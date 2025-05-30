@@ -6,88 +6,61 @@ import useVocabularyStore from '@/store/useVocabularyStore';
 import VocabularyDetail from '@/components/Vocabulary/VocabularyDetail';
 import useAxiosPrivate from '@/hooks/useAxiosPrivate';
 import VocabularyLevel from '@/components/Vocabulary/VocabularyLevel';
-import useLevelStore from '@/store/useLevelStore';
-
-// Mock enriched categories data
-const mockEnrichedCategories = [
-  {
-    topic_id: 1,
-    name: "Cơ bản",
-    description: "Từ vựng tiếng Nhật CNTT cơ bản",
-    image_url: "https://placehold.co/64x64/indigo/white/png?text=N5",
-    required_level: 1,
-    total_words: 50,
-    mastered_words: 45
-  },
-  {
-    topic_id: 2,
-    name: "Lập trình",
-    description: "Từ vựng liên quan đến lập trình",
-    image_url: "https://placehold.co/64x64/indigo/white/png?text=N4",
-    required_level: 2,
-    total_words: 40,
-    mastered_words: 30
-  },
-  {
-    topic_id: 3,
-    name: "Mạng máy tính",
-    description: "Từ vựng liên quan đến mạng và CSDL",
-    image_url: "https://placehold.co/64x64/indigo/white/png?text=N3",
-    required_level: 3,
-    total_words: 60,
-    mastered_words: 25
-  },
-  {
-    topic_id: 4,
-    name: "Điện toán đám mây",
-    description: "Thuật ngữ về cloud computing",
-    image_url: "https://placehold.co/64x64/indigo/white/png?text=N2",
-    required_level: 4,
-    total_words: 45,
-    mastered_words: 0
-  },
-  {
-    topic_id: 5,
-    name: "AI và Big Data",
-    description: "Từ vựng về AI, ML và xử lý dữ liệu lớn",
-    image_url: "https://placehold.co/64x64/indigo/white/png?text=N1",
-    required_level: 5,
-    total_words: 55,
-    mastered_words: 0
-  }
-];
+import useTopicStore from '@/store/useTopicStore';
 
 const Vocabulary = () => {
   const axios = useAxiosPrivate();
-  const { selectedWord, categories, fetchCategories, error } = useVocabularyStore();
-  const { getLevelInfo, fetchLevelInfo } = useLevelStore();
-  const [enrichedCategories, setEnrichedCategories] = useState([]);
-  const [levelInfo, setLevelInfo] = useState(null);
+  const { selectedWord, error: vocabError } = useVocabularyStore();
+  const { 
+    categories, 
+    userLevel, 
+    loading, 
+    error, 
+    initializeUserData,
+    clearError 
+  } = useTopicStore();
 
   useEffect(() => {
-    fetchCategories(axios);
+    initializeUserData(axios, false);
     
-    // Đoạn này sẽ được thay thế bằng API call thực tế
-    const loadUserLevel = async () => {
-      try {
-        // Sử dụng fetchLevelInfo từ useLevelStore để lấy dữ liệu cấp độ
-        const info = await fetchLevelInfo(axios);
-        setLevelInfo(info);
-      } catch (error) {
-        console.error('Error loading user level:', error);
-      }
+    return () => {
+      clearError();
     };
-    
-    loadUserLevel();
-  }, [fetchCategories, fetchLevelInfo]);
-  
-  useEffect(() => {
-    // Trong ứng dụng thực tế, sẽ gọi API riêng hoặc kết hợp dữ liệu từ BE
-    if (categories && categories.length > 0) {
-      // Để demo, dùng dữ liệu mẫu đã làm phong phú
-      setEnrichedCategories(mockEnrichedCategories);
-    }
-  }, [categories]);
+  }, []);
+
+  if (loading && categories.length === 0) {
+    return (
+      <main className="flex flex-col items-center flex-grow scrollbar-hide">
+        <DefaultHeader />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-indigo-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Đang tải dữ liệu...</p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="flex flex-col items-center flex-grow scrollbar-hide">
+        <DefaultHeader />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
+            <div className="text-red-600 text-lg font-semibold mb-2">Có lỗi xảy ra</div>
+            <p className="text-red-700 mb-4">{error}</p>
+            <button
+              onClick={() => initializeUserData(axios)}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors"
+            >
+              Thử lại
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="flex flex-col items-center flex-grow scrollbar-hide">
@@ -106,14 +79,22 @@ const Vocabulary = () => {
         </div>
       ) : (
         <div className="mt-8 max-w-full w-full px-10">
-          {/* User Level Progress Section - Đã tách thành component riêng */}
-          {levelInfo && <VocabularyLevel userLevel={levelInfo} />}
+          {userLevel && userLevel.current_level && (
+            <VocabularyLevel userLevel={userLevel} />
+          )}
+          
+          {vocabError && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+              <p className="text-yellow-800">{vocabError}</p>
+            </div>
+          )}
           
           <h2 className="text-2xl font-bold mt-8 mb-6">Duyệt theo chủ đề</h2>
           <CategoryGrid 
-            error={error} 
-            categories={enrichedCategories} 
-            userLevel={levelInfo?.level || 1}
+            categories={categories} 
+            loading={loading}
+            error={error}
+            userLevel={userLevel}
           />
         </div>
       )}

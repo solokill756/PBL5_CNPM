@@ -17,7 +17,7 @@ const item = {
   show: { opacity: 1, y: 0 }
 };
 
-const CategoryGrid = ({ categories, loading = false, error = null, userLevel = 1 }) => {
+const CategoryGrid = ({ categories, loading = false, error = null, userLevel }) => {
   if (loading) {
     return (
       <div className="text-center py-12">
@@ -28,8 +28,7 @@ const CategoryGrid = ({ categories, loading = false, error = null, userLevel = 1
     );
   }
 
-  // Sắp xếp chủ đề theo cấp độ yêu cầu
-  const sortedCategories = [...categories].sort((a, b) => a.required_level - b.required_level);
+  const sortedCategories = [...categories].sort((a, b) => a.require_level - b.require_level);
 
   return (
     <motion.div
@@ -44,7 +43,11 @@ const CategoryGrid = ({ categories, loading = false, error = null, userLevel = 1
             {...category} 
             loading={loading} 
             index={index} 
-            user_level={userLevel}
+            current_level={userLevel.current_level}
+            total_words={category.total_words}
+            mastered_words={category.mastered_words}
+            require_level={category.require_level}
+            // is_unlocked={category.is_unlocked}
           />
         </motion.div>
       ))}

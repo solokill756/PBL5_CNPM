@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { IoLockClosed, IoLockOpenOutline } from 'react-icons/io5';
 
-// Mảng màu gradient cho các category
 const CATEGORY_COLORS = [
   {
     bg: 'from-blue-50 to-indigo-100',
@@ -44,7 +43,6 @@ const CATEGORY_COLORS = [
 ];
 
 const getColorByIndex = (index) => {
-  // Đảm bảo luôn có màu bằng cách lấy phần dư
   const safeIndex = Math.abs(index) % CATEGORY_COLORS.length;
   return CATEGORY_COLORS[safeIndex];
 };
@@ -56,14 +54,14 @@ const CategoryCard = ({
   image_url, 
   loading = false, 
   index = 0,
-  required_level = 1,
-  user_level = 1, // Default level 1
+  require_level = 1,
+  current_level = 1,   
   total_words = 0,
   mastered_words = 0
 }) => {
   const navigate = useNavigate();
   const colors = getColorByIndex(index);
-  const isLocked = user_level < required_level;
+  const isLocked = current_level < require_level;
   const progressPercent = total_words > 0 ? Math.round((mastered_words / total_words) * 100) : 0;
 
   const handleClick = () => {
@@ -88,7 +86,7 @@ const CategoryCard = ({
     >
       {/* Level badge */}
       <div className="absolute -top-2 -right-2 bg-indigo-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs font-bold shadow-md">
-        N{required_level}
+        N{require_level}
       </div>
       
       <div className="flex flex-col h-full">
@@ -137,8 +135,8 @@ const CategoryCard = ({
       {isLocked && (
         <div className="absolute inset-0 bg-gray-100 bg-opacity-10 rounded-xl flex flex-col items-center justify-center">
           <div className="bg-white bg-opacity-90 px-4 py-2 rounded-md shadow-md text-center">
-            <p className="text-gray-800 font-semibold">Mở khóa ở cấp độ {required_level}</p>
-            <p className="text-xs text-gray-600">Cấp độ hiện tại: {user_level}</p>
+            <p className="text-gray-800 font-semibold">Mở khóa ở cấp độ {require_level}</p>
+            <p className="text-xs text-gray-600">Cấp độ hiện tại: {current_level}</p>
           </div>
         </div>
       )}
