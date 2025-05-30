@@ -45,7 +45,7 @@ const QuestionNavigator = ({
   );
 };
 
-const QuizPage = ({ timeLeft, isTimeUp }) => {
+const TestPage = ({ timeLeft, isTimeUp }) => {
   const { questions, fetchQuestions, loading, error } = useTestStore();
   const [currentAnswer, setCurrentAnswer] = useState({});
   const [isOpen, setOpen] = useState(false);
@@ -55,11 +55,11 @@ const QuizPage = ({ timeLeft, isTimeUp }) => {
   const questionRefs = useRef([]);
   const axiosPrivate = useAxiosPrivate();
   const { flashcardId } = useParams();
-  const { setAnswers } = useQuizStore();
+  const { setAnswers } = useTestStore();
   const navigate = useNavigate();
-  const { wrongQuestions } = useQuizStore();
+  const { wrongQuestions } = useTestStore();
   const location = useLocation();
-  const { setQuestions } = useQuizStore();
+  const { setQuestions } = useTestStore();
 
   useEffect(() => {
     if (questions.length > 0) {
@@ -118,8 +118,8 @@ const QuizPage = ({ timeLeft, isTimeUp }) => {
     
     setSubmitted(true);
     
-    const { answers, setResult } = useQuizStore.getState();
-    const { setWrongQuestions } = useQuizStore.getState();
+    const { answers, setResult } = useTestStore.getState();
+    const { setWrongQuestions } = useTestStore.getState();
 
     let correctCount = 0;
     const answerDetails = shuffledQuestions.map((q, index) => {
@@ -153,21 +153,20 @@ const QuizPage = ({ timeLeft, isTimeUp }) => {
 
     setResult(result);
 
-    try {
-      await axiosPrivate.post(
-        "http://localhost:9000/api/quiz/saveResultQuiz",
-        result
-      );
-      console.log("Gửi kết quả thành công:", result);
-    } catch (err) {
-      console.error("Gửi kết quả thất bại:", err);
-    }
+    // try {
+    //   await axiosPrivate.post(
+    //     "http://localhost:9000/api/quiz/saveResultQuiz",
+    //     result
+    //   );
+    //   console.log("Gửi kết quả thành công:", result);
+    // } catch (err) {
+    //   console.error("Gửi kết quả thất bại:", err);
+    // }
 
-    navigate(`/flashcard/${flashcardId}/quizResult`);
+    navigate(`/vocabulary/topic/${topicId}/TestResult`);
   };
 
   const handleCheckBeforeSubmit = () => {
-    // Không cho phép submit khi đã hết thời gian (sẽ tự động submit)
     if (isTimeUp) return;
 
     const unansweredIndex = shuffledQuestions.findIndex(
@@ -294,4 +293,4 @@ const QuizPage = ({ timeLeft, isTimeUp }) => {
   );
 };
 
-export default QuizPage;
+export default TestPage;

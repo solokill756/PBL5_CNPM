@@ -23,6 +23,7 @@ import TopicDetail from "@/pages/TopicDetail";
 import VocabularyBattle from "@/pages/VocabularyBattle";
 import RoomListing from "@/components/RoomListing";
 import AddFlashcard from "@/pages/AddFlashcard";
+import Test from "@/pages/TestPage";
 // Component bảo vệ route yêu cầu xác thực
 function PrivateRoute({ children }) {
   // const { auth } = useAuth();
@@ -101,6 +102,14 @@ const router = createBrowserRouter([
       {
         path: "/add-flashcard",
         element: <AddFlashcard />
+      },
+      {
+        path: "/vocabulary/topic/:topicId/Test",
+        element: <Test/>
+      },
+       {
+        path: "/vocabulary/topic/:topicId/TestResult",
+        element: <FlashCard />
       }
     ],
   },
