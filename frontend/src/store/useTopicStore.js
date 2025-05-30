@@ -69,7 +69,7 @@ const useTopicStore = create((set, get) => ({
     try {
       set({ loading: true, error: null });
 
-      const params = points > 0 ? { new_points: points } : {};
+      const params = points > 0 ? { new_points: points } : {new_points: 0};
 
       const response = await axios.post("/api/vocabulary/checkLevelUser", params);
       const data = response.data.data;
