@@ -2,7 +2,9 @@ import { filterUserData } from "../helpers/fillData";
 import { sendRequestNewVocabularyEmail } from "../helpers/sendRequestNewVocabulary";
 import db from "../models";
 import dotenv from "dotenv";
+import achivermentService from "./achivermentService";
 dotenv.config();
+
 const getSimilarVocabulary = async (word: string, language: string) => {
   try {
     if (language == "Japanese") {
@@ -215,6 +217,7 @@ const getHistorySearch = async (user_id: string) => {
         throw new Error("User not found");
       }
       if(user.total_points + new_points >= user.levelThreshold) {
+        await achivermentService.unlockAchievement(user_id, user.current_level + 1);
         await db.user.update({
           current_level: user.current_level + 1,
           levelThreshold: user.levelThreshold + (user.current_level * 100 + 500),

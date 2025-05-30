@@ -6,11 +6,11 @@ interface AchievementAttributes {
   description: string;
   icon: string;
   required_level: number;
-  points_reward?: number;
+  
   created_at?: Date;
 }
 
-interface AchievementCreationAttributes extends Optional<AchievementAttributes, 'achievement_id' | 'points_reward' | 'created_at'> {}
+interface AchievementCreationAttributes extends Optional<AchievementAttributes, 'achievement_id' | 'created_at'> {}
 
 class Achievement
   extends Model<AchievementAttributes, AchievementCreationAttributes>
@@ -20,7 +20,6 @@ class Achievement
   declare description: string;
   declare icon: string;
   declare required_level: number;
-  declare points_reward?: number;
   declare created_at?: Date;
 }
 
@@ -47,11 +46,6 @@ export default (sequelize: Sequelize) => {
       required_level: {
         type: DataTypes.INTEGER,
         allowNull: false,
-      },
-      points_reward: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        defaultValue: 0,
       },
       created_at: {
         type: DataTypes.DATE,

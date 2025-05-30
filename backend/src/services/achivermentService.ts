@@ -68,13 +68,7 @@ const unlockAchievement = async (userId: string, user_level: number) => {
                 user_id: userId,
                 achievement_id: achievement.achievement_id
             });
-            await db.user.update({
-                points: db.user.points + achievement.points_reward
-            }, {
-                where: {
-                    user_id: userId
-                }
-            });
+            
         }
         return await getAchievementByUserId(userId);
     } catch (error) {
