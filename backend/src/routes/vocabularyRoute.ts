@@ -16,4 +16,5 @@ vocabularyRouter.get('/historySearch', vocabularyController.getHistorySearch);
 vocabularyRouter.post('/addHistorySearch', vocabularyController.addHistorySearch);
 vocabularyRouter.post('/checkLevelUser', vocabularyController.checkLevelUser);
 vocabularyRouter.post('/updateVocabularyUser', vocabularyController.updateVocabularyUser);
+vocabularyRouter.get('/topicDetails/:topic_id', vocabularyController.getTopicVocabularyByID);
 export default vocabularyRouter;

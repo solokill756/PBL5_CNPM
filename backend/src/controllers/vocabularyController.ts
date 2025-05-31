@@ -96,6 +96,14 @@ const updateVocabularyUser = async (req: Request, res: Response) => {
     }
 }
 
+const getTopicVocabularyByID = async (req: Request, res: Response) => {
+    try {
+        const { topic_id } = req.params;
+        const vocabularies = await vocabularyService.getTopicVocabularyByID(topic_id);
+        sendSuccess(res, vocabularies);
+    } catch (error) {
+        sendError(res, "Lỗi server", 500);
+    }
+}   
 
-
-export default { getSimilarVocabulary, getVocabularyByTopic, getAlToFindVocabulary , requestNewVocabulary , getAllTopic , getHistorySearch , addHistorySearch , checkLevelUser , updateVocabularyUser };
+export default { getSimilarVocabulary, getVocabularyByTopic, getAlToFindVocabulary , requestNewVocabulary , getAllTopic , getHistorySearch , addHistorySearch , checkLevelUser , updateVocabularyUser , getTopicVocabularyByID };

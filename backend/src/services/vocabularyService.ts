@@ -5,6 +5,16 @@ import dotenv from "dotenv";
 import achivermentService from "./achivermentService";
 dotenv.config();
 
+
+const getTopicVocabularyByID = async (topic_id: string) => {
+  try {
+    const topic = await db.vocabularyTopic.findByPk(topic_id);
+    return topic;
+  } catch (error) {
+    throw error;
+  }
+}
+
 const getSimilarVocabulary = async (word: string, language: string) => {
   try {
     if (language == "Japanese") {
@@ -269,5 +279,5 @@ const addHistorySearch = async (user_id: string, vocabulary_id: string) => {
  
 }
 
-  export default { getSimilarVocabulary, getVocabularyByTopic, getAlToFindVocabulary , requestNewVocabulary , getAllTopic , getHistorySearch , addHistorySearch , checkLevelUser , updateVocabularyUser   };
+  export default { getSimilarVocabulary, getVocabularyByTopic, getAlToFindVocabulary , requestNewVocabulary , getAllTopic , getHistorySearch , addHistorySearch , checkLevelUser , updateVocabularyUser , getTopicVocabularyByID };
 
