@@ -86,7 +86,7 @@ const CategoryCard = ({
     >
       {/* Level badge */}
       <div className="absolute -top-2 -right-2 bg-indigo-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs font-bold shadow-md">
-        N{require_level}
+        L{require_level}
       </div>
       
       <div className="flex flex-col h-full">

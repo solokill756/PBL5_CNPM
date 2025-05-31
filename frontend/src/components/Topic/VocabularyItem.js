@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { IoBookmarkOutline, IoBookmark, IoCheckmarkCircle } from 'react-icons/io5';
+import useTopicStore from '@/store/useTopicStore';
 
 const VocabularyItem = ({
   vocabulary,
@@ -11,12 +12,16 @@ const VocabularyItem = ({
   index,
   total,
 }) => {
+  const { isBookmarkUpdating, isLearningUpdating } = useTopicStore();
   const { vocab_id, word, pronunciation, meaning, level } = vocabulary;
   
-  // Kiểm tra trạng thái từ cả hai nguồn để đảm bảo sync
   const isBookmarked = vocabulary.VocabularyUsers?.[0]?.is_saved || vocabulary.isBookmarked || false;
   const isKnown = vocabulary.VocabularyUsers?.[0]?.had_learned || vocabulary.isKnown || false;
   
+  // Check loading state cho vocabulary cụ thể này
+  const isThisBookmarkUpdating = isBookmarkUpdating(vocab_id);
+  const isThisLearningUpdating = isLearningUpdating(vocab_id);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -28,13 +33,13 @@ const VocabularyItem = ({
         isSelected
           ? "border-indigo-300 bg-indigo-50"
           : "border-gray-200 hover:border-indigo-200"
-      } ${isKnown ? "border-green-200 bg-green-50" : ""}`}
+      } ${isKnown ? "border-green-400 " : ""}`}
     >
-      <div className="flex justify-between items-start">
-        {/* Phần nội dung chính với overflow và ellipsis */}
-        <div className="flex-1 min-w-0 mr-3">
-          <div className="flex flex-wrap items-center gap-2 mb-1">
-            <h3 className={`text-lg font-semibold break-words ${
+      <div className="grid grid-cols-[1fr_auto] gap-4 items-start">
+        {/* Content section */}
+        <div className="min-w-0">
+          <div className="flex items-start gap-3 mb-1">
+            <h3 className={`text-lg font-semibold break-words flex-1 ${
               'text-gray-900'
             }`}>
               {word}
@@ -43,14 +48,13 @@ const VocabularyItem = ({
               <motion.span 
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="text-xs text-green-600 font-medium flex items-center gap-1 flex-shrink-0 bg-green-100 px-2 py-1 rounded-full"
+                className="text-xs text-green-600 font-medium flex items-center gap-1 flex-shrink-0 bg-green-100 px-2 py-1 rounded-full mt-0.5"
               >
-                <IoCheckmarkCircle className="w-3 h-3" /> Đã học
+                Đã học
               </motion.span>
             )}
           </div>
           
-          {/* Cách đọc - nên dùng overflow-ellipsis */}
           <p className="text-sm text-gray-500 mb-1 overflow-hidden text-ellipsis">
             {pronunciation}
           </p>
@@ -62,8 +66,8 @@ const VocabularyItem = ({
           </p>
         </div>
         
-        {/* Phần nút và nhãn cấp độ */}
-        <div className="flex flex-col items-end gap-2 flex-shrink-0">
+        {/* Actions section */}
+        <div className="flex flex-col items-end gap-2">
           <div className="flex items-center gap-2">
             {level && (
               <span className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium whitespace-nowrap">
@@ -78,13 +82,14 @@ const VocabularyItem = ({
               whileTap={{ scale: 0.95 }}
               onClick={(e) => {
                 e.stopPropagation();
-                onToggleBookmark(vocab_id);
+                if (!isThisBookmarkUpdating) onToggleBookmark(vocab_id);
               }}
               className={`p-1.5 rounded-full transition-colors ${
                 isBookmarked
                   ? "bg-yellow-50 text-yellow-500 hover:bg-yellow-100"
                   : "text-gray-400 hover:text-yellow-500 hover:bg-yellow-50"
-              }`}
+              } ${isThisBookmarkUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={isThisBookmarkUpdating}
               title={isBookmarked ? "Bỏ bookmark" : "Thêm bookmark"}
             >
               <motion.div
@@ -94,7 +99,9 @@ const VocabularyItem = ({
                 }}
                 transition={{ duration: 0.3 }}
               >
-                {isBookmarked ? (
+                {isThisBookmarkUpdating ? (
+                  <div className="w-5 h-5 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin" />
+                ) : isBookmarked ? (
                   <IoBookmark className="w-5 h-5" />
                 ) : (
                   <IoBookmarkOutline className="w-5 h-5" />
@@ -108,12 +115,19 @@ const VocabularyItem = ({
                 whileTap={{ scale: 0.95 }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onMarkLearned(vocab_id);
+                  if (!isThisLearningUpdating) onMarkLearned(vocab_id);
                 }}
-                className="p-1.5 rounded-full text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors"
+                className={`p-1.5 rounded-full text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors ${
+                  isThisLearningUpdating ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+                disabled={isThisLearningUpdating}
                 title="Đánh dấu đã học"
               >
-                <IoCheckmarkCircle className="w-5 h-5" />
+                {isThisLearningUpdating ? (
+                  <div className="w-5 h-5 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <IoCheckmarkCircle className="w-5 h-5" />
+                )}
               </motion.button>
             )}
           </div>

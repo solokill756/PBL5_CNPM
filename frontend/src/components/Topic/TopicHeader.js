@@ -1,15 +1,17 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { IoArrowBack } from 'react-icons/io5';
+import { IoArrowBack, IoSchool } from 'react-icons/io5';
 import { TbCards } from 'react-icons/tb';
 
 const TopicHeader = ({ 
   topic, 
   onBack, 
   onCreateFlashcard,
+  onTakeTest,
   topicProgress,
   learnedCount,
-  totalCount
+  totalCount,
+  isTopicCompleted = false
 }) => {
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
@@ -53,21 +55,48 @@ const TopicHeader = ({
           </div>
           <div className="w-40 h-2 bg-gray-200 rounded-full">
             <div
-              className="h-2 bg-green-500 rounded-full"
+              className={`h-2 rounded-full transition-all duration-300 ${
+                isTopicCompleted ? 'bg-green-500' : 'bg-blue-500'
+              }`}
               style={{ width: `${topicProgress}%` }}
             ></div>
           </div>
+          {isTopicCompleted && (
+            <motion.span
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-xs text-green-600 font-medium mt-1"
+            >
+              🎉 Hoàn thành!
+            </motion.span>
+          )}
         </div>
 
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={onCreateFlashcard}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-colors"
-        >
-          <TbCards className="w-5 h-5" />
-          Tạo Flashcard
-        </motion.button>
+        <div className="flex gap-2">
+          {isTopicCompleted && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onTakeTest}
+              className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-full hover:bg-sky-700 transition-colors"
+            >
+              <IoSchool className="w-5 h-5" />
+              Làm bài test
+            </motion.button>
+          )}
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onCreateFlashcard}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-colors"
+          >
+            <TbCards className="w-5 h-5" />
+            Tạo Flashcard
+          </motion.button>
+        </div>
       </div>
     </div>
   );

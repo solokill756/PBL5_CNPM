@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { IoRibbonOutline } from "react-icons/io5";
 import { GrAchievement } from "react-icons/gr";
 import { FaRegStar } from "react-icons/fa";
+import useTopicStore from "../../store/useTopicStore";
+import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 
 const VocabularyLevel = ({ userLevel }) => {
   const {
@@ -14,42 +16,32 @@ const VocabularyLevel = ({ userLevel }) => {
     progress_percent,
   } = userLevel;
 
+  const [nextLevelRewards, setNextLevelRewards] = useState([]);
+  const [loadingRewards, setLoadingRewards] = useState(false);
+  const { getNextLevelRewards } = useTopicStore();
+  const axios = useAxiosPrivate();
+
   const pointsNeeded = levelThreshold - total_points;
 
-  // Thông tin phần thưởng cho cấp độ tiếp theo
-  const getNextLevelRewards = (level) => {
-    const rewardsByLevel = {
-      1: {
-        topics: ["Điện toán đám mây"],
-        badges: ["Cloud Beginner"],
-        themes: ["Cloud Theme"],
-      },
-      2: {
-        topics: ["AI và Machine Learning"],
-        badges: ["AI Explorer"],
-        themes: ["Tech Theme"],
-      },
-      3: {
-        topics: ["Blockchain & Web3"],
-        badges: ["Blockchain Master"],
-        themes: ["Crypto Theme"],
-      },
-      4: {
-        topics: ["DevOps & Infrastructure"],
-        badges: ["DevOps Expert"],
-        themes: ["Dark Tech Theme"],
-      },
-      default: {
-        topics: ["Advanced Topics"],
-        badges: ["Expert"],
-        themes: ["Premium Theme"],
+  // Fetch rewards for next level
+  useEffect(() => {
+    const fetchNextLevelRewards = async () => {
+      if (pointsNeeded > 0) {
+        try {
+          setLoadingRewards(true);
+          const rewards = await getNextLevelRewards(axios, current_level + 1);
+          setNextLevelRewards(rewards);
+        } catch (error) {
+          console.error("Error fetching next level rewards:", error);
+          setNextLevelRewards([]);
+        } finally {
+          setLoadingRewards(false);
+        }
       }
     };
 
-    return rewardsByLevel[current_level] || rewardsByLevel.default;
-  };
-
-  const nextLevelRewards = getNextLevelRewards(current_level);
+    fetchNextLevelRewards();
+  }, [current_level, pointsNeeded, getNextLevelRewards, axios]);
 
   return (
     <motion.div
@@ -118,35 +110,44 @@ const VocabularyLevel = ({ userLevel }) => {
             <IoRibbonOutline className="text-indigo-500" />
             Phần thưởng mở khóa ở cấp {current_level + 1}:
           </h3>
-          <div className="flex flex-wrap gap-3">
-            {nextLevelRewards.topics.map((topic) => (
-              <motion.span
-                key={topic}
-                whileHover={{ y: -2 }}
-                className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm flex items-center gap-1"
-              >
-                Chủ đề: {topic}
-              </motion.span>
-            ))}
-            {nextLevelRewards.badges.map((badge) => (
-              <motion.span
-                key={badge}
-                whileHover={{ y: -2 }}
-                className="px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-sm flex items-center gap-1"
-              >
-                Huy hiệu: "{badge}"
-              </motion.span>
-            ))}
-            {nextLevelRewards.themes.map((theme) => (
-              <motion.span
-                key={theme}
-                whileHover={{ y: -2 }}
-                className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm flex items-center gap-1"
-              >
-                {theme}
-              </motion.span>
-            ))}
-          </div>
+          
+          {loadingRewards ? (
+            <div className="flex items-center justify-center py-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500"></div>
+              {/* <span className="ml-2 text-gray-500">Đang tải phần thưởng...</span> */}
+            </div>
+          ) : nextLevelRewards.length > 0 ? (
+            <div className="flex flex-wrap gap-3">
+              {nextLevelRewards.map((reward) => (
+                <motion.div
+                  key={reward.achievement_id}
+                  whileHover={{ y: -2 }}
+                  className="px-4 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-full flex items-center gap-3 shadow-sm"
+                >
+                  <img 
+                    src={reward.icon} 
+                    alt={reward.title}
+                    className="w-6 h-6"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold text-indigo-700">
+                      {reward.title}
+                    </span>
+                    <span className="text-xs text-gray-600">
+                      {/* {reward.description} */}
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-gray-500 text-sm">
+              Không có phần thưởng nào cho cấp độ tiếp theo.
+            </div>
+          )}
         </div>
       )}
     </motion.div>

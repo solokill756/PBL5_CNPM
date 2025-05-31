@@ -11,6 +11,7 @@ import LevelUpModal from "@/components/Modal/LevelUpModal";
 import FlashcardModal from "@/components/Modal/FlashcardModal";
 import VocabularyDetail from "@/components/Topic/VocabularyDetail";
 import useTopicStore from "@/store/useTopicStore";
+import TopicCompletedModal from "@/components/Modal/TopicCompletedModal";
 
 const TopicDetail = () => {
   const { topicId } = useParams();
@@ -23,8 +24,8 @@ const TopicDetail = () => {
     toggleBookmark,
     updateLearningStatus,
     currentTopic,
-    topicVocabularies, // Sử dụng trực tiếp từ store
-    loading,
+    topicVocabularies,
+    loadingStates,
     checkLevel,
     refreshUserLevel,
     updateCategoryProgress,
@@ -35,27 +36,31 @@ const TopicDetail = () => {
   const [showLevelUpModal, setShowLevelUpModal] = useState(false);
   const [levelUpResults, setLevelUpResults] = useState(null);
   const [showFlashcardModal, setShowFlashcardModal] = useState(false);
+  const [showTopicCompletedModal, setShowTopicCompletedModal] = useState(false);
+  const [topicCompletedResults, setTopicCompletedResults] = useState(null);
+
+  // Loading states
+  const isLoading = loadingStates.topicVocabularies;
+  const isBookmarkUpdating = loadingStates.bookmarkUpdate;
+  const isLearningUpdating = loadingStates.learningUpdate;
 
   useEffect(() => {
     const fetchTopicData = async () => {
       try {
         await fetchVocabularyByTopic(axios, topicId);
       } catch (error) {
-        console.error("Error fetching topic data:", error);
         addToast("Không thể tải dữ liệu chủ đề", TOAST_TYPES.ERROR);
       }
     };
 
     fetchTopicData();
-  }, [topicId]);
+  }, [topicId, fetchVocabularyByTopic, axios]);
 
-  // Cập nhật selectedVocabulary khi topicVocabularies thay đổi
   useEffect(() => {
     if (topicVocabularies.length > 0 && !selectedVocabulary) {
       setSelectedVocabulary(topicVocabularies[0]);
       setSelectedIndex(0);
     } else if (selectedVocabulary) {
-      // Cập nhật selectedVocabulary với dữ liệu mới từ store
       const updatedVocab = topicVocabularies.find(
         (v) => v.vocab_id === selectedVocabulary.vocab_id
       );
@@ -63,7 +68,27 @@ const TopicDetail = () => {
         setSelectedVocabulary(updatedVocab);
       }
     }
-  }, [topicVocabularies]);
+  }, [topicVocabularies, selectedVocabulary]);
+
+  useEffect(() => {
+    if (topicVocabularies.length > 0) {
+      const learnedCount = getLearnedCount();
+      const isTopicCompleted = learnedCount === topicVocabularies.length;
+
+      if (isTopicCompleted) {
+        const wasCompleted = localStorage.getItem(`topic_completed_${topicId}`);
+        if (!wasCompleted) {
+          localStorage.setItem(`topic_completed_${topicId}`, "true");
+          setTopicCompletedResults({
+            topicName: currentTopic.name,
+            totalWords: topicVocabularies.length,
+            topicId: topicId,
+          });
+          setShowTopicCompletedModal(true);
+        }
+      }
+    }
+  }, [topicVocabularies, currentTopic, topicId]);
 
   const calculateProgress = () => {
     if (!topicVocabularies || topicVocabularies.length === 0) return 0;
@@ -85,6 +110,8 @@ const TopicDetail = () => {
   };
 
   const handleToggleBookmark = async (vocabId) => {
+    if (isBookmarkUpdating) return;
+
     try {
       const vocab = topicVocabularies.find((v) => v.vocab_id === vocabId);
       const newBookmarkStatus = await toggleBookmark(axios, vocabId, topicId);
@@ -101,13 +128,20 @@ const TopicDetail = () => {
   };
 
   const handleWordLearned = async (vocabId) => {
+    if (isLearningUpdating) return; // Prevent double-click
+
     try {
       const vocab = topicVocabularies.find((v) => v.vocab_id === vocabId);
       const wasLearned =
         vocab.VocabularyUsers?.[0]?.had_learned || vocab.isKnown;
 
-      const newLearningStatus = await updateLearningStatus(axios, vocabId, topicId);
+      const newLearningStatus = await updateLearningStatus(
+        axios,
+        vocabId,
+        topicId
+      );
       const newMasteredCount = getLearnedCount();
+
       if (currentTopic) {
         updateCategoryProgress(currentTopic.topic_id, newMasteredCount);
       }
@@ -119,11 +153,16 @@ const TopicDetail = () => {
         TOAST_TYPES.SUCCESS
       );
 
-      // Nếu từ chưa học -> đã học, cộng điểm và kiểm tra level up
+      if (newLearningStatus !== wasLearned) {
+        setTimeout(() => {
+          const { calculateUserStats } = useTopicStore.getState();
+          calculateUserStats();
+        }, 100);
+      }
+
       if (!wasLearned && newLearningStatus) {
         try {
           const levelResult = await refreshUserLevel(axios);
-
           if (levelResult.leveledUp) {
             setLevelUpResults({
               oldLevel: levelResult.oldLevel,
@@ -154,9 +193,17 @@ const TopicDetail = () => {
     // Nếu action === 'continue' thì chỉ đóng modal
   };
 
-  if (loading) {
+  const handleTopicCompletedAction = (action) => {
+    setShowTopicCompletedModal(false);
+    if (action === "test") {
+      navigate("/test"); // Chuyển đến trang test
+    }
+    // Nếu action === 'continue' thì chỉ đóng modal
+  };
+
+  if (isLoading) {
     return (
-      <main className="flex flex-col items-center flex-grow">
+      <main className="flex flex-col justify-center items-center flex-grow">
         <div className="w-full max-w-6xl px-4 py-8">
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent"></div>
@@ -172,10 +219,12 @@ const TopicDetail = () => {
         <TopicHeader
           topic={currentTopic}
           onBack={() => navigate("/vocabulary")}
+          onTakeTest={() => navigate("/test")}
           onCreateFlashcard={handleCreateFlashcards}
           topicProgress={calculateProgress()}
           learnedCount={getLearnedCount()}
           totalCount={topicVocabularies.length}
+          isTopicCompleted={getLearnedCount() === topicVocabularies.length}
         />
 
         {/* Main content */}
@@ -200,7 +249,7 @@ const TopicDetail = () => {
                 total={topicVocabularies.length}
               />
             ) : (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex flex-col items-center justify-center h-64">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex flex-col items-center justify-center h-full">
                 <TbCards className="w-16 h-16 text-gray-300 mb-4" />
                 <p className="text-gray-500 text-center">
                   Chọn một từ vựng từ danh sách để xem chi tiết
@@ -217,6 +266,14 @@ const TopicDetail = () => {
             levelUpResults={levelUpResults}
             onClose={() => setShowLevelUpModal(false)}
             onAction={handleLevelUpAction}
+          />
+        )}
+
+        {showTopicCompletedModal && (
+          <TopicCompletedModal
+            topicResults={topicCompletedResults}
+            onClose={() => setShowTopicCompletedModal(false)}
+            onAction={handleTopicCompletedAction}
           />
         )}
 
