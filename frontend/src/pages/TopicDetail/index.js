@@ -188,7 +188,7 @@ const TopicDetail = () => {
   const handleLevelUpAction = (action) => {
     setShowLevelUpModal(false);
     if (action === "test") {
-      navigate("/test"); // Chuyển đến trang test
+      navigate(`/vocabulary/topic/${topicId}/Test`);
     }
     // Nếu action === 'continue' thì chỉ đóng modal
   };
@@ -196,7 +196,7 @@ const TopicDetail = () => {
   const handleTopicCompletedAction = (action) => {
     setShowTopicCompletedModal(false);
     if (action === "test") {
-      navigate("/test"); // Chuyển đến trang test
+      navigate(`/vocabulary/topic/${topicId}/Test`); // Chuyển đến trang test
     }
     // Nếu action === 'continue' thì chỉ đóng modal
   };
@@ -219,7 +219,7 @@ const TopicDetail = () => {
         <TopicHeader
           topic={currentTopic}
           onBack={() => navigate("/vocabulary")}
-          onTakeTest={() => navigate("/test")}
+          onTakeTest={() => navigate(`/vocabulary/topic/${topicId}/Test`)}
           onCreateFlashcard={handleCreateFlashcards}
           topicProgress={calculateProgress()}
           learnedCount={getLearnedCount()}
@@ -227,9 +227,7 @@ const TopicDetail = () => {
           isTopicCompleted={getLearnedCount() === topicVocabularies.length}
         />
 
-        {/* Main content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Vocabulary list */}
           <div className="lg:col-span-1 order-2 lg:order-1">
             <VocabularyList
               vocabularies={topicVocabularies}
@@ -240,7 +238,6 @@ const TopicDetail = () => {
             />
           </div>
 
-          {/* Vocabulary detail */}
           <div className="lg:col-span-2 order-1 lg:order-2">
             {selectedVocabulary ? (
               <VocabularyDetail

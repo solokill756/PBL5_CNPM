@@ -158,7 +158,7 @@ const VocabularySearch = () => {
             onKeyDown={handleKeyDown}
             onChange={handleSearchChange}
             onFocus={handleFocus}
-            placeholder="Tìm kiếm theo chủ đề hoặc từ khóa"
+            placeholder="Tìm kiếm từ vựng IT"
             className="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           <SearchResult />
