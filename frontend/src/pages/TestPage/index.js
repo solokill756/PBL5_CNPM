@@ -3,11 +3,11 @@ import ModeHeader from "@/components/ModeHeader";
 import { useNavigate, useParams } from "react-router-dom";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import TestPage from "@/components/TestList";
-
+import { useTestStore } from "@/store/useTestStore";
+import useTopicStore from "@/store/useTopicStore";
 
 function Test() {
   const { flashcardId } = useParams();
-  const [open, setOpen] = useState(true);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -16,56 +16,39 @@ function Test() {
   const [testStarted, setTestStarted] = useState(false);
   const axios = useAxiosPrivate();
 
-  const {
-    openModal,
-    isFlashcardSaved,
-    setAxios,
-    currentIndex,
-    displayDeck,
-    fetchFlashcardList,
-    flashcardMetadata,
-    authorInfor,
-    isDataLoaded,
-    lastLoadedId,
-    resetFlashcardState
-  } = useFlashcardStore();
-
-  const { questions } = useTestStore();
+  const { questions, fetchQuestions } = useTestStore();
+  const { currentTopic } = useTopicStore();
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!isDataLoaded || lastLoadedId !== flashcardId) {
-        try {
-          setLoading(true);
-          setAxios(axios);
-
-          await fetchFlashcardList(axios, flashcardId);
-
-        } catch (error) {
-          setError(error);
-        } finally {
-          setLoading(false);
-        }
+    const loadQuestions = async () => {
+      try {
+        setLoading(true);
+        await fetchQuestions(axios, flashcardId);
+      } catch (err) {
+        setError(err.message || "Có lỗi xảy ra khi tải câu hỏi");
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchData();
-  }, [flashcardId, axios, setAxios, isDataLoaded, lastLoadedId, fetchFlashcardList]);
+    if (flashcardId) {
+      loadQuestions();
+    }
+  }, [flashcardId, axios, fetchQuestions]);
 
-  // Khởi tạo timer khi quiz bắt đầu (modal đóng)
+  // Khởi tạo timer sau khi tải xong câu hỏi
   useEffect(() => {
-    if (!open && questions.length > 0 && !testStarted) {
-      const totalTime = questions.length * 25; // 25 giây mỗi câu
+    if (!testStarted && questions.length > 0) {
+      const totalTime = questions.length * 25;
       setTimeLeft(totalTime);
       setTestStarted(true);
       setIsTimeUp(false);
     }
-  }, [open, questions.length, testStarted]);
+  }, [questions.length, testStarted]);
 
-  // Timer countdown
   useEffect(() => {
     let timerInterval;
-    
+
     if (testStarted && timeLeft > 0 && !isTimeUp) {
       timerInterval = setInterval(() => {
         setTimeLeft(prev => {
@@ -85,26 +68,56 @@ function Test() {
     };
   }, [testStarted, timeLeft, isTimeUp]);
 
-  // Hàm format thời gian thành mm:ss
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-xl font-semibold">Đang tải câu hỏi...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-600 text-xl font-semibold">Có lỗi xảy ra</div>
+          <div className="text-gray-600 mt-2">{error}</div>
+          <button 
+            onClick={() => navigate(-1)}
+            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            Quay lại
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <div className="fixed top-0 left-0 right-0 w-full z-50 bg-white shadow-md">
         <ModeHeader
           flashcardId={flashcardId}
-          flashcardTitle={flashcardMetadata.title}
+          flashcardTitle={currentTopic?.topic_name || "Bài kiểm tra"}
           onClose={() => {
-            navigate(`/flashcard/${flashcardId}`);
+            const topicId = currentTopic?.topic_id;
+            if (topicId) {
+              navigate(`/vocabulary/topic/${topicId}`);
+            } else {
+              navigate('/vocabulary');
+            }
           }}
         />
       </div>
 
-      {/* Timer hiển thị cố định ở góc trên bên phải - chỉ hiện khi quiz đã bắt đầu */}
       {testStarted && (
         <div className="fixed top-20 right-4 z-40 bg-white rounded-lg shadow-lg border-2 border-gray-200 px-4 py-3">
           <div className="flex items-center gap-2">
@@ -139,7 +152,6 @@ function Test() {
         </div>
       )}
 
-      {/* Time up modal overlay */}
       {isTimeUp && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md mx-4">
@@ -161,16 +173,8 @@ function Test() {
           </div>
         </div>
       )}
-      
-      <div className="flex-1 pt-16 mt-4"> 
-        {open && (
-          <QuizModal
-            isOpen={open}
-            onClose={() => setOpen(false)}
-            title={flashcardMetadata.title}
-            maxQuestions={displayDeck.length}
-          />
-        )}       
+
+      <div className="flex-1 pt-16 mt-4">      
         <div className="w-full">
           <TestPage timeLeft={timeLeft} isTimeUp={isTimeUp} />
         </div>

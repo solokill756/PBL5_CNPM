@@ -60,7 +60,7 @@ const VocabularyItem = ({
           </p>
           
           <p className={`line-clamp-2 text-sm ${
-            isKnown ? 'text-gray-600' : 'text-gray-700'
+            isKnown ? 'text-gray-600' : 'text-gray-700' 
           }`}>
             {meaning}
           </p>
