@@ -78,7 +78,8 @@ const updateLastReview = async (flashcard_id: string, user_id: string) => {
 const getFlashcardByListId = async (list_id: string, user_id: string) => {
     try {
         const number_flashcard = await db.flashcard.count({where: {list_id}});
-        const number_flashcard_learn = await db.flashcardUser.count({where: {list_id, user_id}});
+        const flashCardID = await db.flashcard.findAll({where: {list_id}});
+        const number_flashcard_learn = await db.flashcardUser.count({where: {flashcard_id: flashCardID.map((flashcard: any) => flashcard.flashcard_id), user_id}});
         const flashcardStudy = await db.flashcardStudy.findOne({where: {list_id, user_id}});
         if(flashcardStudy){
             await db.flashcardStudy.update({
