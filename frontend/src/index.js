@@ -5,21 +5,19 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { Provider } from "@/components/ui/provider";
 import { AuthProvider } from "./context/AuthProvider";
-import { ToastContainer } from "react-toastify";
-// import { AuthProvider } from './hooks/AuthContext';
-// import { AuthProvider } from './hooks/useAuth';
+import ToastProvider from "./context/ToastContext";
+import ToastContainer from "./components/Toast";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     <AuthProvider>
-      <Provider>
-        <App />
-        <ToastContainer
-          toastClassName="!bg-white !text-gray-800 !text-base !font-medium !rounded-xl !shadow-lg border border-gray-200"
-          bodyClassName="!text-sm leading-relaxed"
-        />
-      </Provider>
+      <ToastProvider>
+        <Provider>
+          <App />
+          <ToastContainer />
+        </Provider>
+      </ToastProvider>
     </AuthProvider>
   </React.StrictMode>
 );

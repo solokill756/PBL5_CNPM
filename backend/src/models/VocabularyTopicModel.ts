@@ -6,6 +6,9 @@ interface VocabularyTopicAttributes {
   image_url?: string;
   description?: string;
   created_at: Date;
+  require_level: number;
+  total_words : number;
+  points : number;
 }
 
 interface VocabularyTopicCreationAttributes
@@ -22,6 +25,9 @@ class VocabularyTopic
   declare description?: string;
   declare created_at: Date;
   declare image_url?: string | undefined;
+  declare require_level: number;
+  declare total_words: number;
+  declare points: number;
 }
 
 export default (sequelize: Sequelize) => {
@@ -50,6 +56,23 @@ export default (sequelize: Sequelize) => {
         allowNull: false,
         defaultValue: DataTypes.NOW,
       },
+      require_level: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      total_words: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      points: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+
+
     },
     {
       sequelize,

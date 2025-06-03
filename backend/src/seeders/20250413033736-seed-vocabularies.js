@@ -15,10 +15,12 @@ module.exports = {
 
     // Define topic IDs (UUIDs, must match vocabulary_topic table)
     const topicIds = {
-      "it-topic-01": "8151a05b-2f82-11f0-b6d1-002248bb7bd1", // IT cơ bản
-      "it-topic-02": "8171554a-2f82-11f0-b6d1-002248bb7bd1", // Phát triển phần mềm
-      "it-topic-03": "8190e204-2f82-11f0-b6d1-002248bb7bd1", // Mạng & bảo mật
-      "it-topic-04": "81b0989e-2f82-11f0-b6d1-002248bb7bd1", // Cơ sở dữ liệu
+      "it-topic-01": "925abf41-3c3d-11f0-b6d1-002248bb7bd1", // IT cơ bản
+      "it-topic-02": "9285571c-3c3d-11f0-b6d1-002248bb7bd1", // Phát triển phần mềm
+      "it-topic-03": "92ad4598-3c3d-11f0-b6d1-002248bb7bd1", // Mạng & bảo mật
+      "it-topic-04": "92d67dea-3c3d-11f0-b6d1-002248bb7bd1", // Cơ sở dữ liệu
+      "it-topic-05": "92f8df75-3c3d-11f0-b6d1-002248bb7bd1", // Điện toán đám mây
+      "it-topic-06": "932149d7-3c3d-11f0-b6d1-002248bb7bd1", // Trí tuệ nhân tạo
     };
 
     // Verify topics exist in vocabulary_topic table
@@ -1018,8 +1020,263 @@ module.exports = {
         type: "danh từ",
         topic_id: topicIds["it-topic-04"],
       },
+      // it-topic-05: Điện toán đám mây (10 terms)
+      {
+        word: "クラウド",
+        meaning: "Đám mây",
+        pronunciation: "くらうど",
+        example: "クラウドサービスを利用します。||クラウドにデータを保存しました。||クラウドのコストを最適化しました。",
+        usage: "Dùng để chỉ công nghệ cung cấp tài nguyên tính toán qua Internet, như lưu trữ hoặc xử lý.",
+        example_meaning: "Sử dụng dịch vụ đám mây.||Lưu dữ liệu trên đám mây.||Tối ưu hóa chi phí đám mây.",
+        ai_suggested: false,
+        created_at: new Date("2025-04-01T15:10:00"),
+        language: "ja",
+        level: "N3",
+        type: "danh từ",
+        topic_id: topicIds["it-topic-05"],
+      },
+      {
+        word: "仮想化",
+        meaning: "Ảo hóa",
+        pronunciation: "かそうか",
+        example: "サーバーを仮想化しました。||仮想化技術を導入しました。||仮想化でリソースを最適化しました。",
+        usage: "Dùng để chỉ công nghệ tạo ra các phiên bản ảo của tài nguyên như máy chủ hoặc hệ điều hành.",
+        example_meaning: "Ảo hóa máy chủ.||Áp dụng công nghệ ảo hóa.||Tối ưu hóa tài nguyên bằng ảo hóa.",
+        ai_suggested: true,
+        created_at: new Date("2025-04-01T15:15:00"),
+        language: "ja",
+        level: "N3",
+        type: "danh từ",
+        topic_id: topicIds["it-topic-05"],
+      },
+      {
+        word: "スケーラビリティ",
+        meaning: "Khả năng mở rộng",
+        pronunciation: "すけーらびりてぃ",
+        example: "クラウドのスケーラビリティを活用します。||スケーラビリティをテストしました。||スケーラビリティを強化しました。",
+        usage: "Dùng để chỉ khả năng mở rộng tài nguyên của hệ thống đám mây để đáp ứng nhu cầu.",
+        example_meaning: "Tận dụng khả năng mở rộng của đám mây.||Kiểm tra khả năng mở rộng.||Tăng cường khả năng mở rộng.",
+        ai_suggested: false,
+        created_at: new Date("2025-04-01T15:20:00"),
+        language: "ja",
+        level: "N3",
+        type: "danh từ",
+        topic_id: topicIds["it-topic-05"],
+      },
+      {
+        word: "リソース",
+        meaning: "Tài nguyên",
+        pronunciation: "りそーす",
+        example: "リソースを割り当てました。||クラウドリソースを管理します。||リソース使用量を監視しました。",
+        usage: "Dùng để chỉ các thành phần tính toán như CPU, bộ nhớ, hoặc lưu trữ trong đám mây.",
+        example_meaning: "Phân bổ tài nguyên.||Quản lý tài nguyên đám mây.||Giám sát mức sử dụng tài nguyên.",
+        ai_suggested: true,
+        created_at: new Date("2025-04-01T15:25:00"),
+        language: "ja",
+        level: "N3",
+        type: "danh từ",
+        topic_id: topicIds["it-topic-05"],
+      },
+      {
+        word: "ホスティング",
+        meaning: "Lưu trữ",
+        pronunciation: "ほすてぃんぐ",
+        example: "クラウドでホスティングします。||ホスティング環境を設定しました。||ホスティングコストを削減しました。",
+        usage: "Dùng để chỉ việc lưu trữ ứng dụng hoặc dữ liệu trên máy chủ đám mây.",
+        example_meaning: "Lưu trữ trên đám mây.||Thiết lập môi trường lưu trữ.||Giảm chi phí lưu trữ.",
+        ai_suggested: false,
+        created_at: new Date("2025-04-01T15:30:00"),
+        language: "ja",
+        level: "N3",
+        type: "danh từ",
+        topic_id: topicIds["it-topic-05"],
+      },
+      {
+        word: "バックアップ",
+        meaning: "Sao lưu",
+        pronunciation: "ばっくあっぷ",
+        example: "クラウドでバックアップしました。||バックアップスケジュールを設定しました。||バックアップを復元しました。",
+        usage: "Dùng để chỉ việc lưu trữ dữ liệu dự phòng để khôi phục khi cần thiết.",
+        example_meaning: "Sao lưu trên đám mây.||Thiết lập lịch sao lưu.||Khôi phục từ bản sao lưu.",
+        ai_suggested: true,
+        created_at: new Date("2025-04-01T15:35:00"),
+        language: "ja",
+        level: "N3",
+        type: "danh từ",
+        topic_id: topicIds["it-topic-05"],
+      },
+      {
+        word: "分散",
+        meaning: "Phân tán",
+        pronunciation: "ぶんさん",
+        example: "データを分散して保存しました。||分散システムを構築しました。||分散処理を最適化しました。",
+        usage: "Dùng để chỉ việc chia nhỏ dữ liệu hoặc tác vụ và xử lý trên nhiều máy chủ trong đám mây.",
+        example_meaning: "Lưu trữ dữ liệu phân tán.||Xây dựng hệ thống phân tán.||Tối ưu hóa xử lý phân tán.",
+        ai_suggested: false,
+        created_at: new Date("2025-04-01T15:40:00"),
+        language: "ja",
+        level: "N3",
+        type: "danh từ",
+        topic_id: topicIds["it-topic-05"],
+      },
+      {
+        word: "可用性",
+        meaning: "Tính sẵn sàng",
+        pronunciation: "かようせい",
+        example: "クラウドの可用性を高めました。||可用性をテストしました。||可用性ポリシーを策定しました。",
+        usage: "Dùng để chỉ khả năng hệ thống luôn sẵn sàng hoạt động mà không bị gián đoạn.",
+        example_meaning: "Tăng tính sẵn sàng của đám mây.||Kiểm tra tính sẵn sàng.||Xây dựng chính sách tính sẵn sàng.",
+        ai_suggested: true,
+        created_at: new Date("2025-04-01T15:45:00"),
+        language: "ja",
+        level: "N3",
+        type: "danh từ",
+        topic_id: topicIds["it-topic-05"],
+      },
+      {
+        word: "サービス",
+        meaning: "Dịch vụ",
+        pronunciation: "さーびす",
+        example: "クラウドサービスを契約しました。||サービスを最適化しました。||サービス停止を防ぎました。",
+        usage: "Dùng để chỉ các giải pháp hoặc tính năng được cung cấp qua đám mây, như SaaS, PaaS.",
+        example_meaning: "Ký hợp đồng dịch vụ đám mây.||Tối ưu hóa dịch vụ.||Ngăn chặn dừng dịch vụ.",
+        ai_suggested: false,
+        created_at: new Date("2025-04-01T15:50:00"),
+        language: "ja",
+        level: "N3",
+        type: "danh từ",
+        topic_id: topicIds["it-topic-05"],
+      },
+      {
+        word: "コスト",
+        meaning: "Chi phí",
+        pronunciation: "こすと",
+        example: "クラウドのコストを削減しました。||コストを分析しました。||コスト最適化計画を立てました。",
+        usage: "Dùng để chỉ chi phí sử dụng tài nguyên hoặc dịch vụ trong môi trường đám mây.",
+        example_meaning: "Giảm chi phí đám mây.||Phân tích chi phí.||Lập kế hoạch tối ưu hóa chi phí.",
+        ai_suggested: true,
+        created_at: new Date("2025-04-01T15:55:00"),
+        language: "ja",
+        level: "N3",
+        type: "danh từ",
+        topic_id: topicIds["it-topic-05"],
+      },
+      // it-topic-06: Trí tuệ nhân tạo (10 terms)
+      {
+        word: "人工知能",
+        meaning: "Trí tuệ nhân tạo",
+        pronunciation: "じんこうちのう",
+        example: "人工知能を開発しています。||人工知能でデータを分析しました。||人工知能の倫理を検討しました。",
+        usage: "Dùng để chỉ công nghệ mô phỏng trí thông minh của con người, như học máy hoặc xử lý ngôn ngữ tự nhiên.",
+        example_meaning: "Đang phát triển trí tuệ nhân tạo.||Phân tích dữ liệu bằng trí tuệ nhân tạo.||Xem xét đạo đức trí tuệ nhân tạo.",
+        ai_suggested: false,
+        created_at: new Date("2025-04-01T16:00:00"),
+        language: "ja",
+        level: "N3",
+        type: "danh từ",
+        topic_id: topicIds["it-topic-06"],
+      },
+      {
+        word: "学習",
+        meaning: "Học (học máy)",
+        pronunciation: "がくしゅう",
+        example: "機械学習モデルを学習させました。||学習データを準備しました。||学習精度を向上させました。",
+        usage: "Dùng trong AI để chỉ quá trình huấn luyện mô hình bằng dữ liệu.",
+        example_meaning: "Huấn luyện mô hình học máy.||Chuẩn bị dữ liệu học.||Cải thiện độ chính xác học.",
+        ai_suggested: true,
+        created_at: new Date("2025-04-01T16:05:00"),
+        language: "ja",
+        level: "N3",
+        type: "danh từ",
+        topic_id: topicIds["it-topic-06"],
+      },
+      
+      {
+        word: "データセット",
+        meaning: "Tập dữ liệu",
+        pronunciation: "でーたせっと",
+        example: "データセットを準備しました。||データセットを拡張しました。||データセットを検証しました。",
+        usage: "Dùng để chỉ tập hợp dữ liệu dùng để huấn luyện hoặc kiểm tra mô hình AI.",
+        example_meaning: "Chuẩn bị tập dữ liệu.||Mở rộng tập dữ liệu.||Xác minh tập dữ liệu.",
+        ai_suggested: true,
+        created_at: new Date("2025-04-01T16:15:00"),
+        language: "ja",
+        level: "N3",
+        type: "danh từ",
+        topic_id: topicIds["it-topic-06"],
+      },
+      {
+        word: "モデル",
+        meaning: "Mô hình",
+        pronunciation: "もでる",
+        example: "AIモデルを構築しました。||モデルを評価しました。||モデルを最適化しました。",
+        usage: "Dùng để chỉ mô hình AI được huấn luyện để thực hiện nhiệm vụ cụ thể, như dự đoán hoặc phân loại.",
+        example_meaning: "Xây dựng mô hình AI.||Đánh giá mô hình.||Tối ưu hóa mô hình.",
+        ai_suggested: false,
+        created_at: new Date("2025-04-01T16:20:00"),
+        language: "ja",
+        level: "N3",
+        type: "danh từ",
+        topic_id: topicIds["it-topic-06"],
+      },
+      {
+        word: "推論",
+        meaning: "Suy luận",
+        pronunciation: "すいろん",
+        example: "AIで推論を行いました。||推論速度を向上させました。||推論結果を分析しました。",
+        usage: "Dùng để chỉ quá trình AI đưa ra dự đoán hoặc kết luận dựa trên dữ liệu đã học.",
+        example_meaning: "Thực hiện suy luận bằng AI.||Cải thiện tốc độ suy luận.||Phân tích kết quả suy luận.",
+        ai_suggested: true,
+        created_at: new Date("2025-04-01T16:25:00"),
+        language: "ja",
+        level: "N3",
+        type: "danh từ",
+        topic_id: topicIds["it-topic-06"],
+      },
+      {
+        word: "ニューラルネットワーク",
+        meaning: "Mạng nơ-ron",
+        pronunciation: "にゅーらるねっとわーく",
+        example: "ニューラルネットワークを設計しました。||ニューラルネットワークを学習させました。||ニューラルネットワークを評価しました。",
+        usage: "Dùng để chỉ mô hình AI mô phỏng cách hoạt động của não bộ, thường dùng trong học sâu.",
+        example_meaning: "Thiết kế mạng nơ-ron.||Huấn luyện mạng nơ-ron.||Đánh giá mạng nơ-ron.",
+        ai_suggested: false,
+        created_at: new Date("2025-04-01T16:30:00"),
+        language: "ja",
+        level: "N3",
+        type: "danh từ",
+        topic_id: topicIds["it-topic-06"],
+      },
+      {
+        word: "トレーニング",
+        meaning: "Huấn luyện",
+        pronunciation: "とれーにんぐ",
+        example: "モデルをトレーニングしました。||トレーニングデータを拡張しました。||トレーニング時間を短縮しました。",
+        usage: "Dùng để chỉ quá trình cung cấp dữ liệu để mô hình AI học và cải thiện hiệu suất.",
+        example_meaning: "Huấn luyện mô hình.||Mở rộng dữ liệu huấn luyện.||Rút ngắn thời gian huấn luyện.",
+        ai_suggested: true,
+        created_at: new Date("2025-04-01T16:35:00"),
+        language: "ja",
+        level: "N3",
+        type: "danh từ",
+        topic_id: topicIds["it-topic-06"],
+      },
+      {
+        word: "予測",
+        meaning: "Dự đoán",
+        pronunciation: "よそく",
+        example: "AIでデータを予測しました。||予測モデルを構築しました。||予測精度を向上させました。",
+        usage: "Dùng để chỉ việc AI dự đoán kết quả dựa trên dữ liệu đầu vào.",
+        example_meaning: "Dự đoán dữ liệu bằng AI.||Xây dựng mô hình dự đoán.||Cải thiện độ chính xác dự đoán.",
+        ai_suggested: false,
+        created_at: new Date("2025-04-01T16:40:00"),
+        language: "ja",
+        level: "N3",
+        type: "danh từ",
+        topic_id: topicIds["it-topic-06"],
+      },
+     
     ];
-
     // Generate UUIDs for vocab_id
     for (let vocab of vocabularies) {
       const result = await queryInterface.sequelize.query("SELECT UUID() as id", {
@@ -1027,14 +1284,12 @@ module.exports = {
       });
       vocab.vocab_id = result[0].id;
     }
-
     // Check for duplicate words
     const words = vocabularies.map((v) => v.word);
     const duplicates = words.filter((item, index) => words.indexOf(item) !== index);
     if (duplicates.length > 0) {
       throw new Error(`Duplicate words found: ${duplicates.join(", ")}`);
     }
-
     // Log first vocabulary entry for debugging
     console.log("First vocabulary entry:", vocabularies[0]);
 
@@ -1051,8 +1306,8 @@ module.exports = {
       throw error;
     }
   },
-
   async down(queryInterface, Sequelize) {
     await queryInterface.bulkDelete("vocabulary", null, {});
-  },
+    console.log("Vocabulary deleted successfully!");
+  }
 };

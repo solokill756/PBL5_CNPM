@@ -7,10 +7,12 @@ import { postFlashcardRating } from "@/api/postFlashcardRating";
 import { useParams } from "react-router-dom";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import { fetchIsRated } from "@/api/getIsRated";
+import { useToast, TOAST_TYPES } from "@/context/ToastContext";
 
 export default function FeedbackModal() {
   const { flashcardId } = useParams();
   const axiosPrivate = useAxiosPrivate();
+  const { addToast } = useToast();
 
   const {
     isModalOpen,
@@ -62,10 +64,12 @@ export default function FeedbackModal() {
           rating,
           selectedTags
         );
+
         if (data && data.rate !== undefined && data.numberRate !== undefined) {
           updateFlashcardMetadata(data.rate, data.numberRate);
         }
 
+        addToast("Đánh giá đã được gửi", TOAST_TYPES.SUCCESS);
         setIsRated(true);
         closeModal();
       } catch (error) {

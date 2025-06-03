@@ -14,7 +14,10 @@ const SearchResult = () => {
     relatedWords,
     fetchAIExplain,
     getHistorySearch,
+    addHistorySearch,
     searchTerm,
+    setSearchResults,
+    updateResults,
     setVocabularySets,
     translationType,
     isSearchModalOpen: isOpen,
@@ -86,21 +89,30 @@ const SearchResult = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, loading, searchResults, selectedIndex]);
 
-  const handleWordSelect = (word) => {
+  const handleWordSelect = async (word) => {
+    closeSearchModal();
+
     const normalizedWord = normalizeVocabularyData(word);
     setSelectedWord(normalizedWord);
-    setVocabularySets([normalizedWord]);
-    navigate(`/vocabulary/${encodeURIComponent(normalizedWord.word)}`, { replace: true });
-    closeSearchModal();
+    updateResults([normalizedWord]);
+
+    if (word.vocab_id) {
+      await addHistorySearch(axios, word.vocab_id);
+    }
+
+    navigate(`/vocabulary/${encodeURIComponent(searchTerm)}`, {
+      replace: true,
+    });
   };
 
   const handleHistorySelect = (historyItem) => {
-    // Normalize history item data before setting
+    closeSearchModal();
+    
     const normalizedWord = normalizeVocabularyData(historyItem.Vocabulary);
     setSelectedWord(normalizedWord);
-    setVocabularySets([normalizedWord]);
+    updateResults([normalizedWord]);
+    
     navigate(`/vocabulary/${encodeURIComponent(normalizedWord.word)}`, { replace: true });
-    closeSearchModal();
   };
 
   const handleAISearch = async () => {
@@ -109,17 +121,22 @@ const SearchResult = () => {
       const aiData = await fetchAIExplain(axios, searchTerm);
       const normalizedAIResult = normalizeVocabularyData({
         ...aiData,
-        ai_suggested: true
+        ai_suggested: true,
       });
-      
-      setVocabularySets([normalizedAIResult]);
-      setSelectedWord(normalizedAIResult);
-      navigate(`/vocabulary/${encodeURIComponent(normalizedAIResult.word)}`, { replace: true });
-      closeSearchModal();
+
+      // Update both search results and vocabulary sets
+      // updateResults([normalizedAIResult]);
+      // setSelectedWord(normalizedAIResult);
+
+      // Navigate to vocabulary detail page
+      navigate(`/vocabulary/${encodeURIComponent(searchTerm)}`, {
+        replace: true,
+      });
     } catch (error) {
       console.error("AI Search Error:", error);
     } finally {
       setIsAILoading(false);
+      closeSearchModal();
     }
   };
 
@@ -183,7 +200,8 @@ const SearchResult = () => {
           {relatedWords.length > 0 && (
             <div className="px-4 py-2 bg-gray-50 text-sm text-gray-500 border-t">
               <p className="text-xs text-gray-400 italic">
-                Hiển thị {Math.min(10, relatedWords.length)} kết quả tìm kiếm gần đây nhất
+                Hiển thị {Math.min(10, relatedWords.length)} kết quả tìm kiếm
+                gần đây nhất
               </p>
             </div>
           )}

@@ -65,8 +65,10 @@ const initializeModels = async () => {
   );
   const { default: FlashcardUser } = await import("./FlashcardUserModel.js");
   const { default: ListFlashCardClass } = await import("./ListFlashCardClass.js");
-
-
+  const { default: VocabularyTopicUser } = await import("./vocabularyTopicUserModel.js");
+  const { default: VocabularyUser } = await import("./vocabularyUserModel.js");
+  const { default: Achievement } = await import("./achievementModel.js");
+  const { default: UserAchievement } = await import("./userAchievementModel.js"); 
   // Khởi tạo các model
   db.vocabularyTopic = VocabularyTopic(sequelize);
   db.user = UserModel(sequelize);
@@ -90,6 +92,10 @@ const initializeModels = async () => {
   db.flashcardStudy = FlashcardStudy(sequelize);
   db.flashcardUser = FlashcardUser(sequelize);
   db.listFlashCardClass = ListFlashCardClass(sequelize);
+  db.vocabularyTopicUser = VocabularyTopicUser(sequelize);
+  db.vocabularyUser = VocabularyUser(sequelize);
+  db.achievement = Achievement(sequelize);
+  db.userAchievement = UserAchievement(sequelize);
   // Xét quan hệ giữa các bảng
   db.user.belongsToMany(db.role, {
     through: db.userRole,
@@ -191,6 +197,18 @@ const initializeModels = async () => {
   db.listFlashCardClass.belongsTo(db.listFlashcard, { foreignKey: "list_id" });
   db.class.hasMany(db.listFlashCardClass, { foreignKey: "class_id", onDelete: 'CASCADE' });
   db.listFlashCardClass.belongsTo(db.class, { foreignKey: "class_id" });
+  db.user.hasMany(db.vocabularyTopicUser, { foreignKey: "user_id", onDelete: 'CASCADE' });
+  db.vocabularyTopicUser.belongsTo(db.user, { foreignKey: "user_id" });
+  db.vocabularyTopic.hasMany(db.vocabularyTopicUser, { foreignKey: "topic_id", onDelete: 'CASCADE' });
+  db.vocabularyTopicUser.belongsTo(db.vocabularyTopic, { foreignKey: "topic_id" });
+  db.user.hasMany(db.vocabularyUser, { foreignKey: "user_id", onDelete: 'CASCADE' });
+  db.vocabularyUser.belongsTo(db.user, { foreignKey: "user_id" });
+  db.vocabulary.hasMany(db.vocabularyUser, { foreignKey: "vocabulary_id", onDelete: 'CASCADE' });
+  db.vocabularyUser.belongsTo(db.vocabulary, { foreignKey: "vocabulary_id" });
+  db.user.hasMany(db.userAchievement, { foreignKey: "user_id", onDelete: 'CASCADE' });
+  db.userAchievement.belongsTo(db.user, { foreignKey: "user_id" });
+  db.achievement.hasMany(db.userAchievement, { foreignKey: "achievement_id", onDelete: 'CASCADE' });
+  db.userAchievement.belongsTo(db.achievement, { foreignKey: "achievement_id" });
   // Đồng bộ database
   db.sequelize
     .sync({ force: false})

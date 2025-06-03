@@ -6,11 +6,12 @@ import ClassOptionList from "../Class/ClassOptionList";
 import { saveFlashcardToClasses } from "@/api/saveFlashcardToClasses";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import { useParams } from "react-router-dom";
-import { toast } from "react-toastify";
+import { useToast, TOAST_TYPES } from "@/context/ToastContext";
 
 export default function SaveModal() {
   const axiosPrivate = useAxiosPrivate();
   const { flashcardId } = useParams();
+  const { addToast } = useToast();
 
   const { 
     isModalOpen, 
@@ -53,11 +54,11 @@ export default function SaveModal() {
         message = "Không có thay đổi nào được thực hiện.";
       }
 
-      toast.success(message);
+      addToast(message, TOAST_TYPES.SUCCESS);
       closeModal();
     } catch (error) {
       console.error("Error saving:", error);
-      toast.error("Lưu thất bại. Vui lòng thử lại.");
+      addToast("Lưu thất bại. Vui lòng thử lại.", TOAST_TYPES.ERROR);
     } finally {
       setIsSaving(false);
     }

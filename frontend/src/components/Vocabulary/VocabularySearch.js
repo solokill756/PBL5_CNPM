@@ -14,7 +14,7 @@ const VocabularySearch = () => {
     setSelectedWord,
     setTranslationType,
     searchVocabulary,
-    searchResults,
+    lastSearchWasAI,
     isSearchModalOpen: isOpen,
     closeSearchModal,
     openSearchModal,
@@ -46,22 +46,23 @@ const VocabularySearch = () => {
       const decodedWord = decodeURIComponent(word);
       setSearchTerm(decodedWord);
       
-      // Search the term and set up the results
-      const initializeFromParam = async () => {
-        try {
-          const results = await searchVocabulary(axios, decodedWord);
-          if (results && results.length > 0) {
-            setSelectedWord(results[0]);
+      if (!lastSearchWasAI) {
+        const initializeFromParam = async () => {
+          try {
+            const results = await searchVocabulary(axios, decodedWord);
+            if (results && results.length > 0) {
+              setSelectedWord(results[0]);
+            }
+            closeSearchModal();
+          } catch (error) {
+            console.error('Error initializing from URL param:', error);
           }
-          closeSearchModal();
-        } catch (error) {
-          console.error('Error initializing from URL param:', error);
-        }
-      };
-      
-      initializeFromParam();
+        };
+        
+        initializeFromParam();
+      }
     }
-  }, [word, axios]);
+  }, [word, axios, lastSearchWasAI]);
 
   const handleFocus = () => {
     // Mở dropdown khi focus vào input
@@ -80,7 +81,8 @@ const VocabularySearch = () => {
     }
     
     try {
-      const results = await searchVocabulary(axios, value);
+      // Pass true to add to history when user presses Enter
+      const results = await searchVocabulary(axios, value, true);
       
       if (results && results.length > 0) {
         setSelectedWord(results[0]);
@@ -132,12 +134,12 @@ const VocabularySearch = () => {
     {
       label: 'Việt - Nhật',
       value: 'Vietnamese',
-      onClick: () => setTranslationType('Vietnamese')
+      onClick: () => setTranslationType(axios, 'Vietnamese')
     },
     {
       label: 'Nhật - Việt',
       value: 'Japanese',
-      onClick: () => setTranslationType('Japanese')
+      onClick: () => setTranslationType(axios, 'Japanese')
     }
   ];
 
@@ -156,7 +158,7 @@ const VocabularySearch = () => {
             onKeyDown={handleKeyDown}
             onChange={handleSearchChange}
             onFocus={handleFocus}
-            placeholder="Tìm kiếm theo chủ đề hoặc từ khóa"
+            placeholder="Tìm kiếm từ vựng IT"
             className="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           <SearchResult />

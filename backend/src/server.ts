@@ -13,7 +13,7 @@ import flashCardRoutes from "./routes/flashCardRoute.js";
 import quizRoutes from "./routes/quizRoute.js";
 import vocabularyRoutes from "./routes/vocabularyRoute.js";
 import learnRoutes from "./routes/learnRoutes.js";
-
+import achivermentRoutes from "./routes/achivermentRote.js";  
 dotenv.config();
 
 const app: Application = express();
@@ -54,6 +54,7 @@ app.use("/api/flashcard", flashCardRoutes);
 app.use("/api/quiz", quizRoutes); 
 app.use("/api/vocabulary", vocabularyRoutes);
 app.use("/api/learn", learnRoutes);
+app.use("/api/achievement", achivermentRoutes);
 
 
 app.listen(port, hostname, () => {
