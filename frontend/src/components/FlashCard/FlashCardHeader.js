@@ -5,25 +5,40 @@ import { RiShare2Line } from "react-icons/ri";
 import RoundButton from "../RoundButton";
 import { FaRegCopy } from "react-icons/fa6";
 import { useFlashcardStore } from "@/store/useflashcardStore";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Skeleton from "react-loading-skeleton";
-
-const dropdownMenu = [
-  {
-    label: "Tạo một bản sao",
-    icon: <FaRegCopy className="size-5"/>
-  },
-  {
-    label: "Báo cáo",
-    icon: <MdOutlineReportProblem className="size-5"/>
-  },
-];
 
 const FlashCardHeader = ({ title, rating, ratingCount, onSave, onShare, onMore, onStar, loading = false }) => {
   const { flashcardId } = useParams();
+  const navigate = useNavigate();
   const { isFlashcardSaved } = useFlashcardStore();
   
   const isSaved = isFlashcardSaved(flashcardId);
+
+  const handleCopyFlashcard = () => {
+    navigate('/add-flashcard', {
+      state: { copyFrom: flashcardId }
+    });
+  };
+
+  const handleReport = () => {
+    // TODO: Implement report functionality
+    console.log('Report functionality to be implemented');
+  };
+
+  // Menu cho dropdown với logic xử lý
+  const dropdownMenu = [
+    {
+      label: "Tạo một bản sao",
+      icon: <FaRegCopy className="size-5"/>,
+      onClick: handleCopyFlashcard
+    },
+    {
+      label: "Báo cáo",
+      icon: <MdOutlineReportProblem className="size-5"/>,
+      onClick: handleReport
+    },
+  ];
 
   return (
     <div className="w-full max-w-4xl px-4 py-4">
@@ -48,7 +63,7 @@ const FlashCardHeader = ({ title, rating, ratingCount, onSave, onShare, onMore, 
           <RoundButton icon={<RiShare2Line />} onClick={onShare} />
           <RoundButton 
             icon={<MdMoreHoriz />} 
-            onClick={onMore} 
+            onClick={onMore}
             isDropdown={true} 
             menu={dropdownMenu}
           />

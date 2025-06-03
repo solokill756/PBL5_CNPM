@@ -13,9 +13,13 @@ const RoundButton = ({
   isSaved = false,
   isActive = false,
   loading = false,
-  label = "" 
+  label = "" ,
+  showDropdown = false,
+  onCloseDropdown,
+  ...props
 }) => {
   const [active, setActive] = useState(false);
+  const dropdownRef = useRef();
   const buttonRef = useRef();
 
   const toggleDropdown = (e) => {
