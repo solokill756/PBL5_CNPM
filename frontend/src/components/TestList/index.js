@@ -1,9 +1,9 @@
 import React, { useRef, useState, useEffect } from "react";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
-import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { useTestStore } from "@/store/useTestStore";
+import useTopicStore from "@/store/useTopicStore";
 
 const shuffleArray = (array) => {
   const shuffled = [...array];
@@ -54,12 +54,13 @@ const TestPage = ({ timeLeft, isTimeUp }) => {
   const [shuffledQuestions, setShuffledQuestions] = useState([]);
   const questionRefs = useRef([]);
   const axiosPrivate = useAxiosPrivate();
-  const { flashcardId } = useParams();
   const { setAnswers } = useTestStore();
   const navigate = useNavigate();
   const { wrongQuestions } = useTestStore();
   const location = useLocation();
   const { setQuestions } = useTestStore();
+  
+  const { currentTopic } = useTopicStore();
 
   useEffect(() => {
     if (questions.length > 0) {
@@ -69,14 +70,13 @@ const TestPage = ({ timeLeft, isTimeUp }) => {
     }
   }, [questions]);
 
-  useEffect(() => {
+    useEffect(() => {
     if (location.state?.retryWrongOnly && wrongQuestions.length > 0) {
-      setOpen(false);
-      setQuestions(wrongQuestions);
-    } else if (flashcardId) {
-      fetchQuestions(flashcardId, "1", 10, axiosPrivate);
+        setOpen(false);
+        setQuestions(wrongQuestions);
     }
-  }, [flashcardId, axiosPrivate, location.state?.retryWrongOnly]);
+    }, [location.state?.retryWrongOnly, wrongQuestions]);
+
 
   useEffect(() => {
     if (isTimeUp && !submitted) {
@@ -163,7 +163,15 @@ const TestPage = ({ timeLeft, isTimeUp }) => {
     //   console.error("Gửi kết quả thất bại:", err);
     // }
 
-    navigate(`/vocabulary/topic/${topicId}/TestResult`);
+    // Lấy topicId từ currentTopic
+    const topicId = currentTopic?.topic_id;
+    
+    if (topicId) {
+      navigate(`/vocabulary/topic/${topicId}/TestResult`);
+    } else {
+      console.error("Không tìm thấy topicId từ currentTopic");
+      navigate('/vocabulary');
+    }
   };
 
   const handleCheckBeforeSubmit = () => {

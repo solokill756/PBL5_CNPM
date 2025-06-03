@@ -24,6 +24,7 @@ import VocabularyBattle from "@/pages/VocabularyBattle";
 import RoomListing from "@/components/RoomListing";
 import AddFlashcard from "@/pages/AddFlashcard";
 import Test from "@/pages/TestPage";
+import TestResult from "@/pages/TestPage/TestResult";
 // Component bảo vệ route yêu cầu xác thực
 function PrivateRoute({ children }) {
   // const { auth } = useAuth();
@@ -109,7 +110,7 @@ const router = createBrowserRouter([
       },
        {
         path: "/vocabulary/topic/:topicId/TestResult",
-        element: <FlashCard />
+        element: <TestResult/>
       }
     ],
   },
