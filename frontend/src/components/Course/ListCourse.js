@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Course from './Course';
 import useAxiosPrivate from '@/hooks/useAxiosPrivate';
 import { fetchRecentFlashcards } from '@/api/recentFlashcard';
+import { useAuthStore } from '@/store/useAuthStore';
 
 const CourseSkeleton = () => {
     return (
@@ -102,6 +103,7 @@ const ListCourse = () => {
     const [groupedCourses, setGroupedCourses] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
+    const user = useAuthStore(state => state.user);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -120,10 +122,11 @@ const ListCourse = () => {
                                 avatar: item.User?.profile_picture || item.avatar || null, 
                                 lesson: item.title || item.lesson || 'Untitled',
                                 created_at: item.created_at || item.creationDate || new Date().toISOString(),
+                                user_id: item.user_id || null
                             };
                         });
-                        
-                        const grouped = groupCoursesByMonthYear(formattedCourses);
+                        const filteredCourses = formattedCourses.filter(course => course.user_id === user?.id);
+                        const grouped = groupCoursesByMonthYear(filteredCourses);                  
                         setGroupedCourses(grouped);
                     } else {
                         setGroupedCourses({});
