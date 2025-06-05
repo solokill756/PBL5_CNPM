@@ -207,7 +207,7 @@ const useVocabularyStore = create((set, get) => ({
   },
 
   // Search vocabulary with normalized responses
-  searchVocabulary: async (axios, term = "", addToHistory = false) => {
+  searchVocabulary: async (axios, term = "", language = "Japanese", addToHistory = false) => {
     const { translationType } = get();
     if (!term?.trim()) {
       get().clearResults();
@@ -219,7 +219,7 @@ const useVocabularyStore = create((set, get) => ({
 
       const response = await axios.post("api/vocabulary/similar", {
         word: term,
-        language: translationType,
+        language: language || translationType,
       });
 
       const results = response.data.data;
