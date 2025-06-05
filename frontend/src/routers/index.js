@@ -167,7 +167,15 @@ const router = createBrowserRouter([
     {
     path: "/flashcard/:flashcardId/testAgain",
     element: <TestAgain/>
-  }
+  },
+     {
+        path: "/vocabulary/topic/:topicId/Test",
+        element: <Test/>
+      },
+       {
+        path: "/vocabulary/topic/:topicId/TestResult",
+        element: <TestResult/>
+      }
 ]);
 
 export default router;

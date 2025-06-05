@@ -256,7 +256,7 @@ export default function LearnFlashcard() {
             }}
           />
         </div>
-        <div className="w-full max-w-[850px] flex flex-col items-center px-4">
+        <div className="w-full max-w-[850px] mt-4 flex flex-col items-center px-4">
           <div className="w-full mb-8">
             <LearnHeaderSkeleton />
           </div>
@@ -279,7 +279,7 @@ export default function LearnFlashcard() {
             }}
           />
         </div>
-        <div className="w-full max-w-[850px] flex flex-col items-center px-4">
+        <div className="w-full max-w-[850px] mt-4 flex flex-col items-center px-4">
           <div className="w-full mb-8">
             <LearnHeaderSkeleton />
           </div>
@@ -411,7 +411,7 @@ export default function LearnFlashcard() {
         />
       </div>
 
-      <div className="w-full flex max-w-[850px] flex-col items-center">
+      <div className="w-full flex max-w-[850px] mt-4 flex-col items-center">
         {getRound() > 1 && (
           <div className="w-full text-right text-gray-600 mb-2">
             Vòng học: {getRound()}

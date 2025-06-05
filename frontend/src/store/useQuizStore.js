@@ -16,7 +16,7 @@ export const useQuizStore = create((set) => ({
   fetchQuestions: async (list_id, type_quiz, number_of_questions, axiosPrivate) => {
     set({ loading: true, error: null });
     try {
-      const res = await axiosPrivate.post("http://localhost:9000/api/quiz//generateQuiz", {
+      const res = await axiosPrivate.post("/api/quiz//generateQuiz", {
         list_id, 
         type_quiz, 
         number_of_questions,
