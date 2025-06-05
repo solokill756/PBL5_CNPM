@@ -17,7 +17,7 @@ import Achievement from "@/pages/Achievement";
 import QuizResult from "@/pages/QuizResult";
 import TestAgain from "@/pages/Quiz/TestAgain";
 import Vocabulary from "@/pages/Vocabulary";
-import VocabularyDetail from "@/components/Vocabulary/VocabularyDetail";  
+import VocabularyDetail from "@/components/Vocabulary/VocabularyDetail";
 import Quiz from "@/pages/Quiz";
 import TopicDetail from "@/pages/TopicDetail";
 import VocabularyBattle from "@/pages/VocabularyBattle";
@@ -25,21 +25,18 @@ import RoomListing from "@/components/RoomListing";
 import AddFlashcard from "@/pages/AddFlashcard";
 import Test from "@/pages/TestPage";
 import TestResult from "@/pages/TestPage/TestResult";
+import BattleTest from "@/components/BattleTest/battleTest";
 // Component bảo vệ route yêu cầu xác thực
 function PrivateRoute({ children }) {
   // const { auth } = useAuth();
-  const accessToken = useAuthStore(state => state.accessToken);
+  const accessToken = useAuthStore((state) => state.accessToken);
 
-  return accessToken ? (
-    children
-  ) : (
-    <Navigate to="/accounts/login" replace />
-  );
+  return accessToken ? children : <Navigate to="/accounts/login" replace />;
 }
 
 // Component bảo vệ route dành cho khách
 function GuestRoute({ children }) {
-  const accessToken = useAuthStore(state => state.accessToken);
+  const accessToken = useAuthStore((state) => state.accessToken);
   return !accessToken ? children : <Navigate to="/" replace />;
 }
 
@@ -98,7 +95,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/flashcard/:flashcardId",
-        element: <FlashCard />
+        element: <FlashCard />,
       },
       {
         path: "/add-flashcard",
@@ -144,6 +141,7 @@ const router = createBrowserRouter([
       },
     ],
   },
+
   {
     path: "/auth-success",
     element: <AuthSuccess />,
@@ -154,17 +152,17 @@ const router = createBrowserRouter([
   },
   {
     path: "/flashcard/:flashcardId/detail",
-    element: <FlashCard mode="detail"/>
+    element: <FlashCard mode="detail" />,
   },
   {
     path: "/flashcard/:flashcardId/quiz",
-    element: <Quiz/>
+    element: <Quiz />,
   },
   {
     path: "/flashcard/:flashcardId/quizResult",
-    element: <QuizResult/>
+    element: <QuizResult />,
   },
-    {
+  {
     path: "/flashcard/:flashcardId/testAgain",
     element: <TestAgain/>
   },

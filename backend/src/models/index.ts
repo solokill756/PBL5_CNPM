@@ -6,7 +6,7 @@ dotenv.config();
 const sequelize = new Sequelize(database.DB, database.USER, database.PASSWORD, {
   port: database.port,
   host: database.HOST,
-  
+
   dialect: database.dialect as Dialect,
   pool: {
     max: database.pool.max,
@@ -16,9 +16,8 @@ const sequelize = new Sequelize(database.DB, database.USER, database.PASSWORD, {
   },
   dialectOptions: {
     ssl: {
-      require: true,            
-      
-    }
+      require: true,
+    },
   },
 });
 
@@ -64,11 +63,21 @@ const initializeModels = async () => {
     "./VocabularyTopicModel.js"
   );
   const { default: FlashcardUser } = await import("./FlashcardUserModel.js");
-  const { default: ListFlashCardClass } = await import("./ListFlashCardClass.js");
-  const { default: VocabularyTopicUser } = await import("./vocabularyTopicUserModel.js");
+  const { default: ListFlashCardClass } = await import(
+    "./ListFlashCardClass.js"
+  );
+  const { default: VocabularyTopicUser } = await import(
+    "./vocabularyTopicUserModel.js"
+  );
   const { default: VocabularyUser } = await import("./vocabularyUserModel.js");
   const { default: Achievement } = await import("./achievementModel.js");
-  const { default: UserAchievement } = await import("./userAchievementModel.js"); 
+  const { default: UserAchievement } = await import(
+    "./userAchievementModel.js"
+  );
+  const { default: BattleStats } = await import("./battleStatsModel.js");
+  const { default: BattleHistoryAttributes } = await import(
+    "./battleHistoryModel.js"
+  );
   // Khởi tạo các model
   db.vocabularyTopic = VocabularyTopic(sequelize);
   db.user = UserModel(sequelize);
@@ -81,7 +90,7 @@ const initializeModels = async () => {
   db.vocabulary = VocabularyModel(sequelize);
   db.searchHistory = SearchHistoryModel(sequelize);
   db.flashcard = FlashcardModel(sequelize);
-   
+
   db.quizResult = QuizResultModel(sequelize);
   db.notification = NotificationModel(sequelize);
   db.forumPost = ForumPostModel(sequelize);
@@ -96,6 +105,8 @@ const initializeModels = async () => {
   db.vocabularyUser = VocabularyUser(sequelize);
   db.achievement = Achievement(sequelize);
   db.userAchievement = UserAchievement(sequelize);
+  db.battleStats = BattleStats(sequelize);
+  db.battleHistory = BattleHistoryAttributes(sequelize);
   // Xét quan hệ giữa các bảng
   db.user.belongsToMany(db.role, {
     through: db.userRole,
@@ -105,85 +116,136 @@ const initializeModels = async () => {
     through: db.userRole,
     foreignKey: "role_id",
   });
-  db.flashcard.hasMany(db.flashcardUser, { foreignKey: "flashcard_id", onDelete: 'CASCADE' });
+  db.flashcard.hasMany(db.flashcardUser, {
+    foreignKey: "flashcard_id",
+    onDelete: "CASCADE",
+  });
   db.flashcardUser.belongsTo(db.flashcard, { foreignKey: "flashcard_id" });
-  db.user.hasMany(db.flashcardUser, { foreignKey: "user_id", onDelete: 'CASCADE' });
+  db.user.hasMany(db.flashcardUser, {
+    foreignKey: "user_id",
+    onDelete: "CASCADE",
+  });
   db.flashcardUser.belongsTo(db.user, { foreignKey: "user_id" });
-  db.user.hasMany(db.authentication, { foreignKey: "user_id", onDelete: 'CASCADE' });
+  db.user.hasMany(db.authentication, {
+    foreignKey: "user_id",
+    onDelete: "CASCADE",
+  });
   db.authentication.belongsTo(db.user, { foreignKey: "user_id" });
-  db.user.hasMany(db.class, { foreignKey: "created_by", onDelete: 'CASCADE' });
+  db.user.hasMany(db.class, { foreignKey: "created_by", onDelete: "CASCADE" });
   db.class.belongsTo(db.user, { foreignKey: "created_by" });
 
-  db.class.hasMany(db.classMember, { foreignKey: "class_id", onDelete: 'CASCADE' });
+  db.class.hasMany(db.classMember, {
+    foreignKey: "class_id",
+    onDelete: "CASCADE",
+  });
   db.classMember.belongsTo(db.class, { foreignKey: "class_id" });
 
-  db.user.hasMany(db.classMember, { foreignKey: "user_id", onDelete: 'CASCADE' });
+  db.user.hasMany(db.classMember, {
+    foreignKey: "user_id",
+    onDelete: "CASCADE",
+  });
   db.classMember.belongsTo(db.user, { foreignKey: "user_id" });
 
-  db.class.hasMany(db.lesson, { foreignKey: "class_id", onDelete: 'CASCADE' });
+  db.class.hasMany(db.lesson, { foreignKey: "class_id", onDelete: "CASCADE" });
   db.lesson.belongsTo(db.class, { foreignKey: "class_id" });
 
-
-  db.user.hasMany(db.quizResult, { foreignKey: "user_id", onDelete: 'CASCADE' });
+  db.user.hasMany(db.quizResult, {
+    foreignKey: "user_id",
+    onDelete: "CASCADE",
+  });
   db.quizResult.belongsTo(db.user, { foreignKey: "user_id" });
 
-
-
-  db.user.hasMany(db.notification, { foreignKey: "user_id", onDelete: 'CASCADE' });
+  db.user.hasMany(db.notification, {
+    foreignKey: "user_id",
+    onDelete: "CASCADE",
+  });
   db.notification.belongsTo(db.user, { foreignKey: "user_id" });
 
-  db.user.hasMany(db.forumPost, { foreignKey: "user_id", onDelete: 'CASCADE' });
+  db.user.hasMany(db.forumPost, { foreignKey: "user_id", onDelete: "CASCADE" });
   db.forumPost.belongsTo(db.user, { foreignKey: "user_id" });
 
-  db.forumPost.hasMany(db.forumComment, { foreignKey: "post_id", onDelete: 'CASCADE' });
+  db.forumPost.hasMany(db.forumComment, {
+    foreignKey: "post_id",
+    onDelete: "CASCADE",
+  });
   db.forumComment.belongsTo(db.forumPost, { foreignKey: "post_id" });
 
-  db.user.hasMany(db.forumComment, { foreignKey: "user_id", onDelete: 'CASCADE' });
+  db.user.hasMany(db.forumComment, {
+    foreignKey: "user_id",
+    onDelete: "CASCADE",
+  });
   db.forumComment.belongsTo(db.user, { foreignKey: "user_id" });
 
-  db.user.hasMany(db.forumLike, { foreignKey: "user_id", onDelete: 'CASCADE' });
+  db.user.hasMany(db.forumLike, { foreignKey: "user_id", onDelete: "CASCADE" });
   db.forumLike.belongsTo(db.user, { foreignKey: "user_id" });
 
-  db.forumPost.hasMany(db.forumLike, { foreignKey: "post_id", onDelete: 'CASCADE' });
+  db.forumPost.hasMany(db.forumLike, {
+    foreignKey: "post_id",
+    onDelete: "CASCADE",
+  });
   db.forumLike.belongsTo(db.forumPost, { foreignKey: "post_id" });
 
-  db.forumComment.hasMany(db.forumLike, { foreignKey: "comment_id", onDelete: 'CASCADE' });
+  db.forumComment.hasMany(db.forumLike, {
+    foreignKey: "comment_id",
+    onDelete: "CASCADE",
+  });
   db.forumLike.belongsTo(db.forumComment, { foreignKey: "comment_id" });
 
-  db.user.hasMany(db.forumReport, { foreignKey: "reported_by", onDelete: 'CASCADE' });
+  db.user.hasMany(db.forumReport, {
+    foreignKey: "reported_by",
+    onDelete: "CASCADE",
+  });
   db.forumReport.belongsTo(db.user, { foreignKey: "reported_by" });
 
-  db.forumPost.hasMany(db.forumReport, { foreignKey: "post_id", onDelete: 'CASCADE' });
+  db.forumPost.hasMany(db.forumReport, {
+    foreignKey: "post_id",
+    onDelete: "CASCADE",
+  });
   db.forumReport.belongsTo(db.forumPost, { foreignKey: "post_id" });
 
-  db.forumComment.hasMany(db.forumReport, { foreignKey: "comment_id", onDelete: 'CASCADE' });
+  db.forumComment.hasMany(db.forumReport, {
+    foreignKey: "comment_id",
+    onDelete: "CASCADE",
+  });
   db.forumReport.belongsTo(db.forumComment, { foreignKey: "comment_id" });
 
-  db.user.hasMany(db.searchHistory, { foreignKey: "user_id", onDelete: 'CASCADE' });
+  db.user.hasMany(db.searchHistory, {
+    foreignKey: "user_id",
+    onDelete: "CASCADE",
+  });
   db.searchHistory.belongsTo(db.user, { foreignKey: "user_id" });
 
-  db.vocabulary.hasMany(db.searchHistory, { foreignKey: "vocab_id", onDelete: 'CASCADE' });
+  db.vocabulary.hasMany(db.searchHistory, {
+    foreignKey: "vocab_id",
+    onDelete: "CASCADE",
+  });
   db.searchHistory.belongsTo(db.vocabulary, { foreignKey: "vocab_id" });
 
   db.listFlashcard.hasMany(db.flashcard, {
     foreignKey: "list_id",
     as: "Flashcard",
-    onDelete: 'CASCADE'
+    onDelete: "CASCADE",
   });
   db.flashcard.belongsTo(db.listFlashcard, {
     foreignKey: "list_id",
   });
   db.user.hasMany(db.listFlashcard, {
     foreignKey: "user_id",
-    onDelete: 'CASCADE'
+    onDelete: "CASCADE",
   });
   db.listFlashcard.belongsTo(db.user, {
     foreignKey: "user_id",
   });
-  db.listFlashcard.hasMany(db.flashcardStudy, { foreignKey: "list_id", onDelete: 'CASCADE' });
+  db.listFlashcard.hasMany(db.flashcardStudy, {
+    foreignKey: "list_id",
+    onDelete: "CASCADE",
+  });
   db.flashcardStudy.belongsTo(db.listFlashcard, { foreignKey: "list_id" });
 
-  db.user.hasMany(db.flashcardStudy, { foreignKey: "user_id", onDelete: 'CASCADE' });
+  db.user.hasMany(db.flashcardStudy, {
+    foreignKey: "user_id",
+    onDelete: "CASCADE",
+  });
   db.flashcardStudy.belongsTo(db.user, { foreignKey: "user_id" });
   db.vocabulary.belongsTo(db.vocabularyTopic, {
     foreignKey: "topic_id",
@@ -191,27 +253,70 @@ const initializeModels = async () => {
   });
   db.vocabularyTopic.hasMany(db.vocabulary, {
     foreignKey: "topic_id",
-    onDelete: 'CASCADE'
+    onDelete: "CASCADE",
   });
-  db.listFlashcard.hasMany(db.listFlashCardClass, { foreignKey: "list_id", onDelete: 'CASCADE' });
+  db.listFlashcard.hasMany(db.listFlashCardClass, {
+    foreignKey: "list_id",
+    onDelete: "CASCADE",
+  });
   db.listFlashCardClass.belongsTo(db.listFlashcard, { foreignKey: "list_id" });
-  db.class.hasMany(db.listFlashCardClass, { foreignKey: "class_id", onDelete: 'CASCADE' });
+  db.class.hasMany(db.listFlashCardClass, {
+    foreignKey: "class_id",
+    onDelete: "CASCADE",
+  });
   db.listFlashCardClass.belongsTo(db.class, { foreignKey: "class_id" });
-  db.user.hasMany(db.vocabularyTopicUser, { foreignKey: "user_id", onDelete: 'CASCADE' });
+  db.user.hasMany(db.vocabularyTopicUser, {
+    foreignKey: "user_id",
+    onDelete: "CASCADE",
+  });
   db.vocabularyTopicUser.belongsTo(db.user, { foreignKey: "user_id" });
-  db.vocabularyTopic.hasMany(db.vocabularyTopicUser, { foreignKey: "topic_id", onDelete: 'CASCADE' });
-  db.vocabularyTopicUser.belongsTo(db.vocabularyTopic, { foreignKey: "topic_id" });
-  db.user.hasMany(db.vocabularyUser, { foreignKey: "user_id", onDelete: 'CASCADE' });
+  db.vocabularyTopic.hasMany(db.vocabularyTopicUser, {
+    foreignKey: "topic_id",
+    onDelete: "CASCADE",
+  });
+  db.vocabularyTopicUser.belongsTo(db.vocabularyTopic, {
+    foreignKey: "topic_id",
+  });
+  db.user.hasMany(db.vocabularyUser, {
+    foreignKey: "user_id",
+    onDelete: "CASCADE",
+  });
   db.vocabularyUser.belongsTo(db.user, { foreignKey: "user_id" });
-  db.vocabulary.hasMany(db.vocabularyUser, { foreignKey: "vocabulary_id", onDelete: 'CASCADE' });
+  db.vocabulary.hasMany(db.vocabularyUser, {
+    foreignKey: "vocabulary_id",
+    onDelete: "CASCADE",
+  });
   db.vocabularyUser.belongsTo(db.vocabulary, { foreignKey: "vocabulary_id" });
-  db.user.hasMany(db.userAchievement, { foreignKey: "user_id", onDelete: 'CASCADE' });
+  db.user.hasMany(db.userAchievement, {
+    foreignKey: "user_id",
+    onDelete: "CASCADE",
+  });
   db.userAchievement.belongsTo(db.user, { foreignKey: "user_id" });
-  db.achievement.hasMany(db.userAchievement, { foreignKey: "achievement_id", onDelete: 'CASCADE' });
-  db.userAchievement.belongsTo(db.achievement, { foreignKey: "achievement_id" });
+  db.achievement.hasMany(db.userAchievement, {
+    foreignKey: "achievement_id",
+    onDelete: "CASCADE",
+  });
+  db.userAchievement.belongsTo(db.achievement, {
+    foreignKey: "achievement_id",
+  });
+  db.user.hasOne(db.battleStats, {
+    foreignKey: "user_id",
+    onDelete: "CASCADE",
+  });
+  db.battleStats.belongsTo(db.user, { foreignKey: "user_id" });
+  db.user.hasMany(db.battleHistory, {
+    foreignKey: "user_id",
+    onDelete: "CASCADE",
+  });
+  db.battleHistory.belongsTo(db.user, { foreignKey: "user_id" });
+  db.battleHistory.belongsTo(db.user, { foreignKey: "opponent_id" });
+  db.user.hasMany(db.battleHistory, {
+    foreignKey: "opponent_id",
+    onDelete: "CASCADE",
+  });
   // Đồng bộ database
   db.sequelize
-    .sync({ force: false})
+    .sync({ force: false })
     .then(() => {
       console.log("Database synced successfully");
     })
