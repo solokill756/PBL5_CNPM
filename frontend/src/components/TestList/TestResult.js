@@ -75,6 +75,11 @@ const Result = () => {
               Chúc mừng bạn đã vượt qua bài kiểm tra!
             </div>
           )}
+          {!passed && (
+            <div className="mt-6 text-red-600 font-semibold text-lg text-center">
+              Rất tiếc, bạn chưa vượt qua bài kiểm tra. Hãy thử lại!
+            </div>
+          )}
         </div>
       </div>
     </div>

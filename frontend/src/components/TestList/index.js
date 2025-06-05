@@ -15,6 +15,50 @@ const shuffleArray = (array) => {
   return shuffled;
 };
 
+const LoadingSkeleton = () => {
+  return (
+    <div className="fixed inset-0 bg-white z-50 flex items-center justify-center">
+      <div className="max-w-4xl w-full mx-4">
+        {/* Header skeleton */}
+        <div className="text-center mb-8">
+          <div className="h-8 bg-gray-200 rounded-lg w-64 mx-auto mb-4 animate-pulse"></div>
+          <div className="h-4 bg-gray-200 rounded w-48 mx-auto animate-pulse"></div>
+        </div>
+
+        {/* Score circle skeleton */}
+        <div className="flex justify-center mb-8">
+          <div className="w-48 h-48 bg-gray-200 rounded-full animate-pulse flex items-center justify-center">
+            <div className="w-32 h-32 bg-gray-300 rounded-full animate-pulse"></div>
+          </div>
+        </div>
+
+        {/* Stats skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-gray-50 p-6 rounded-xl">
+              <div className="h-6 bg-gray-200 rounded w-24 mx-auto mb-2 animate-pulse"></div>
+              <div className="h-8 bg-gray-200 rounded w-16 mx-auto animate-pulse"></div>
+            </div>
+          ))}
+        </div>
+
+        {/* Buttons skeleton */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="h-12 bg-gray-200 rounded-full w-48 animate-pulse"></div>
+          <div className="h-12 bg-gray-200 rounded-full w-48 animate-pulse"></div>
+        </div>
+
+        {/* Loading text */}
+        <div className="text-center mt-8">
+          <div className="flex items-center justify-center space-x-2">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const QuestionNavigator = ({
   questions,
   currentQuestionIndex,
@@ -52,6 +96,7 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
   const [currentAnswer, setCurrentAnswer] = useState({});
   const [isOpen, setOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Thêm state cho loading
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [shuffledQuestions, setShuffledQuestions] = useState([]);
   const questionRefs = useRef([]);
@@ -67,9 +112,8 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
       setShuffledQuestions(shuffled);
       setCurrentAnswer({});
     }
-  }, [questions.length]); // Chỉ phụ thuộc vào questions.length
+  }, [questions.length]); 
 
-  // Handle retry wrong questions
   useEffect(() => {
     if (location.state?.retryWrongOnly && wrongQuestions.length > 0) {
       setOpen(false);
@@ -77,7 +121,6 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
     }
   }, [location.state?.retryWrongOnly, wrongQuestions, setQuestions]);
 
-  // Auto submit when time is up
   useEffect(() => {
     if (isTimeUp && !submitted) {
       handleSubmit();
@@ -87,7 +130,7 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
   const isAllAnswered = shuffledQuestions.length === Object.keys(currentAnswer).length;
 
   const handleAnswer = (qIndex, selectedOption) => {
-    if (isTimeUp) return;
+    if (isTimeUp || isSubmitting) return; 
 
     setCurrentAnswer((prev) => {
       const updated = { ...prev, [qIndex]: selectedOption };
@@ -106,6 +149,8 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
   };
 
   const navigateToQuestion = (index) => {
+    if (isSubmitting) return;
+    
     questionRefs.current[index]?.scrollIntoView({
       behavior: "smooth",
       block: "center",
@@ -114,64 +159,71 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
   };
 
   const handleSubmit = async () => {
-    if (submitted) return; 
+    if (submitted || isSubmitting) return; 
     
     setSubmitted(true);
+    setIsSubmitting(true); 
     
-    const { answers } = useTestStore.getState();
+    try {
+      const { answers } = useTestStore.getState();
 
-    let correctCount = 0;
-    const answerDetails = shuffledQuestions.map((q, index) => {
-      const selected = answers[index];
-      const isCorrect = selected === q.answer;
+      let correctCount = 0;
+      const answerDetails = shuffledQuestions.map((q, index) => {
+        const selected = answers[index];
+        const isCorrect = selected === q.answer;
 
-      if (isCorrect) correctCount++;
+        if (isCorrect) correctCount++;
 
-      return {
-        questionId: q.id,
-        selected,
-        correct: q.answer,
-        isCorrect,
-      };
-    });
-
-    const wrongQs = answerDetails
-      .filter((a) => !a.isCorrect)
-      .map((wrong) => {
-        return shuffledQuestions.find((q) => q.id === wrong.questionId);
+        return {
+          questionId: q.id,
+          selected,
+          correct: q.answer,
+          isCorrect,
+        };
       });
 
-    setWrongQuestions(wrongQs);
+      const wrongQs = answerDetails
+        .filter((a) => !a.isCorrect)
+        .map((wrong) => {
+          return shuffledQuestions.find((q) => q.id === wrong.questionId);
+        });
 
-    const total = shuffledQuestions.length;
-    const score = (correctCount / total) * 100;
+      setWrongQuestions(wrongQs);
 
-    const result = {
-      score: Math.round(score),
-    };
+      const total = shuffledQuestions.length;
+      const score = (correctCount / total) * 100;
 
-    setResult(result);
+      const result = {
+        score: Math.round(score),
+      };
 
-    try {
-    const res = await postTestResult(axiosPrivate, correctCount, total);
-    console.log("Kết quả bài test:", res.result); 
-  } catch (err) {
-    console.error("Gửi kết quả thất bại", err);
-  }
+      setResult(result);
 
-    const topicIdToUse = topicId || currentTopic?.topic_id || currentTopic?.topic_Id;
-    
-    if (topicIdToUse) {
-      navigate(`/vocabulary/topic/${topicIdToUse}/TestResult`);
-    } else {
-      console.error("Không tìm thấy topicId");
-      console.error("Available data:", { topicId, currentTopic });
-      navigate('/vocabulary');
+      const res = await postTestResult(axiosPrivate, correctCount, total, topicId);
+      console.log("Kết quả bài test:", res.result); 
+
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const topicIdToUse = topicId || currentTopic?.topic_id || currentTopic?.topic_Id;
+      
+      if (topicIdToUse) {
+        navigate(`/vocabulary/topic/${topicIdToUse}/TestResult`);
+      } else {
+        console.error("Không tìm thấy topicId");
+        console.error("Available data:", { topicId, currentTopic });
+        navigate('/vocabulary');
+      }
+    } catch (err) {
+      console.error("Gửi kết quả thất bại", err);
+      setIsSubmitting(false); 
+      setSubmitted(false); 
+
+      alert("Có lỗi xảy ra khi gửi kết quả. Vui lòng thử lại!");
     }
   };
 
   const handleCheckBeforeSubmit = () => {
-    if (isTimeUp) return;
+    if (isTimeUp || isSubmitting) return;
 
     const unansweredIndex = shuffledQuestions.findIndex(
       (_, index) => !currentAnswer[index]
@@ -188,7 +240,15 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
     }
   };
 
-  const onClose = () => setOpen(false);
+  const onClose = () => {
+    if (isSubmitting) return; // Prevent closing modal during submission
+    setOpen(false);
+  };
+
+  // Hiển thị loading skeleton khi đang submit
+  if (isSubmitting) {
+    return <LoadingSkeleton />;
+  }
 
   // Chờ questions được load từ component cha
   if (!questionsReady || shuffledQuestions.length === 0) {
@@ -204,8 +264,6 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
-
-
       <div className="hidden lg:block fixed left-8 top-32 w-64 z-30">
         <QuestionNavigator
           questions={shuffledQuestions}
@@ -231,7 +289,7 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
               key={`${q.id}-${index}`}
               ref={(el) => (questionRefs.current[index] = el)}
               className={`bg-white p-10 rounded-2xl shadow-xl shadow-neutral-300 w-full max-w-4xl mx-auto space-y-6 relative ${
-                isTimeUp ? 'opacity-75 pointer-events-none' : ''
+                isTimeUp || isSubmitting ? 'opacity-75 pointer-events-none' : ''
               }`}
             >
               <div className="absolute top-4 right-6 text-sm text-gray-400 font-semibold">
@@ -258,9 +316,9 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
                     <button
                       key={opt}
                       onClick={() => handleAnswer(index, opt)}
-                      disabled={isTimeUp}
+                      disabled={isTimeUp || isSubmitting}
                       className={`border px-6 py-5 text-lg rounded-xl text-left transition-all duration-200 ${
-                        isTimeUp ? 'cursor-not-allowed opacity-50' : ''
+                        isTimeUp || isSubmitting ? 'cursor-not-allowed opacity-50' : ''
                       } ${
                         currentAnswer[index] === opt
                           ? "bg-blue-100 border-blue-500 text-blue-800 font-semibold"
@@ -292,21 +350,30 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
             </h2>
             <button
               onClick={handleCheckBeforeSubmit}
-              disabled={!isAllAnswered || isTimeUp}
+              disabled={!isAllAnswered || isTimeUp || isSubmitting}
               className={`${
-                !isAllAnswered || isTimeUp
+                !isAllAnswered || isTimeUp || isSubmitting
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-red-700 hover:bg-red-800"
-              } text-white font-semibold text-xl px-10 py-4 rounded-full transition-all duration-300`}
+              } text-white font-semibold text-xl px-10 py-4 rounded-full transition-all duration-300 flex items-center justify-center mx-auto min-w-[200px]`}
             >
-              {isTimeUp ? "Đang tự động nộp bài..." : "Gửi bài kiểm tra"}
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                  Đang xử lý...
+                </>
+              ) : isTimeUp ? (
+                "Đang tự động nộp bài..."
+              ) : (
+                "Gửi bài kiểm tra"
+              )}
             </button>
           </div>
         )}
       </div>
 
       {/* Modal cảnh báo câu hỏi chưa trả lời */}
-      {isOpen && (
+      {isOpen && !isSubmitting && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md mx-4">
             <div className="text-center">
