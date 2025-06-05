@@ -181,7 +181,7 @@ const saveResultQuiz = async (
       result: result,
       completed_at: new Date(),
     });
-    const topic = await db.topicVocabulary.findOne({
+    const topic = await db.vocabularyTopic.findOne({
       where: {
         topic_id: topic_id,
       },
