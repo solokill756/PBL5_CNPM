@@ -13,7 +13,10 @@ import flashCardRoutes from "./routes/flashCardRoute.js";
 import quizRoutes from "./routes/quizRoute.js";
 import vocabularyRoutes from "./routes/vocabularyRoute.js";
 import learnRoutes from "./routes/learnRoutes.js";
-import achivermentRoutes from "./routes/achivermentRote.js";  
+import achivermentRoutes from "./routes/achivermentRote.js";
+import http from "http";
+import { Server } from "socket.io";
+import battleHandler from "./socketIO/battleHandler.js";
 dotenv.config();
 
 const app: Application = express();
@@ -23,7 +26,7 @@ const corOptions: cors.CorsOptions = {
   origin: "http://localhost:3000", // Chỉ định frontend được phép truy cập
   credentials: true, // Cho phép gửi cookie/token qua request
 };
-
+const server = http.createServer(app);
 // Cấu hình session
 app.use(
   session({
@@ -33,6 +36,18 @@ app.use(
     cookie: { secure: false }, // Đặt thành `true` nếu dùng HTTPS
   })
 );
+
+// Cấu hình cho Socket IO
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Cho phép tất cả các nguồn truy cập
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
+
+const gameRooms = new Map();
+const waitingPlayers: any[] = [];
 
 // Khởi tạo Passport
 app.use(passport.initialize());
@@ -51,12 +66,14 @@ app.use("/api/auth", authRoutes);
 app.use("/api/homePage", homePageRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/flashcard", flashCardRoutes);
-app.use("/api/quiz", quizRoutes); 
+app.use("/api/quiz", quizRoutes);
 app.use("/api/vocabulary", vocabularyRoutes);
 app.use("/api/learn", learnRoutes);
 app.use("/api/achievement", achivermentRoutes);
 
+// import Socket IO logic
+battleHandler(io, gameRooms, waitingPlayers);
 
-app.listen(port, hostname, () => {
+server.listen(port, hostname, () => {
   console.log(`Example app listening on port ${hostname}/${port}`);
 });
