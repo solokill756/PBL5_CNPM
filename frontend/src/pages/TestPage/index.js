@@ -1,48 +1,52 @@
 import React, { useState, useEffect } from "react";
 import ModeHeader from "@/components/ModeHeader";
-import { useNavigate, useParams } from "react-router-dom";
-import useAxiosPrivate from "@/hooks/useAxiosPrivate";
+import { useNavigate } from "react-router-dom";
 import TestPage from "@/components/TestList";
 import { useTestStore } from "@/store/useTestStore";
 import useTopicStore from "@/store/useTopicStore";
+import { useParams } from "react-router-dom";
+import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 
 function Test() {
-  const { flashcardId } = useParams();
+  const { topicId } = useParams(); 
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const axios = useAxiosPrivate()
+  const { questions, fetchQuestions, loading, error } = useTestStore();
+  const { currentTopic, fetchTopicById } = useTopicStore();
   const [timeLeft, setTimeLeft] = useState(0);
   const [isTimeUp, setIsTimeUp] = useState(false);
   const [testStarted, setTestStarted] = useState(false);
-  const axios = useAxiosPrivate();
-
-  const { questions, fetchQuestions } = useTestStore();
-  const { currentTopic } = useTopicStore();
+  const [dataInitialized, setDataInitialized] = useState(false);
 
   useEffect(() => {
-    const loadQuestions = async () => {
+    const initializeTest = async () => {
+      if (dataInitialized) return;
+      
       try {
-        setLoading(true);
-        await fetchQuestions(axios, flashcardId);
-      } catch (err) {
-        setError(err.message || "Có lỗi xảy ra khi tải câu hỏi");
-      } finally {
-        setLoading(false);
+
+        const currentTopicId = currentTopic?.topic_id || currentTopic?.topic_Id;
+        await fetchQuestions(axios,topicId);
+        setDataInitialized(true);
+  
+        
+      } catch (error) {
+        console.error("Error initializing test:", error);
+        setDataInitialized(true); 
       }
     };
 
-    if (flashcardId) {
-      loadQuestions();
+    if (topicId && !dataInitialized) {
+      initializeTest();
     }
-  }, [flashcardId, axios, fetchQuestions]);
+  }, [topicId]);
 
-  // Khởi tạo timer sau khi tải xong câu hỏi
   useEffect(() => {
     if (!testStarted && questions.length > 0) {
-      const totalTime = questions.length * 25;
+      const totalTime = questions.length * 25; 
       setTimeLeft(totalTime);
       setTestStarted(true);
       setIsTimeUp(false);
+      console.log("Bắt đầu test với thời gian:", totalTime, "giây");
     }
   }, [questions.length, testStarted]);
 
@@ -74,11 +78,18 @@ function Test() {
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  if (loading) {
+  // Hiển thị loading khi đang fetch
+  if (loading || !dataInitialized) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="text-xl font-semibold">Đang tải câu hỏi...</div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <div className="text-xl font-semibold text-gray-600 mb-2">
+            Đang tải dữ liệu...
+          </div>
+          <p className="text-gray-500">
+            Vui lòng đợi trong giây lát
+          </p>
         </div>
       </div>
     );
@@ -88,13 +99,51 @@ function Test() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="text-red-600 text-xl font-semibold">Có lỗi xảy ra</div>
-          <div className="text-gray-600 mt-2">{error}</div>
+          <div className="text-red-600 text-xl mb-4">❌</div>
+          <div className="text-red-600 mb-4">{error}</div>
           <button 
-            onClick={() => navigate(-1)}
-            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            onClick={() => {
+              const topicIdToUse = topicId || currentTopic?.topic_id || currentTopic?.topic_Id;
+              if (topicIdToUse) {
+                navigate(`/vocabulary/topic/${topicIdToUse}`);
+              } else {
+                navigate('/vocabulary');
+              }
+            }}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
           >
-            Quay lại
+            Quay lại chủ đề
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (questions.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">📚</div>
+          <div className="text-xl font-semibold text-gray-600 mb-4">
+            Không có câu hỏi để kiểm tra
+          </div>
+          <p className="text-gray-500 mb-6">
+            Chủ đề "{currentTopic?.topic_name || currentTopic?.name || 'này'}" chưa có câu hỏi nào.
+            <br />
+            Vui lòng tạo câu hỏi trước khi vào trang kiểm tra.
+          </p>
+          <button 
+            onClick={() => {
+              const topicIdToUse = topicId || currentTopic?.topic_id || currentTopic?.topic_Id;
+              if (topicIdToUse) {
+                navigate(`/vocabulary/topic/${topicIdToUse}`);
+              } else {
+                navigate('/vocabulary');
+              }
+            }}
+            className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            Quay lại chủ đề
           </button>
         </div>
       </div>
@@ -105,12 +154,11 @@ function Test() {
     <div className="min-h-screen flex flex-col">
       <div className="fixed top-0 left-0 right-0 w-full z-50 bg-white shadow-md">
         <ModeHeader
-          flashcardId={flashcardId}
-          flashcardTitle={currentTopic?.topic_name || "Bài kiểm tra"}
+          flashcardTitle={currentTopic?.topic_name || currentTopic?.name || "Bài kiểm tra"}
           onClose={() => {
-            const topicId = currentTopic?.topic_id;
-            if (topicId) {
-              navigate(`/vocabulary/topic/${topicId}`);
+            const topicIdToUse = topicId || currentTopic?.topic_id || currentTopic?.topic_Id;
+            if (topicIdToUse) {
+              navigate(`/vocabulary/topic/${topicIdToUse}`);
             } else {
               navigate('/vocabulary');
             }
@@ -165,7 +213,7 @@ function Test() {
               </p>
               <button
                 onClick={() => setIsTimeUp(false)}
-                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-semibold"
+                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
               >
                 Đã hiểu
               </button>
@@ -176,7 +224,12 @@ function Test() {
 
       <div className="flex-1 pt-16 mt-4">      
         <div className="w-full">
-          <TestPage timeLeft={timeLeft} isTimeUp={isTimeUp} />
+          <TestPage 
+            timeLeft={timeLeft} 
+            isTimeUp={isTimeUp}
+            questionsReady={questions.length > 0}
+            topicId={topicId}
+          />
         </div>
       </div>
     </div>

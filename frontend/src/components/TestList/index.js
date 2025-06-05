@@ -1,9 +1,10 @@
 import React, { useRef, useState, useEffect } from "react";
-import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { useTestStore } from "@/store/useTestStore";
 import useTopicStore from "@/store/useTopicStore";
+import { postTestResult } from "@/api/postTestResult";
+import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 
 const shuffleArray = (array) => {
   const shuffled = [...array];
@@ -45,39 +46,38 @@ const QuestionNavigator = ({
   );
 };
 
-const TestPage = ({ timeLeft, isTimeUp }) => {
-  const { questions, fetchQuestions, loading, error } = useTestStore();
+const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
+  const { questions, wrongQuestions, setAnswers, setResult, setWrongQuestions, setQuestions } = useTestStore();
+  const { currentTopic } = useTopicStore();
   const [currentAnswer, setCurrentAnswer] = useState({});
   const [isOpen, setOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [shuffledQuestions, setShuffledQuestions] = useState([]);
   const questionRefs = useRef([]);
-  const axiosPrivate = useAxiosPrivate();
-  const { setAnswers } = useTestStore();
   const navigate = useNavigate();
-  const { wrongQuestions } = useTestStore();
   const location = useLocation();
-  const { setQuestions } = useTestStore();
-  
-  const { currentTopic } = useTopicStore();
+  const axiosPrivate = useAxiosPrivate();
 
+  // Shuffle questions chỉ khi có data và chưa shuffle
   useEffect(() => {
-    if (questions.length > 0) {
+    if (questions.length > 0 && shuffledQuestions.length === 0) {
+      console.log("Shuffling questions:", questions.length);
       const shuffled = shuffleArray(questions);
       setShuffledQuestions(shuffled);
       setCurrentAnswer({});
     }
-  }, [questions]);
+  }, [questions.length]); // Chỉ phụ thuộc vào questions.length
 
-    useEffect(() => {
+  // Handle retry wrong questions
+  useEffect(() => {
     if (location.state?.retryWrongOnly && wrongQuestions.length > 0) {
-        setOpen(false);
-        setQuestions(wrongQuestions);
+      setOpen(false);
+      setQuestions(wrongQuestions);
     }
-    }, [location.state?.retryWrongOnly, wrongQuestions]);
+  }, [location.state?.retryWrongOnly, wrongQuestions, setQuestions]);
 
-
+  // Auto submit when time is up
   useEffect(() => {
     if (isTimeUp && !submitted) {
       handleSubmit();
@@ -118,8 +118,7 @@ const TestPage = ({ timeLeft, isTimeUp }) => {
     
     setSubmitted(true);
     
-    const { answers, setResult } = useTestStore.getState();
-    const { setWrongQuestions } = useTestStore.getState();
+    const { answers } = useTestStore.getState();
 
     let correctCount = 0;
     const answerDetails = shuffledQuestions.map((q, index) => {
@@ -153,23 +152,20 @@ const TestPage = ({ timeLeft, isTimeUp }) => {
 
     setResult(result);
 
-    // try {
-    //   await axiosPrivate.post(
-    //     "http://localhost:9000/api/quiz/saveResultQuiz",
-    //     result
-    //   );
-    //   console.log("Gửi kết quả thành công:", result);
-    // } catch (err) {
-    //   console.error("Gửi kết quả thất bại:", err);
-    // }
+    try {
+    const res = await postTestResult(axiosPrivate, correctCount, total);
+    console.log("Kết quả bài test:", res.result); 
+  } catch (err) {
+    console.error("Gửi kết quả thất bại", err);
+  }
 
-    // Lấy topicId từ currentTopic
-    const topicId = currentTopic?.topic_id;
+    const topicIdToUse = topicId || currentTopic?.topic_id || currentTopic?.topic_Id;
     
-    if (topicId) {
-      navigate(`/vocabulary/topic/${topicId}/TestResult`);
+    if (topicIdToUse) {
+      navigate(`/vocabulary/topic/${topicIdToUse}/TestResult`);
     } else {
-      console.error("Không tìm thấy topicId từ currentTopic");
+      console.error("Không tìm thấy topicId");
+      console.error("Available data:", { topicId, currentTopic });
       navigate('/vocabulary');
     }
   };
@@ -194,12 +190,22 @@ const TestPage = ({ timeLeft, isTimeUp }) => {
 
   const onClose = () => setOpen(false);
 
-  if (loading) return <div className="text-center">Đang tải câu hỏi...</div>;
-  if (error) return <div className="text-center text-red-600">{error}</div>;
-  if (shuffledQuestions.length === 0) return null;
+  // Chờ questions được load từ component cha
+  if (!questionsReady || shuffledQuestions.length === 0) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Đang chuẩn bị câu hỏi...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
+
+
       <div className="hidden lg:block fixed left-8 top-32 w-64 z-30">
         <QuestionNavigator
           questions={shuffledQuestions}
@@ -224,19 +230,20 @@ const TestPage = ({ timeLeft, isTimeUp }) => {
             <div
               key={`${q.id}-${index}`}
               ref={(el) => (questionRefs.current[index] = el)}
-              className={`bg-white p-10 rounded-2xl shadow-xl shadow-neutral-300 w-full max-w-4xl mx-auto space-y-6 ${
+              className={`bg-white p-10 rounded-2xl shadow-xl shadow-neutral-300 w-full max-w-4xl mx-auto space-y-6 relative ${
                 isTimeUp ? 'opacity-75 pointer-events-none' : ''
               }`}
             >
               <div className="absolute top-4 right-6 text-sm text-gray-400 font-semibold">
                 Câu {index + 1}/{shuffledQuestions.length}
               </div>
+              
               {/* Câu hỏi */}
               <div className="">
                 <p className="text-base text-gray-500 font-medium mb-1">
                   Định nghĩa:
                 </p>
-                <p className="text-2xl font-bold text-gray-800 ">
+                <p className="text-2xl font-bold text-gray-800">
                   {q.definition}
                 </p>
               </div>
@@ -247,7 +254,7 @@ const TestPage = ({ timeLeft, isTimeUp }) => {
                   Chọn thuật ngữ đúng:
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                  {q.options.map((opt) => (
+                  {q.options && q.options.map((opt) => (
                     <button
                       key={opt}
                       onClick={() => handleAnswer(index, opt)}
@@ -257,7 +264,7 @@ const TestPage = ({ timeLeft, isTimeUp }) => {
                       } ${
                         currentAnswer[index] === opt
                           ? "bg-blue-100 border-blue-500 text-blue-800 font-semibold"
-                          : "hover:bg-gray-50"
+                          : "hover:bg-gray-50 border-gray-200"
                       }`}
                     >
                       {opt}
@@ -297,6 +304,37 @@ const TestPage = ({ timeLeft, isTimeUp }) => {
           </div>
         )}
       </div>
+
+      {/* Modal cảnh báo câu hỏi chưa trả lời */}
+      {isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md mx-4">
+            <div className="text-center">
+              <div className="text-4xl mb-4">⚠️</div>
+              <h2 className="text-xl font-bold text-gray-800 mb-4">
+                Còn câu hỏi chưa trả lời
+              </h2>
+              <p className="text-gray-600 mb-6">
+                Bạn có chưa trả lời một số câu hỏi. Bạn có muốn tiếp tục nộp bài không?
+              </p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={onClose}
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
+                >
+                  Nộp bài
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

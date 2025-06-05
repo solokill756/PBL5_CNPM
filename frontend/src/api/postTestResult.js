@@ -1,9 +1,10 @@
-export const postTest = async (axiosPrivate,topic_id) => {
+export const postTestResult = async (axiosPrivate,correctCount, total) => {
     try {
         const response = await axiosPrivate.post(
-            "/api/quiz//generateQuiz", 
+            "/api/quiz/saveResultQuiz", 
             {
-                topic_id: topic_id
+                score: correctCount,
+                number_of_questions: total,
             }
         );
         

@@ -22,9 +22,10 @@ const Result = () => {
   const score = result.score;
   const correct = Math.round((score / 100) * total);
   const wrong = total - correct;
+  const passed = correct > total / 2;
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-16">
+    <div className="max-w-4xl mx-auto px-6 py-16 mt-4">
       <h1 className="text-3xl font-bold text-center text-gray-800 mb-8">
         {score === 100 ? "Tuyệt vời! Bạn đã hoàn thành hoàn hảo!" : "Kết quả bài kiểm tra"}
       </h1>
@@ -38,7 +39,7 @@ const Result = () => {
                 cx="60"
                 cy="60"
                 r="54"
-                stroke="#EF4444"  
+                stroke="#EF4444"
                 strokeWidth="12"
                 fill="none"
               />
@@ -46,7 +47,7 @@ const Result = () => {
                 cx="60"
                 cy="60"
                 r="54"
-                stroke="#10B981" 
+                stroke="#10B981"
                 strokeWidth="12"
                 fill="none"
                 strokeDasharray={2 * Math.PI * 54}
@@ -61,9 +62,19 @@ const Result = () => {
           </div>
 
           <div className="mt-6 text-center">
-            <p className="text-green-600 font-semibold text-lg">Đúng: {correct}/{total}</p>
-            <p className="text-red-600 font-semibold text-lg">Sai: {wrong}/{total}</p>
+            <p className="text-green-600 font-semibold text-lg">
+              Đúng: {correct}/{total}
+            </p>
+            <p className="text-red-600 font-semibold text-lg">
+              Sai: {wrong}/{total}
+            </p>
           </div>
+
+          {passed && (
+            <div className="mt-6 text-blue-600 font-semibold text-lg text-center">
+              Chúc mừng bạn đã vượt qua bài kiểm tra!
+            </div>
+          )}
         </div>
       </div>
     </div>
