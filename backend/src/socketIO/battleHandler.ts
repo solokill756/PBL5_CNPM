@@ -30,7 +30,7 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
   io.on("connection", (socket: any) => {
     console.log(`🔌 User ${socket.username} connected (ID: ${socket.id})`);
     // Tham gia hàng đợi tìm trận
-    socket.on("join_queue", async (data: any) => {
+    socket.on("join_queue", async (_data: any) => {
       const player = {
         id: socket.id,
         user_id: socket.user_id,
@@ -128,7 +128,7 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
 
       gameRoom.status = "playing";
       gameRoom.questionStartTime = Date.now();
-
+      gameRoom.currentQuestion = 1;
       // Gửi câu hỏi đầu tiên
       io.to(data.roomId).emit("game_started", {
         question: gameRoom.questions[0],
@@ -140,6 +140,12 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
       // setTimeout(() => {
       //   handleQuestionTimeout(data.roomId);
       // }, 10000);
+    });
+    socket.on("time_end", (data: any) => {
+      const gameRoom = gameRooms.get(data.roomId);
+      if (!gameRoom || gameRoom.status !== "playing") return;
+      console.log(`⏰ Time ended for question in room ${data.roomId}`);
+      handleQuestionTimeout(data.roomId);
     });
     socket.on("submit_answer", (data: any) => {
       const gameRoom = gameRooms.get(data.roomId);
@@ -162,7 +168,8 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
       }
 
       gameRoom.scores[socket.user_id] += points;
-      gameRoom.answers[socket.user_id] = {
+      gameRoom.answers[socket.id] = {
+        username: socket.username,
         answer: data.answer,
         isCorrect,
         points,
@@ -237,9 +244,9 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
           });
 
           // Timer cho câu hỏi mới
-          setTimeout(() => {
-            handleQuestionTimeout(roomId);
-          }, 10000);
+          // setTimeout(() => {
+          //   handleQuestionTimeout(roomId);
+          // }, 10000);
         }, 3000);
       } else {
         // Kết thúc game
@@ -303,15 +310,15 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
         for (const player of players) {
           const isWinner = winner && winner.user_id === player.user_id;
           const points = finalScores[player.user_id];
-          const opponentId = players.find(
-            (p: any) => p.user_id !== player.user_id
-          )?.user_id;
+          // const opponentId = players.find(
+          //   (p: any) => p.user_id !== player.user_id
+          // )?.user_id;
 
           await gameService.updatePlayScore(
             player.user_id,
             points,
             isWinner,
-            opponentId
+            // opponentId
           );
         }
       } catch (error) {
@@ -357,8 +364,8 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
               .updatePlayScore(
                 opponent.user_id,
                 gameRoom.scores[opponent.user_id] + 100, // Bonus thắng
-                true,
-                playerInRoom.user_id
+                true
+                // playerInRoom.user_id
               )
               .catch(console.error);
           }

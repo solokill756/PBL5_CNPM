@@ -38,11 +38,15 @@ const registerService = async (
       return checkEmail;
     }
     const newUser = await db.user.create(
-      { ...user, tokenVersion: 0 , level: 1 , points: 0, levelThreshold: 500},
+      { ...user, tokenVersion: 0, level: 0, points: 0, levelThreshold: 500 },
       { transaction }
     );
     await db.authentication.create(
-      { user_id: newUser.user_id, verified: verified, email_send: newUser.email },
+      {
+        user_id: newUser.user_id,
+        verified: verified,
+        email_send: newUser.email,
+      },
       { transaction }
     );
     await transaction.commit();
