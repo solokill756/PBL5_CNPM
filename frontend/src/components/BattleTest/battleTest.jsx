@@ -225,11 +225,27 @@ const BattleTest = () => {
           <h3 className="font-bold text-lg">
             Câu hỏi {questionNumber}/{totalQuestions}
           </h3>
-          {scores && (
+          {scores ? (
             <div className="text-sm">
-              {Object.entries(scores).map(([userId, score]) => (
-                <span key={userId} className="ml-2">
-                  User {userId}: {score} điểm
+              {Object.entries(scores).map(([userId, score]) => {
+                // Tìm username từ gameData nếu có
+                const player = gameData?.players?.find(
+                  (player) => player.userId === userId
+                );
+                const username = player?.username || `User ${userId}`;
+
+                return (
+                  <span key={userId} className="ml-2 font-medium">
+                    {username}: {score} điểm
+                  </span>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-sm">
+              {gameData?.players?.map((player) => (
+                <span key={player.userId} className="ml-2 font-medium">
+                  {player.username}: 0 điểm
                 </span>
               ))}
             </div>
@@ -274,7 +290,7 @@ const BattleTest = () => {
         <div className="space-y-2">
           {Object.entries(questionResults.answers).map(([userId, answer]) => (
             <div key={userId} className="flex justify-between">
-              <span>User {userId}:</span>
+              <span>{answer.username} :</span>
               <span
                 className={answer.isCorrect ? "text-green-600" : "text-red-600"}
               >

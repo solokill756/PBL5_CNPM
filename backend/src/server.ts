@@ -20,7 +20,7 @@ import battleHandler from "./socketIO/battleHandler.js";
 dotenv.config();
 
 const app: Application = express();
-const port: number = parseInt(process.env.PORT as string, 10) || 8888;
+const port: number = parseInt(process.env.PORT as string, 10) || 80;
 const hostname: string = process.env.HOST_NAME as string;
 const corOptions: cors.CorsOptions = {
   origin: "http://localhost:3000", // Chỉ định frontend được phép truy cập
@@ -74,6 +74,6 @@ app.use("/api/achievement", achivermentRoutes);
 // import Socket IO logic
 battleHandler(io, gameRooms, waitingPlayers);
 
-server.listen(port, hostname, () => {
+server.listen(port, "0.0.0.0", () => {
   console.log(`Example app listening on port ${hostname}/${port}`);
 });
