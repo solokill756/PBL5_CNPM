@@ -17,6 +17,8 @@ import achivermentRoutes from "./routes/achivermentRote.js";
 import http from "http";
 import { Server } from "socket.io";
 import battleHandler from "./socketIO/battleHandler.js";
+import classRoute from "./routes/classRoute.js";
+import listFlashCardRoute from "./routes/listFlashCardRoute.js";
 dotenv.config();
 
 const app: Application = express();
@@ -70,6 +72,8 @@ app.use("/api/quiz", quizRoutes);
 app.use("/api/vocabulary", vocabularyRoutes);
 app.use("/api/learn", learnRoutes);
 app.use("/api/achievement", achivermentRoutes);
+app.use("/api/class", classRoute);
+app.use("/api/listFlashcard", listFlashCardRoute);
 
 // import Socket IO logic
 battleHandler(io, gameRooms, waitingPlayers);

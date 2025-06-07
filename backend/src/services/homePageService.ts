@@ -6,7 +6,6 @@ const getRecentClassesService = async (userId: string): Promise<any> => {
       where: { user_id: userId },
       attributes: ["class_id"],
       order: [["last_accessed", "DESC"]],
-      limit: 10,
     });
 
     const classIds = classMemberships.map(
@@ -17,7 +16,6 @@ const getRecentClassesService = async (userId: string): Promise<any> => {
 
     const recentClasses = await db.class.findAll({
       where: { class_id: classIds },
-      limit: 10,
       include: [
         {
           model: db.classMember,
@@ -26,7 +24,7 @@ const getRecentClassesService = async (userId: string): Promise<any> => {
         },
         {
           model: db.user,
-          attributes: ["username"],
+          attributes: ["username", "profile_picture", "user_id", "email"],
           required: false,
         },
       ],
@@ -41,7 +39,12 @@ const getRecentClassesService = async (userId: string): Promise<any> => {
       subQuery: false,
       group: ["Class.class_id"],
     });
-
+    for (const cls of recentClasses) {
+      const count = await db.listFlashCardClass.count({
+        where: { class_id: cls.class_id },
+      });
+      cls.dataValues.listFlashCardCount = count;
+    }
     return recentClasses;
   } catch (error) {
     throw error;
@@ -75,7 +78,7 @@ const getRecentFlashcardsService = async (userId: string): Promise<any> => {
           as: "Flashcard",
           attributes: [],
           required: true,
-        },  
+        },
       ],
       attributes: {
         include: [
