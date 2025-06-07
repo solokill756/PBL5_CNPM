@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { io } from "socket.io-client";
 import { useAuthStore } from "@/store/useAuthStore";
+import DefaultAvatar from "@/assets/images/avatar.jpg"
 import {
   IoTrophy,
   IoGameController,
@@ -26,6 +27,7 @@ import FinalResult from "./FinalResult";
 const ModernBattle = () => {
   // Auth state
   const { accessToken, user } = useAuthStore();
+  console.log("user", user);
 
   // Socket state
   const [socket, setSocket] = useState(null);
@@ -50,6 +52,9 @@ const ModernBattle = () => {
   const [showQuestionResult, setShowQuestionResult] = useState(false);
   const [loading, setLoading] = useState(false);
   const [playerAnswerTime, setPlayerAnswerTime] = useState(0);
+  const [waitingForOpponent, setWaitingForOpponent] = useState(false);
+  const [playerReadyForNext, setPlayerReadyForNext] = useState(false);
+  const [opponentReadyForNext, setOpponentReadyForNext] = useState(false);
 
   const timerRef = useRef(null);
   const questionStartTime = useRef(null);
@@ -98,7 +103,7 @@ const ModernBattle = () => {
       setGameState("gameFound");
       setTotalQuestions(data.totalQuestions);
       setScores({
-        [user.user_id]: 0,
+        [user.id]: 0,
         [data.opponent.user_id]: 0,
       });
 
@@ -119,6 +124,9 @@ const ModernBattle = () => {
       setSelectedAnswer(null);
       setShowQuestionResult(false);
       setPlayerAnswerTime(0);
+      setWaitingForOpponent(false);
+      setPlayerReadyForNext(false);
+      setOpponentReadyForNext(false);
       startQuestionTimer();
     });
 
@@ -131,6 +139,9 @@ const ModernBattle = () => {
       setQuestionResults(null);
       setShowQuestionResult(false);
       setPlayerAnswerTime(0);
+      setWaitingForOpponent(false);
+      setPlayerReadyForNext(false);
+      setOpponentReadyForNext(false);
       
       // Delay để tạo hiệu ứng smooth transition
       setTimeout(() => {
@@ -141,14 +152,13 @@ const ModernBattle = () => {
     newSocket.on("question_result", (data) => {
       console.log("📊 Question result:", data);
       setQuestionResults(data);
-      setScores(data.scores);
+      setScores(data.scores); // Sử dụng điểm từ BE
       setShowQuestionResult(true);
+      setWaitingForOpponent(false);
       resetTimer();
       
-      // Tự động chuyển sang câu tiếp theo sau 3 giây
-      setTimeout(() => {
-        setShowQuestionResult(false);
-      }, 3000);
+      // Không tự động chuyển câu tiếp theo nữa
+      // Người chơi phải click "Tiếp tục" để sẵn sàng câu tiếp theo
     });
 
     newSocket.on("game_ended", (data) => {
@@ -157,6 +167,11 @@ const ModernBattle = () => {
       setGameResults(data);
       setScores(data.finalScores);
       resetTimer();
+      
+      // Delay một chút trước khi disconnect để đảm bảo UI hiển thị kết quả
+      setTimeout(() => {
+        // Không disconnect ngay, để user có thể xem kết quả và rewards
+      }, 1000);
     });
 
     // Error events
@@ -169,7 +184,7 @@ const ModernBattle = () => {
       console.log("🚪 Opponent disconnected:", data);
       setGameState("ended");
       setGameResults({
-        winner: { username: user.username, user_id: user.user_id },
+        winner: { username: user.username, user_id: user.id },
         isDraw: false,
         finalScores: scores,
         totalQuestions: totalQuestions,
@@ -232,7 +247,8 @@ const ModernBattle = () => {
     resetTimer();
     if (socket && gameData && selectedAnswer === null) {
       socket.emit("time_end", { roomId: gameData.roomId });
-      setSelectedAnswer(false); // Mark as timeout
+      setSelectedAnswer("timeout"); // Mark as timeout instead of false
+      setWaitingForOpponent(true);
     }
   };
 
@@ -259,6 +275,7 @@ const ModernBattle = () => {
     
     setSelectedAnswer(answer);
     setPlayerAnswerTime(answerTimeInSeconds);
+    setWaitingForOpponent(true);
     resetTimer();
     
     if (socket && gameData) {
@@ -268,6 +285,20 @@ const ModernBattle = () => {
         responseTime: responseTime,
       });
     }
+  };
+
+  // Handle player ready for next question
+  const handleContinueToNext = () => {
+    setPlayerReadyForNext(true);
+    
+    // Emit ready event to server (you might need to add this to BE)
+    if (socket && gameData) {
+      socket.emit("player_ready_next", { roomId: gameData.roomId });
+    }
+    
+    // For now, just hide the result notification
+    // In a real implementation, you'd wait for both players to be ready
+    setShowQuestionResult(false);
   };
 
   const handlePlayAgain = () => {
@@ -282,6 +313,9 @@ const ModernBattle = () => {
     setQuestionResults(null);
     setShowQuestionResult(false);
     setPlayerAnswerTime(0);
+    setWaitingForOpponent(false);
+    setPlayerReadyForNext(false);
+    setOpponentReadyForNext(false);
     resetTimer();
   };
 
@@ -294,7 +328,7 @@ const ModernBattle = () => {
   };
 
   const getPlayerInfo = (userId) => {
-    if (userId === user?.user_id) return user;
+    if (userId === user?.id) return user;
     if (userId === gameData?.opponent?.user_id) return gameData.opponent;
     return null;
   };
@@ -303,14 +337,14 @@ const ModernBattle = () => {
   const getPlayersData = () => {
     const player = {
       name: user?.username || "Bạn",
-      avatar: user?.profile_picture || "/default-avatar.png",
-      score: scores[user?.user_id] || 0,
-      user_id: user?.user_id,
+      avatar: user?.profile_picture || DefaultAvatar,
+      score: scores[user?.id] || 0,
+      user_id: user?.id,
     };
     
     const opponent = {
       name: gameData?.opponent?.username || "Đối thủ",
-      avatar: gameData?.opponent?.profile_picture || "/default-avatar.png",
+      avatar: gameData?.opponent?.profile_picture || DefaultAvatar,
       score: scores[gameData?.opponent?.user_id] || 0,
       user_id: gameData?.opponent?.user_id,
     };
@@ -486,6 +520,8 @@ const ModernBattle = () => {
   // Playing State Component
   const PlayingState = () => {
     const { player, opponent } = getPlayersData();
+    console.log("player, opponent", player, opponent);
+    
     
     // Check if both players answered for result notification
     const shouldShowResultNotification = showQuestionResult && questionResults;
@@ -494,11 +530,12 @@ const ModernBattle = () => {
     const getAnswerResults = () => {
       if (!questionResults?.answers) return null;
       
-      const playerAnswer = Object.values(questionResults.answers).find(
-        answer => answer.user_id === player.user_id
+      const answersArray = Object.values(questionResults.answers);
+      const playerAnswer = answersArray.find(
+        answer => answer.username === player.name
       );
-      const opponentAnswer = Object.values(questionResults.answers).find(
-        answer => answer.user_id === opponent.user_id
+      const opponentAnswer = answersArray.find(
+        answer => answer.username === opponent.name
       );
       
       return {
@@ -506,6 +543,8 @@ const ModernBattle = () => {
         opponentCorrect: opponentAnswer?.isCorrect || false,
         playerTime: (playerAnswer?.responseTime || 0) / 1000,
         opponentTime: (opponentAnswer?.responseTime || 0) / 1000,
+        playerPoints: playerAnswer?.points || 0, // Sử dụng điểm từ BE
+        opponentPoints: opponentAnswer?.points || 0, // Sử dụng điểm từ BE
       };
     };
 
@@ -515,17 +554,19 @@ const ModernBattle = () => {
         <ScoreDisplay player={player} opponent={opponent} />
         
         {/* Timer */}
-        <div className="bg-white rounded-xl shadow-lg p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-600">
-              Câu {questionNumber}/{totalQuestions}
-            </span>
-            <span className="text-sm font-medium text-gray-600">
-              Thời gian còn lại
-            </span>
+        {timerActive && (
+          <div className="bg-white rounded-xl shadow-lg p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-600">
+                Câu {questionNumber}/{totalQuestions}
+              </span>
+              <span className="text-sm font-medium text-gray-600">
+                Thời gian còn lại
+              </span>
+            </div>
+            <CountdownTimer timeLeft={timeLeft} totalTime={10} />
           </div>
-          <CountdownTimer timeLeft={timeLeft} totalTime={10} />
-        </div>
+        )}
 
         {/* Question */}
         {currentQuestion && (
@@ -536,16 +577,18 @@ const ModernBattle = () => {
             currentQuestion={questionNumber - 1}
             questionCount={totalQuestions}
             playerAnswerTime={playerAnswerTime}
+            questionResults={questionResults}
+            waitingForOpponent={waitingForOpponent}
           />
         )}
 
         {/* Opponent Status */}
-        <OpponentStatus 
-          playerAnswer={selectedAnswer} 
-          opponentAnswer={questionResults?.answers ? 
-            Object.values(questionResults.answers).find(a => a.user_id === opponent.user_id) : null
-          } 
-        />
+        {/* {waitingForOpponent && !showQuestionResult && (
+          <OpponentStatus 
+            playerAnswer={selectedAnswer} 
+            opponentAnswer={null}
+          />
+        )} */}
 
         {/* Result Notification */}
         <AnimatePresence>
@@ -557,7 +600,10 @@ const ModernBattle = () => {
                 opponentCorrect={results.opponentCorrect}
                 playerTime={results.playerTime}
                 opponentTime={results.opponentTime}
-                onContinue={() => setShowQuestionResult(false)}
+                playerPoints={results.playerPoints}
+                opponentPoints={results.opponentPoints}
+                onContinue={handleContinueToNext}
+                questionResults={questionResults}
               />
             ) : null;
           })()}
@@ -566,7 +612,7 @@ const ModernBattle = () => {
     );
   };
 
-  // Game Ended State Component
+  // Game Ended State Component - Updated to show rewards
   const GameEndedState = () => {
     const { player, opponent } = getPlayersData();
     
@@ -574,6 +620,7 @@ const ModernBattle = () => {
       <FinalResult
         player={player}
         opponent={opponent}
+        gameResults={gameResults}
         onRetry={handlePlayAgain}
         onExit={handleExitBattle}
       />
