@@ -13,7 +13,7 @@ const AuthSuccess = () => {
     const fetchUser = async () => {
       try {
         const res = await axiosPrivate.get(
-          "http://localhost:9000/api/auth/user"
+          "api/auth/user"
         );
         const { accessToken, refreshToken, user } = res.data.user;
 
