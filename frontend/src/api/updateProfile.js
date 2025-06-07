@@ -1,7 +1,7 @@
 export const updateProfile = async (axiosPrivate, full_name, username, profile_picture, newPassword) => {
     try {
         const response = await axiosPrivate.post(
-            'http://localhost:9000/api/profile/updateProfile', 
+            '/api/profile/updateProfile', 
             {
                 full_name: full_name,
                 username: username,
