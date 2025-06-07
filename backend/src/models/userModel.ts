@@ -15,13 +15,19 @@ interface UserAttributes {
   current_level?: number;
   is_active?: boolean;
   levelThreshold?: number;
+  is_blocked?: boolean;
 }
 
-interface UserCreationAttributes extends Optional<UserAttributes, 'user_id' | 'profile_picture' | 'datetime_joined'> { }
+interface UserCreationAttributes
+  extends Optional<
+    UserAttributes,
+    "user_id" | "profile_picture" | "datetime_joined"
+  > {}
 
 class User
   extends Model<UserAttributes, UserCreationAttributes>
-  implements UserAttributes {
+  implements UserAttributes
+{
   declare user_id: string;
   declare full_name: string;
   declare email: string;
@@ -36,6 +42,7 @@ class User
   declare current_level?: number;
   declare is_active?: boolean;
   declare levelThreshold?: number;
+  declare is_blocked?: boolean;
 }
 
 export default (sequelize: Sequelize) => {
@@ -107,6 +114,11 @@ export default (sequelize: Sequelize) => {
         allowNull: false,
         defaultValue: 0,
       },
+      is_blocked: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
     },
     {
       sequelize,
@@ -115,16 +127,14 @@ export default (sequelize: Sequelize) => {
       indexes: [
         {
           unique: true,
-          fields: ['email']
+          fields: ["email"],
         },
         {
           unique: true,
-          fields: ["user_id"]
-        }
-
-      ]
+          fields: ["user_id"],
+        },
+      ],
     }
-    
   );
   return User;
 };

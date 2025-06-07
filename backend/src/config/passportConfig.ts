@@ -6,7 +6,7 @@ import {
   generateRefreshToken,
   saltRounds,
 } from "../helpers/tokenHelper.js";
-import { registerService, UserPayload } from "../services/authService.js";
+import { registerService, UserPayload } from "../services/User/authService.js";
 import { filterUserData } from "../utils/fillData.js";
 import dotenv from "dotenv";
 import generateRandomPassword from "../helpers/generatePassword.js";

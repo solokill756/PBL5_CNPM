@@ -1,8 +1,8 @@
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
-import gameService from "../services/gameService";
+import gameService from "../services/User/gameService";
 import { NextFunction } from "express";
-import { UserPayload } from "../services/authService";
+import { UserPayload } from "../services/User/authService";
 dotenv.config();
 export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
   // Middleware xác thực
@@ -125,7 +125,6 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
       }
 
       console.log(`🚀 Starting game in room ${data.roomId}`);
-
       gameRoom.status = "playing";
       gameRoom.questionStartTime = Date.now();
       gameRoom.currentQuestion = 1;
@@ -317,7 +316,7 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
           await gameService.updatePlayScore(
             player.user_id,
             points,
-            isWinner,
+            isWinner
             // opponentId
           );
         }

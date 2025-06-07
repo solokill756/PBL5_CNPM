@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import db from "../models/index.js";
 import jwt from "jsonwebtoken";
-import { UserPayload } from "../services/authService.js";
+import { UserPayload } from "../services/User/authService.js";
 dotenv.config();
 
 const saltRounds = 10;
