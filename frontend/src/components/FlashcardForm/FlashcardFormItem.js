@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { useAddFlashcardStore } from '@/store/useAddFlashcardStore';
 import useAxiosPrivate from '@/hooks/useAxiosPrivate';
 import useVocabularyStore from '@/store/useVocabularyStore';
@@ -36,341 +36,237 @@ const SuggestionInputs = ({ suggestions, onSelect, isVisible }) => {
 };
 
 const FlashcardFormItem = ({ flashcard, index }) => {
-  const [isDragging, setIsDragging] = useState(false);
-  const [showAddButton, setShowAddButton] = useState(false);
-  const [suggestions, setSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [suggestionTimeout, setSuggestionTimeout] = useState(null);
-  const [frontFocused, setFrontFocused] = useState(false);
-  const [backFocused, setBackFocused] = useState(false);
-  const [dragStartPosition, setDragStartPosition] = useState({ x: 0, y: 0 });
-  const [isSelectingSuggestion, setIsSelectingSuggestion] = useState(false);
-  const [lastSelectedWord, setLastSelectedWord] = useState('');
-  
-  const itemRef = useRef(null);
-  const frontInputRef = useRef(null);
-  const dragGhostRef = useRef(null);
-  const axios = useAxiosPrivate();
-  
-  const {
-    updateFlashcard,
-    removeFlashcard,
-    duplicateFlashcard,
-    reorderFlashcards,
-    flashcards,
-    addFlashcardAt
-  } = useAddFlashcardStore();
+  const [isDragging, setIsDragging] = useState(false)
+  const [showAddButton, setShowAddButton] = useState(false)
+  const [suggestions, setSuggestions] = useState([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [frontFocused, setFrontFocused] = useState(false)
+  const [backFocused, setBackFocused] = useState(false)
 
-  const { searchVocabulary } = useVocabularyStore();
+  const dragControls = useDragControls()
+  const itemRef = useRef<HTMLDivElement>(null)
 
-  const fetchSuggestions = useCallback(async (term) => {
-    if (!term.trim() || term.length < 2) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
+  const { updateFlashcard, removeFlashcard, duplicateFlashcard, reorderFlashcards, flashcards, addFlashcardAt } =
+    useAddFlashcardStore()
 
-    // Không gọi API nếu term giống với từ vừa chọn
-    if (term === lastSelectedWord) {
-      return;
-    }
+  const { searchVocabulary } = useVocabularyStore()
 
-    try {
-      const results = await searchVocabulary(axios, term, "Japanese");
-      setSuggestions(results || []);
-      setShowSuggestions(results && results.length > 0);
-    } catch (error) {
-      console.error('Error fetching suggestions:', error);
-      setSuggestions([]);
-      setShowSuggestions(false);
-    }
-  }, [axios, searchVocabulary, lastSelectedWord]);
+  // Memoized suggestions fetcher
+  const fetchSuggestions = useCallback(
+    async (term) => {
+      if (!term.trim() || term.length < 2) {
+        setSuggestions([])
+        setShowSuggestions(false)
+        return
+      }
 
-  const createDragGhost = (e) => {
-    const rect = itemRef.current.getBoundingClientRect();
-    const ghost = itemRef.current.cloneNode(true);
-    
-    ghost.style.position = 'fixed';
-    ghost.style.left = `${rect.left}px`;
-    ghost.style.top = `${rect.top}px`;
-    ghost.style.width = `${rect.width}px`;
-    ghost.style.height = `${rect.height}px`;
-    ghost.style.zIndex = '9999';
-    ghost.style.opacity = '0.8';
-    ghost.style.pointerEvents = 'none';
-    ghost.style.transform = 'rotate(3deg) scale(1.02)';
-    ghost.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';
-    ghost.classList.add('drag-ghost');
-    
-    document.body.appendChild(ghost);
-    dragGhostRef.current = ghost;
-    
-    return { offsetX: e.clientX - rect.left, offsetY: e.clientY - rect.top };
-  };
+      try {
+        const results = await searchVocabulary(null, term, "Japanese")
+        setSuggestions(results || [])
+        setShowSuggestions(results && results.length > 0)
+      } catch (error) {
+        console.error("Error fetching suggestions:", error)
+        setSuggestions([])
+        setShowSuggestions(false)
+      }
+    },
+    [searchVocabulary],
+  )
 
-  const updateGhostPosition = (e, offset) => {
-    if (dragGhostRef.current) {
-      dragGhostRef.current.style.left = `${e.clientX - offset.offsetX}px`;
-      dragGhostRef.current.style.top = `${e.clientY - offset.offsetY}px`;
-    }
-  };
+  // Optimized input change handler
+  const handleInputChange = useCallback(
+    (field, value) => {
+      updateFlashcard(flashcard.id, field, value)
 
-  const findDropTarget = (e) => {
-    const elements = document.elementsFromPoint(e.clientX, e.clientY);
-    const flashcardElement = elements.find(el => {
-      const item = el.closest('[data-flashcard-index]');
-      return item && !item.classList.contains('drag-ghost');
-    });
-    
-    if (flashcardElement) {
-      const targetIndex = parseInt(flashcardElement.closest('[data-flashcard-index]').dataset.flashcardIndex);
-      return isNaN(targetIndex) ? null : targetIndex;
-    }
-    return null;
-  };
+      if (field === "front") {
+        if (!value.trim()) {
+          setShowSuggestions(false)
+          setSuggestions([])
+          return
+        }
 
-  const handleMouseDown = (e) => {
-    // Prevent drag on input elements and buttons
-    if (e.target.closest('input, button, .no-drag')) return;
-    
-    const offset = createDragGhost(e);
-    setDragStartPosition({ x: e.clientX, y: e.clientY });
-    setIsDragging(true);
-    
-    const handleMouseMove = (moveEvent) => {
-      updateGhostPosition(moveEvent, offset);
-      
-      // Only start reordering after significant movement
-      const distance = Math.sqrt(
-        Math.pow(moveEvent.clientX - dragStartPosition.x, 2) + 
-        Math.pow(moveEvent.clientY - dragStartPosition.y, 2)
-      );
-      
-      if (distance > 15) {
-        const targetIndex = findDropTarget(moveEvent);
-        if (targetIndex !== null && targetIndex !== index) {
-          // Add visual feedback for drop target
-          document.querySelectorAll('[data-flashcard-index]').forEach(el => {
-            el.classList.remove('drag-over');
-          });
-          
-          const targetElement = document.querySelector(`[data-flashcard-index="${targetIndex}"]`);
-          if (targetElement) {
-            targetElement.classList.add('drag-over');
-          }
+        // Debounced suggestion fetch
+        const timeoutId = setTimeout(() => {
+          fetchSuggestions(value)
+        }, 300)
+
+        return () => clearTimeout(timeoutId)
+      }
+    },
+    [flashcard.id, updateFlashcard, fetchSuggestions],
+  )
+
+  const handleSuggestionSelect = useCallback(
+    (word) => {
+      updateFlashcard(flashcard.id, "front", word)
+      setShowSuggestions(false)
+      setSuggestions([])
+    },
+    [flashcard.id, updateFlashcard],
+  )
+
+  const handleDragEnd = useCallback(
+    (event, info) => {
+      setIsDragging(false)
+
+      // Simple reorder logic based on drag distance
+      const dragDistance = info.offset.y
+      const threshold = 100
+
+      if (Math.abs(dragDistance) > threshold) {
+        const direction = dragDistance > 0 ? 1 : -1
+        const newIndex = Math.max(0, Math.min(flashcards.length - 1, index + direction))
+
+        if (newIndex !== index) {
+          reorderFlashcards(index, newIndex)
         }
       }
-    };
-    
-    const handleMouseUp = (upEvent) => {
-      const targetIndex = findDropTarget(upEvent);
-      
-      if (targetIndex !== null && targetIndex !== index) {
-        const distance = Math.sqrt(
-          Math.pow(upEvent.clientX - dragStartPosition.x, 2) + 
-          Math.pow(upEvent.clientY - dragStartPosition.y, 2)
-        );
-        
-        if (distance > 15) {
-          reorderFlashcards(index, targetIndex);
-        }
-      }
-      
-      // Cleanup
-      if (dragGhostRef.current) {
-        document.body.removeChild(dragGhostRef.current);
-        dragGhostRef.current = null;
-      }
-      
-      document.querySelectorAll('[data-flashcard-index]').forEach(el => {
-        el.classList.remove('drag-over');
-      });
-      
-      setIsDragging(false);
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-    
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    e.preventDefault();
-  };
+    },
+    [index, flashcards.length, reorderFlashcards],
+  )
 
-  const handleInputChange = (field, value) => {
-    updateFlashcard(flashcard.id, field, value);
-    
-    if (field === 'front') {
-      // Clear timeout nếu có
-      if (suggestionTimeout) {
-        clearTimeout(suggestionTimeout);
-      }
-      
-      // Nếu đang trong quá trình chọn suggestion, bỏ qua
-      if (isSelectingSuggestion) {
-        return;
-      }
-      
-      // Reset lastSelectedWord nếu user thay đổi từ đã chọn
-      if (value !== lastSelectedWord) {
-        setLastSelectedWord('');
-      }
-      
-      // Ẩn suggestions nếu input rỗng
-      if (!value.trim()) {
-        setShowSuggestions(false);
-        setSuggestions([]);
-        return;
-      }
-      
-      // Debounce việc gọi API
-      const timeout = setTimeout(() => {
-        fetchSuggestions(value);
-      }, 300);
-      
-      setSuggestionTimeout(timeout);
+  const canDelete = flashcards.length > 2
+
+  // Memoized handlers
+  const handleDelete = useCallback(() => {
+    if (canDelete) {
+      removeFlashcard(flashcard.id)
     }
-  };
+  }, [canDelete, flashcard.id, removeFlashcard])
 
-  const handleSuggestionSelect = (word) => {
-    setIsSelectingSuggestion(true);
-    setLastSelectedWord(word);
-    
-    // Update value
-    updateFlashcard(flashcard.id, 'front', word);
-    
-    // Ẩn suggestions
-    setShowSuggestions(false);
-    setSuggestions([]);
-    
-    // Clear timeout nếu có
-    if (suggestionTimeout) {
-      clearTimeout(suggestionTimeout);
-    }
-    
-    // Reset flag sau một khoảng thời gian ngắn
-    setTimeout(() => {
-      setIsSelectingSuggestion(false);
-      frontInputRef.current?.focus();
-    }, 100);
-  };
+  const handleDuplicate = useCallback(() => {
+    duplicateFlashcard(index)
+  }, [index, duplicateFlashcard])
 
-  const handleFrontInputFocus = () => {
-    setFrontFocused(true);
-    // Chỉ fetch suggestions nếu có giá trị và không phải từ vừa chọn
-    if (flashcard.front.length >= 2 && flashcard.front !== lastSelectedWord) {
-      fetchSuggestions(flashcard.front);
-    }
-  };
-
-  const handleFrontInputBlur = () => {
-    // Delay để cho phép click vào suggestion
-    setTimeout(() => {
-      setFrontFocused(false);
-      // setShowSuggestions(false);
-    }, 150);
-  };
-
-  const handleDelete = () => {
-    if (flashcards.length > 2) {
-      removeFlashcard(flashcard.id);
-    }
-  };
-
-  const handleDuplicate = () => {
-    duplicateFlashcard(index);
-  };
+  const handleAddCard = useCallback(() => {
+    addFlashcardAt(index)
+  }, [index, addFlashcardAt])
 
   return (
     <motion.div
       ref={itemRef}
-      data-flashcard-index={index}
-      className={`group relative bg-white rounded-lg border transition-all duration-200 ${
-        isDragging 
-          ? 'opacity-50 scale-95' 
-          : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
+      className={`group relative bg-white rounded-xl border transition-all duration-200 ${
+        isDragging ? "opacity-80 scale-[0.98] shadow-2xl z-10" : "border-gray-200 hover:border-gray-300 hover:shadow-md"
       }`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20, scale: 0.95 }}
       layout
-      transition={{ duration: 0.2 }}
+      transition={{
+        layout: { duration: 0.3, ease: "easeInOut" },
+        default: { duration: 0.2 },
+      }}
+      drag="y"
+      dragControls={dragControls}
+      dragConstraints={{ top: 0, bottom: 0 }}
+      dragElastic={0.1}
+      onDragStart={() => setIsDragging(true)}
+      onDragEnd={handleDragEnd}
       onMouseEnter={() => setShowAddButton(true)}
       onMouseLeave={() => setShowAddButton(false)}
+      whileHover={{ scale: isDragging ? 1 : 1.01 }}
     >
-      {/* Header with drag handle and actions */}
-      <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-100 rounded-t-lg">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 bg-gray-50/50 border-b border-gray-100 rounded-t-xl">
         <div className="flex items-center space-x-3">
-          <div
-            onMouseDown={handleMouseDown}
-            className="cursor-grab active:cursor-grabbing p-1.5 rounded hover:bg-gray-200 transition-colors"
-            title="Kéo để sắp xếp lại"
+          <motion.div
+            className="cursor-grab active:cursor-grabbing p-1.5 rounded-lg hover:bg-gray-200 transition-colors"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onPointerDown={(e) => dragControls.start(e)}
           >
             <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M7 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM17 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM17 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM17 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/>
+              <path d="M7 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM17 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM17 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM17 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />
             </svg>
-          </div>
-          
+          </motion.div>
+
           <div className="w-7 h-7 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-medium text-sm">
             {index + 1}
           </div>
         </div>
 
-        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity no-drag">
-          <button
+        <motion.div
+          className="flex items-center space-x-1"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          <motion.button
             onClick={handleDuplicate}
-            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
             title="Nhân bản"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+              />
             </svg>
-          </button>
+          </motion.button>
 
-          {flashcards.length > 2 && (
-            <button
+          {canDelete && (
+            <motion.button
               onClick={handleDelete}
-              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
               title="Xóa"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
               </svg>
-            </button>
+            </motion.button>
           )}
-        </div>
+        </motion.div>
       </div>
 
       {/* Content */}
       <div className="p-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Japanese input */}
-          <div className="space-y-2">
-            <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide">
-              Tiếng Nhật
-            </label>
-            <div>
+          <div className="space-y-2 relative">
+            <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide">Tiếng Nhật</label>
+            <div className="relative">
               <input
-                ref={frontInputRef}
                 type="text"
                 value={flashcard.front}
-                onChange={(e) => handleInputChange('front', e.target.value)}
-                onFocus={handleFrontInputFocus}
-                onBlur={handleFrontInputBlur}
-                className={`no-drag w-full px-3 py-2.5 rounded-md border transition-all text-sm ${
+                onChange={(e) => handleInputChange("front", e.target.value)}
+                onFocus={() => {
+                  setFrontFocused(true)
+                  if (flashcard.front.length >= 2) {
+                    fetchSuggestions(flashcard.front)
+                  }
+                }}
+                onBlur={() => {
+                  setTimeout(() => {
+                    setFrontFocused(false)
+                    setShowSuggestions(false)
+                  }, 150)
+                }}
+                className={`w-full px-3 py-2.5 rounded-lg border transition-all duration-200 text-sm ${
                   frontFocused
-                    ? 'border-blue-400 ring-2 ring-blue-100 bg-blue-50/30'
+                    ? "border-blue-400 ring-2 ring-blue-100 bg-blue-50/30"
                     : flashcard.front
-                    ? 'border-gray-300 bg-white'
-                    : 'border-gray-200 bg-gray-50'
+                      ? "border-gray-300 bg-white"
+                      : "border-gray-200 bg-gray-50"
                 } focus:outline-none`}
                 placeholder="Nhập từ tiếng Nhật..."
               />
-              
+
               <AnimatePresence>
                 <SuggestionInputs
                   suggestions={suggestions}
                   onSelect={handleSuggestionSelect}
-                  isVisible={showSuggestions}
+                  isVisible={showSuggestions && frontFocused}
                 />
               </AnimatePresence>
             </div>
@@ -378,21 +274,19 @@ const FlashcardFormItem = ({ flashcard, index }) => {
 
           {/* Vietnamese input */}
           <div className="space-y-2">
-            <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide">
-              Tiếng Việt
-            </label>
+            <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide">Tiếng Việt</label>
             <input
               type="text"
               value={flashcard.back}
-              onChange={(e) => handleInputChange('back', e.target.value)}
+              onChange={(e) => handleInputChange("back", e.target.value)}
               onFocus={() => setBackFocused(true)}
               onBlur={() => setBackFocused(false)}
-              className={`no-drag w-full px-3 py-2.5 rounded-md border transition-all text-sm ${
+              className={`w-full px-3 py-2.5 rounded-lg border transition-all duration-200 text-sm ${
                 backFocused
-                  ? 'border-green-400 ring-2 ring-green-100 bg-green-50/30'
+                  ? "border-green-400 ring-2 ring-green-100 bg-green-50/30"
                   : flashcard.back
-                  ? 'border-gray-300 bg-white'
-                  : 'border-gray-200 bg-gray-50'
+                    ? "border-gray-300 bg-white"
+                    : "border-gray-200 bg-gray-50"
               } focus:outline-none`}
               placeholder="Nhập nghĩa tiếng Việt..."
             />
@@ -404,35 +298,28 @@ const FlashcardFormItem = ({ flashcard, index }) => {
       <AnimatePresence>
         {showAddButton && !isDragging && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className="absolute -bottom-3 left-[49%] transform -translate-x-1/2 z-10"
+            initial={{ opacity: 0, scale: 0.8, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 10 }}
+            transition={{ duration: 0.15 }}
+            className="absolute -bottom-3 left-[48.75%] transform -translate-x-1/2 z-10"
           >
-            <button
-              onClick={() => addFlashcardAt(index)}
-              className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors shadow-md no-drag"
+            <motion.button
+              onClick={handleAddCard}
+              className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors shadow-lg"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
               title="Thêm thẻ mới"
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-            </button>
+            </motion.button>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Custom styles for drag over effect */}
-      <style jsx>{`
-        .drag-over {
-          border-color: #3b82f6 !important;
-          border-style: dashed !important;
-          transform: scale(1.02) !important;
-          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
-        }
-      `}</style>
     </motion.div>
-  );
-};
+  )
+}
 
-export default FlashcardFormItem;
+export default FlashcardFormItem
