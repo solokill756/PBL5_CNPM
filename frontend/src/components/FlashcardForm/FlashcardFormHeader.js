@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { useAddFlashcardStore } from '@/store/useAddFlashcardStore';
 import useAxiosPrivate from '@/hooks/useAxiosPrivate';
 import ToggleSwitch from '../ToggleSwitch';
+import { useToast, TOAST_TYPES } from '@/context/ToastContext';
+import { useNavigate } from 'react-router-dom';
 
 const FloatingInput = ({ 
   label, 
@@ -142,288 +144,216 @@ const SettingsModal = ({ isOpen, onClose, isPublic, setIsPublic, allowStudyFromC
 };
 
 const FlashcardFormHeader = () => {
-  const [isSticky, setIsSticky] = useState(false);
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [hideDefaultHeader, setHideDefaultHeader] = useState(false);
-  const [headerHeight, setHeaderHeight] = useState(0);
-  const headerRef = useRef(null);
-  const sentinelRef = useRef(null);
-  const containerRef = useRef(null); // Thêm ref cho container
-  const axios = useAxiosPrivate();
-  
-  const { 
-    isAutoSaving, 
-    lastSavedAt, 
+  const [isSticky, setIsSticky] = useState(false)
+  const headerRef = useRef(null)
+  const sentinelRef = useRef(null)
+
+  // Motion values for smooth animations
+  const scrollY = useMotionValue(0)
+  const headerOpacity = useTransform(scrollY, [0, 100], [1, 0.95])
+  const headerScale = useTransform(scrollY, [0, 100], [1, 0.98])
+
+  const {
+    isAutoSaving,
+    lastSavedAt,
     hasDraft,
     title,
     setTitle,
     description,
     setDescription,
-    isPublic,
-    setIsPublic,
-    allowStudyFromClass,
-    setAllowStudyFromClass,
     saving,
-    error,
-    successMessage,
     saveFlashcardSet,
-    flashcards
-  } = useAddFlashcardStore();
+    flashcards,
+    resetForm,
+  } = useAddFlashcardStore()
 
-  // Measure header height khi mount và khi content thay đổi
+  // Optimized intersection observer
   useEffect(() => {
-    if (headerRef.current) {
-      const height = headerRef.current.offsetHeight;
-      setHeaderHeight(height);
-    }
-  }, [isSticky, title, isAutoSaving, hasDraft]);
-
-  useEffect(() => {
-    if (!sentinelRef.current) return;
+    if (!sentinelRef.current) return
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        // Khi sentinel không visible = header đã chạm top = cần sticky
-        const shouldBeSticky = !entry.isIntersecting;
-        setIsSticky(shouldBeSticky);
-        
-        // Logic ẩn DefaultHeader khi sticky
-        setHideDefaultHeader(shouldBeSticky);
+        const shouldBeSticky = !entry.isIntersecting
+        setIsSticky(shouldBeSticky)
       },
       {
         threshold: 0,
-        rootMargin: '0px 0px 0px 0px'
-      }
-    );
+        rootMargin: "-1px 0px 0px 0px",
+      },
+    )
 
-    observer.observe(sentinelRef.current);
+    observer.observe(sentinelRef.current)
+    return () => observer.disconnect()
+  }, [])
 
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
-
-  // Effect để ẩn/hiện DefaultHeader
+  // Smooth scroll tracking
   useEffect(() => {
-    const defaultHeader = document.querySelector('[data-default-header]');
-    
-    if (defaultHeader) {
-      if (hideDefaultHeader) {
-        defaultHeader.style.transform = 'translateY(-100%)';
-        defaultHeader.style.transition = 'transform 0.3s ease-in-out';
-      } else {
-        defaultHeader.style.transform = 'translateY(0)';
-        defaultHeader.style.transition = 'transform 0.3s ease-in-out';
-      }
+    const updateScrollY = () => scrollY.set(window.scrollY)
+    window.addEventListener("scroll", updateScrollY, { passive: true })
+    return () => window.removeEventListener("scroll", updateScrollY)
+  }, [scrollY])
+
+  const validFlashcards = flashcards.filter((card) => card.front.trim() && card.back.trim())
+
+  const handleSave = useCallback(async () => {
+    const result = await saveFlashcardSet()
+    if (result.success) {
+      resetForm()
     }
-  }, [hideDefaultHeader]);
+  }, [saveFlashcardSet, resetForm])
 
-  const validFlashcards = flashcards.filter(
-    card => card.front.trim() && card.back.trim()
-  );
+  const formatLastSaved = useCallback((timestamp) => {
+    if (!timestamp) return ""
+    const now = new Date()
+    const saved = new Date(timestamp)
+    const diffMinutes = Math.floor((now - saved) / (1000 * 60))
 
-  const handleSave = async () => {
-    const result = await saveFlashcardSet(axios);
-    if (result) {
-      // Navigation logic here if needed
-    }
-  };
-
-  const formatLastSaved = (timestamp) => {
-    if (!timestamp) return '';
-    const now = new Date();
-    const saved = new Date(timestamp);
-    const diffMinutes = Math.floor((now - saved) / (1000 * 60));
-    
-    if (diffMinutes < 1) return 'ngay bây giờ';
-    if (diffMinutes < 60) return `${diffMinutes} phút trước`;
-    return saved.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-  };
+    if (diffMinutes < 1) return "ngay bây giờ"
+    if (diffMinutes < 60) return `${diffMinutes} phút trước`
+    return saved.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
+  }, [])
 
   return (
-    <div ref={containerRef} className="w-full mx-auto">
-      {/* Sentinel element - đặt chính xác tại vị trí cần detect */}
-      <div 
-        ref={sentinelRef} 
-        className="h-px w-full pointer-events-none" 
-        style={{ position: 'relative' }}
-      />
+    <div className="w-full">
+      {/* Sentinel for intersection observer */}
+      <div ref={sentinelRef} className="h-px w-full" />
 
-      {/* Sticky Action Bar */}
+      {/* Sticky Header */}
       <motion.div
         ref={headerRef}
-        className={`transition-all duration-300 ${
-          isSticky 
-            ? 'fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-lg z-[60]' 
-            : 'relative bg-inherit border-b border-gray-100'
+        className={`transition-all duration-300 ease-out ${
+          isSticky
+            ? "fixed top-0 left-0 right-0 calc mx-auto bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-lg z-50"
+            : "relative mt-8 bg-white border-b border-gray-100"
         }`}
-        initial={false}
-        animate={{
-          y: isSticky ? 0 : 0,
-          opacity: 1
+        style={{
+          opacity: headerOpacity,
+          scale: headerScale,
         }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
       >
-        <div className="mx-auto px-4 py-4">
+        <div className="mx-auto max-w-4xl px-4 py-4">
           <div className="flex items-center justify-between">
             {/* Left: Title and Status */}
-            <div className="flex items-center space-x-4">
-              <motion.h2 
-                animate={{ 
-                  opacity: 1, 
-                  x: 0,
-                  scale: isSticky ? 0.95 : 1 
+            <div className="flex items-center space-x-4 min-w-0 flex-1">
+              <motion.h2
+                className="text-lg font-semibold text-gray-900 truncate"
+                animate={{
+                  fontSize: isSticky ? "1rem" : "1.125rem",
                 }}
                 transition={{ duration: 0.2 }}
-                className="text-lg font-semibold text-gray-900 truncate max-w-xs"
               >
-                {title || 'Học phần mới'}
+                {title || "Học phần mới"}
               </motion.h2>
-              
+
               <div className="flex items-center space-x-3">
                 {/* Flashcard count */}
-                <motion.div 
+                <motion.div
                   className="flex items-center space-x-1 bg-gray-100 px-3 py-1.5 rounded-full"
-                  animate={{ scale: isSticky ? 0.9 : 1 }}
-                  transition={{ duration: 0.2 }}
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.1 }}
                 >
-                  <span className="text-sm text-gray-600">{validFlashcards.length}</span>
+                  <span className="text-sm font-medium text-gray-700">{validFlashcards.length}</span>
                   <span className="text-xs text-gray-500">thẻ</span>
                 </motion.div>
 
                 {/* Auto-save status */}
-                {isAutoSaving ? (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: isSticky ? 0.9 : 1 }}
-                    className="flex items-center text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full text-sm"
-                  >
-                    <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
-                    <span className="font-medium">Đang lưu...</span>
-                  </motion.div>
-                ) : hasDraft && lastSavedAt ? (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: isSticky ? 0.9 : 1 }}
-                    className="flex items-center text-green-600 bg-green-50 px-3 py-1.5 rounded-full text-sm"
-                  >
-                    <svg className="w-3 h-3 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    <span className="font-medium">Đã lưu {formatLastSaved(lastSavedAt)}</span>
-                  </motion.div>
-                ) : null}
+                <AnimatePresence mode="wait">
+                  {isAutoSaving ? (
+                    <motion.div
+                      key="saving"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      className="flex items-center text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full text-sm"
+                    >
+                      <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+                      <span className="font-medium">Đang lưu...</span>
+                    </motion.div>
+                  ) : hasDraft && lastSavedAt ? (
+                    <motion.div
+                      key="saved"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      className="flex items-center text-green-600 bg-green-50 px-3 py-1.5 rounded-full text-sm"
+                    >
+                      <svg className="w-3 h-3 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <span className="font-medium">Đã lưu {formatLastSaved(lastSavedAt)}</span>
+                    </motion.div>
+                  ) : null}
+                </AnimatePresence>
               </div>
             </div>
 
-            {/* Right: Actions */}
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={() => setShowSettingsModal(true)}
-                className="p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all duration-200 group"
-                title="Cài đặt"
-              >
-                <svg className="w-5 h-5 group-hover:rotate-45 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </button>
-
-              <motion.button
-                onClick={handleSave}
-                disabled={saving || !title.trim() || validFlashcards.length < 2}
-                className={`px-6 py-2.5 rounded-xl font-medium transition-all duration-200 flex items-center space-x-2 ${
-                  saving || !title.trim() || validFlashcards.length < 2
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl'
-                }`}
-                whileHover={{ scale: saving ? 1 : 1.02 }}
-                whileTap={{ scale: saving ? 1 : 0.98 }}
-                animate={{ scale: isSticky ? 0.95 : 1 }}
-                transition={{ duration: 0.2 }}
-              >
-                {saving ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                    <span>Đang lưu...</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                    </svg>
-                    <span>Tạo và ôn luyện</span>
-                  </>
-                )}
-              </motion.button>
-            </div>
+            {/* Right: Save Button */}
+            <motion.button
+              onClick={handleSave}
+              disabled={saving || !title.trim() || validFlashcards.length < 2}
+              className={`px-6 py-2.5 rounded-xl font-medium transition-all duration-200 flex items-center space-x-2 ${
+                saving || !title.trim() || validFlashcards.length < 2
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl"
+              }`}
+              whileHover={{ scale: saving ? 1 : 1.02 }}
+              whileTap={{ scale: saving ? 1 : 0.98 }}
+            >
+              {saving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                  <span>Đang lưu...</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                    />
+                  </svg>
+                  <span>Tạo và ôn luyện</span>
+                </>
+              )}
+            </motion.button>
           </div>
         </div>
       </motion.div>
 
-      {/* Spacer khi sticky để tránh content bị nhảy - sử dụng headerHeight thực tế */}
-      {isSticky && (
-        <div style={{ height: `${headerHeight}px` }} />
-      )}
+      {/* Spacer when sticky */}
+      {isSticky && <div className="h-20" />}
 
-      {/* Form Fields - chỉ hiện khi không sticky */}
-      {!isSticky && (
-        <motion.div 
-          className="px-4 mt-2"
-          initial={{ opacity: 1 }}
-          animate={{ opacity: 1 }}
-        >
-          <div className="space-y-6">
-            <FloatingInput
-              label="Tiêu đề học phần"
-              value={title}
-              onChange={setTitle}
-            />
+      {/* Form Fields - only show when not sticky */}
+      <AnimatePresence>
+        {!isSticky && (
+          <motion.div
+            className="mt-6 w-full mx-auto"
+            initial={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="space-y-6">
+              <FloatingInput label="Tiêu đề học phần" value={title} onChange={setTitle} />
 
-            <FloatingInput
-              label="Mô tả (không bắt buộc)"
-              value={description}
-              onChange={setDescription}
-              multiline={true}
-              rows={3}
-            />
-
-            {/* Settings Preview */}
-            <div className="flex items-center space-x-4 text-sm">
-              <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-full transition-colors ${
-                isPublic ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-gray-100 text-gray-600 border border-gray-200'
-              }`}>
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
-                  <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
-                </svg>
-                <span className="font-medium">{isPublic ? 'Công khai' : 'Riêng tư'}</span>
-              </div>
-              
-              <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-full transition-colors ${
-                allowStudyFromClass ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-600 border border-gray-200'
-              }`}>
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
-                </svg>
-                <span className="font-medium">{allowStudyFromClass ? 'Cho phép học từ lớp' : 'Không cho phép học từ lớp'}</span>
-              </div>
+              <FloatingInput
+                label="Mô tả (không bắt buộc)"
+                value={description}
+                onChange={setDescription}
+                multiline={true}
+                rows={3}
+              />
             </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Settings Modal */}
-      <SettingsModal
-        isOpen={showSettingsModal}
-        onClose={() => setShowSettingsModal(false)}
-        isPublic={isPublic}
-        setIsPublic={setIsPublic}
-        allowStudyFromClass={allowStudyFromClass}
-        setAllowStudyFromClass={setAllowStudyFromClass}
-      />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
-  );
-};
+  )
+}
 
-export default FlashcardFormHeader;
+export default FlashcardFormHeader

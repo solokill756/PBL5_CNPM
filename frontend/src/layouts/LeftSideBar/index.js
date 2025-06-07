@@ -56,7 +56,7 @@ function LeftSideBar({ onToggle }) {
 
   return (
     <>
-      <div className={`sticky h-screen p-4 border-r bg-zinc-50 transition-all duration-300 ${isCollapsed ? "w-20" : "w-64"}`}>
+      <div data-sidebar className={`sticky sidebar h-screen p-4 border-r bg-zinc-50 transition-all duration-300 ${isCollapsed ? "w-20" : "w-64"}`}>
         {/* Nút More */}
         <div className="flex max-h-12 items-center">
           <button onClick={handleToggle} className="p-3 active:bg-red-200 rounded-md hover:bg-red-50 transition">

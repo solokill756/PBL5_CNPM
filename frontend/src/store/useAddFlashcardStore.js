@@ -180,10 +180,10 @@ export const useAddFlashcardStore = create(
       },
 
       // Load from forgotten words
-      loadFromForgottenWords: async (axios) => {
+      loadFromForgottenWords: async (axios, length) => {
         set({ loading: true });
         try {
-          const response = await axios.get("/api/flashcards/forgotten-words");
+          const response = await axios.get(`/api/listFlashcard/get-list-foget-flashcard?length=${length}`);
           const words = response.data.data || [];
 
           set({
@@ -191,9 +191,8 @@ export const useAddFlashcardStore = create(
             description: "Bộ flashcard được tạo từ những từ bạn hay quên",
             flashcards: words.map((word, index) => ({
               id: index + 1,
-              front: word.front_text || word.term || "",
-              back: word.back_text || word.definition || "",
-              note: word.note || "",
+              front: word.Flashcard.front_text || word.term || "",
+              back: word.Flashcard.back_text || word.definition || "",
             })),
           });
         } catch (error) {
@@ -274,11 +273,10 @@ export const useAddFlashcardStore = create(
             flashcards: validFlashcards.map((card) => ({
               front_text: card.front.trim(),
               back_text: card.back.trim(),
-              custom_note: card.note.trim(),
             })),
           };
 
-          const response = await axios.post("/api/flashcards/create", payload);
+          const response = await axios.post("/api/listFlashcard/add-list-flashcard", payload);
 
           set({
             successMessage: "Tạo bộ flashcard thành công!",

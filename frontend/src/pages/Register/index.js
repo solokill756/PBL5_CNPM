@@ -105,6 +105,10 @@ function Register() {
     }
   };
 
+  const handleGoogleLogin = () => {
+    window.location.href = "https://backendserver-app.azurewebsites.net/api/auth/google";
+  };
+
   const isRegisterDisabled =
     fullname.trim() === "" ||
     email.trim() === "" ||
@@ -133,6 +137,7 @@ function Register() {
             name="Đăng nhập bằng google"
             icon={<FcGoogle className="size-6" />}
             size="w-72 !bg-white !text-gray-600"
+            onClick={handleGoogleLogin}
           />
         </div>
         <div className="flex-row flex my-2 text-sm text-gray-500 font-semibold">

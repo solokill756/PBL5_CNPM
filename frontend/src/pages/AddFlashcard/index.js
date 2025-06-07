@@ -99,7 +99,7 @@ const AddFlashcard = () => {
       if (isFromCopy && originalDeck.length > 0) {
         loadFromExisting({ originalDeck, flashcardMetadata });
       } else if (mode === "forgotten") {
-        loadFromForgottenWords(axios);
+        loadFromForgottenWords(axios, 40);
       }
       return;
     }
