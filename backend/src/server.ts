@@ -1,24 +1,27 @@
 import express, { Application } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import userRoutes from "./routes/userRoute.js";
+import userRoutes from "./routes/User/userRoute.js";
 import cookieParser from "cookie-parser";
-import authRoutes from "./routes/authenticationRoute.js";
+import authRoutes from "./routes/User/authenticationRoute.js";
 import passport from "passport";
 import session from "express-session";
-import homePageRoutes from "./routes/homePageRoute.js";
-import profileRoutes from "./routes/profileRoute.js";
-import { responseFormatter } from "./middleware/responseFormatter.js";
-import flashCardRoutes from "./routes/flashCardRoute.js";
-import quizRoutes from "./routes/quizRoute.js";
-import vocabularyRoutes from "./routes/vocabularyRoute.js";
-import learnRoutes from "./routes/learnRoutes.js";
-import achivermentRoutes from "./routes/achivermentRote.js";
+
 import http from "http";
 import { Server } from "socket.io";
 import battleHandler from "./socketIO/battleHandler.js";
-import classRoute from "./routes/classRoute.js";
-import listFlashCardRoute from "./routes/listFlashCardRoute.js";
+import { responseFormatter } from "./middleware/responseFormatter.js";
+import homePageRoutes from "./routes/User/homePageRoute.js";
+import profileRoutes from "./routes/User/profileRoute.js";
+import flashCardRoutes from "./routes/User/flashCardRoute.js";
+import quizRoutes from "./routes/User/quizRoute.js";
+import vocabularyRoute from "./routes/User/vocabularyRoute.js";
+import learnRoutes from "./routes/User/learnRoutes.js";
+import achivermentRoutes from "./routes/User/achivermentRote.js";
+import classRoute from "./routes/User/classRoute.js";
+import listFlashCardRoute from "./routes/User/listFlashCardRoute.js";
+import AdminVocabularyRoutes from "./routes/Admin/VocabularyRoute.js";
+
 dotenv.config();
 
 const app: Application = express();
@@ -69,12 +72,12 @@ app.use("/api/homePage", homePageRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/flashcard", flashCardRoutes);
 app.use("/api/quiz", quizRoutes);
-app.use("/api/vocabulary", vocabularyRoutes);
+app.use("/api/vocabulary", vocabularyRoute);
 app.use("/api/learn", learnRoutes);
 app.use("/api/achievement", achivermentRoutes);
 app.use("/api/class", classRoute);
 app.use("/api/listFlashcard", listFlashCardRoute);
-
+app.use("/api/admin/vocabulary", AdminVocabularyRoutes);
 // import Socket IO logic
 battleHandler(io, gameRooms, waitingPlayers);
 

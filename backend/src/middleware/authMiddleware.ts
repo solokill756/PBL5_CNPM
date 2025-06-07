@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { Request, Response, NextFunction } from "express";
-import { UserPayload } from "../services/authService.js";
+import { UserPayload } from "../services/User/authService.js";
 import checktokenVersion from "../utils/checkTokenVersion.js";
 
 dotenv.config();
