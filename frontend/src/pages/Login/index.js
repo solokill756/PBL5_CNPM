@@ -65,7 +65,7 @@ function Login() {
   };
 
   const handleGoogleLogin = async () => {
-      window.location.href = "http://localhost:9000/api/auth/google";
+      window.location.href = "https://backendserver-app.azurewebsites.net/api/auth/google";
   };
   
   
