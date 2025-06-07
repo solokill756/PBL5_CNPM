@@ -303,9 +303,7 @@ const FlashcardFormItem = ({ flashcard, index }) => {
 
           {/* Vietnamese input */}
           <div className="space-y-2">
-            <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide">
-              Tiếng Việt
-            </label>
+            <label className="block text-xs font-medium text-gray-600 uppercase tracking-wide">Tiếng Việt</label>
             <input
               type="text"
               value={flashcard.back}
@@ -360,7 +358,7 @@ const FlashcardFormItem = ({ flashcard, index }) => {
         )}
       </AnimatePresence>
     </motion.div>
-  );
-};
+  )
+}
 
 export default FlashcardFormItem;
