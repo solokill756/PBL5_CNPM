@@ -5,7 +5,7 @@ import vocabularyService from "./vocabularyService";
 const getRandomQuestion = async () => {
   try {
     // Lấy tối đa 20 flashcard ngẫu nhiên từ database
-    const questions = await db.flashcard.findAll({
+    const questions = await db.vocabulary.findAll({
       order: db.sequelize.random(),
       limit: 20,
     });
@@ -19,8 +19,8 @@ const getRandomQuestion = async () => {
     const shuffledData = shuffleArray([...questions]);
     const flashcards = shuffledData.map((item) => {
       return {
-        front_text: item.front_text,
-        back_text: item.back_text,
+        front_text: item.word,
+        back_text: item.meaning,
       };
     });
 

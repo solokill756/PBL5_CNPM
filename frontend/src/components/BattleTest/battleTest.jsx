@@ -216,7 +216,7 @@ const BattleTest = () => {
         </div>
       </div>
     );
-
+    
   const renderCurrentQuestion = () =>
     gameState === "playing" &&
     currentQuestion && (
