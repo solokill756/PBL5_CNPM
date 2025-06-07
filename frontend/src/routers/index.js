@@ -26,6 +26,7 @@ import AddFlashcard from "@/pages/AddFlashcard";
 import Test from "@/pages/TestPage";
 import TestResult from "@/pages/TestPage/TestResult";
 import BattleTest from "@/components/BattleTest/battleTest";
+import ModernBattle from "@/components/Battle/ModernBattle";
 // Component bảo vệ route yêu cầu xác thực
 function PrivateRoute({ children }) {
   // const { auth } = useAuth();
@@ -85,12 +86,12 @@ const router = createBrowserRouter([
         path: "/vocabulary/:word",
         element: <Vocabulary />,
       },
+      // {
+      //   path: "/battle",
+      //   element: <RoomListing />,
+      // },
       {
         path: "/battle",
-        element: <RoomListing />,
-      },
-      {
-        path: "/battle/:roomId",
         element: <VocabularyBattle />,
       },
       {
