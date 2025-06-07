@@ -84,6 +84,7 @@ const AddFlashcard = () => {
     loading,
     checkForDraft,
     clearDraft,
+    title
   } = useAddFlashcardStore();
 
   const { originalDeck, flashcardMetadata } = useFlashcardStore();
@@ -99,7 +100,9 @@ const AddFlashcard = () => {
       if (isFromCopy && originalDeck.length > 0) {
         loadFromExisting({ originalDeck, flashcardMetadata });
       } else if (mode === "forgotten") {
-        loadFromForgottenWords(axios, 40);
+        if (!title || title !== "Từ hay quên") {
+          loadFromForgottenWords(axios, 40);
+        }
       }
       return;
     }
@@ -108,7 +111,7 @@ const AddFlashcard = () => {
     if (checkForDraft()) {
       setShowDraftModal(true);
     }
-  }, []);
+  }, [location.search, originalDeck, flashcardMetadata, title]);
 
   const handleContinueDraft = () => {
     setShowDraftModal(false);

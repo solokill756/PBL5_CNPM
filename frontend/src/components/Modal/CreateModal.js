@@ -4,9 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiUsers, FiRefreshCw } from 'react-icons/fi';
 import { TbCards } from 'react-icons/tb';
 import { useNavigate } from 'react-router-dom';
+import { useAddFlashcardStore } from '@/store/useAddFlashcardStore';
+import useAxiosPrivate from '@/hooks/useAxiosPrivate';
 
 const CreateModal = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
+  const axios = useAxiosPrivate();
+  const { loadFromForgottenWords, resetForm } = useAddFlashcardStore();
 
   const createOptions = [
     {
@@ -18,6 +22,8 @@ const CreateModal = ({ isOpen, onClose }) => {
       bgColor: 'bg-blue-50',
       textColor: 'text-blue-600',
       onClick: () => {
+        // Reset form để đảm bảo bắt đầu với form trống
+        resetForm();
         navigate('/add-flashcard');
         onClose();
       }
@@ -30,9 +36,20 @@ const CreateModal = ({ isOpen, onClose }) => {
       gradient: 'from-orange-500 to-orange-600',
       bgColor: 'bg-orange-50',
       textColor: 'text-orange-600',
-      onClick: () => {
-        navigate('/add-flashcard?mode=forgotten');
-        onClose();
+      onClick: async () => {
+        try {
+          // Reset form trước
+          resetForm();
+          // Navigate trước để user thấy trang đang load
+          navigate('/add-flashcard?mode=forgotten');
+          onClose();
+          // Gọi API để load từ hay quên
+          await loadFromForgottenWords(axios, 40);
+        } catch (error) {
+          console.error('Error loading forgotten words:', error);
+          // Nếu có lỗi, navigate về trang bình thường
+          navigate('/add-flashcard');
+        }
       }
     },
     {
