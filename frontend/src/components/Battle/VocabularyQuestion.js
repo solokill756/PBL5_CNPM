@@ -10,23 +10,37 @@ const VocabularyQuestion = ({
   questionCount,
   playerAnswerTime,
   questionResults,
-  waitingForOpponent
+  waitingForOpponent,
+  currentUser,
+  isTimeUp // Thêm prop để biết timer đã hết
 }) => {
   if (!question) return null;
   
-  // Check if question is completed (both players answered)
   const isQuestionCompleted = questionResults && questionResults.answers;
   
   // Get player's actual result from BE
   const getPlayerResult = () => {
-    if (!isQuestionCompleted) return null;
+    if (!isQuestionCompleted || !currentUser) return null;
     
     const answersArray = Object.values(questionResults.answers);
-    return answersArray.find(answer => answer.answer === playerAnswer);
+    const playerResult = answersArray.find(
+      answerObj => answerObj.username === currentUser.username
+    );
+    
+    return playerResult;
   };
   
   const playerResult = getPlayerResult();
   
+  // Enhanced timeout and correct logic
+  const isTimeout = playerAnswer === "timeout" || 
+                 (playerResult && playerResult.answer === null) ||
+                 (isQuestionCompleted && !playerResult);
+
+  const isPlayerCorrect = playerResult 
+    ? playerResult.isCorrect 
+    : (playerAnswer !== "timeout" && playerAnswer !== null && playerAnswer === question.correctAnswer);
+
   return (
     <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
       <div className="p-6 border-b border-gray-100">
@@ -106,26 +120,25 @@ const VocabularyQuestion = ({
         </div>
       </div>
       
-      {/* Show result after answering */}
-      {playerAnswer !== null && (
+      {(playerAnswer !== null || isQuestionCompleted) && (
         <div className={`p-4 border-t ${
-          playerAnswer === "timeout" 
+          isTimeout
             ? 'bg-yellow-50 border-yellow-100' 
-            : playerResult?.isCorrect 
+            : isPlayerCorrect
               ? 'bg-green-50 border-green-100' 
               : 'bg-red-50 border-red-100'
         }`}>
           <div className="flex items-center">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
-              playerAnswer === "timeout" 
+              isTimeout
                 ? 'bg-yellow-100 text-yellow-600'
-                : playerResult?.isCorrect 
+                : isPlayerCorrect
                   ? 'bg-green-100 text-green-600' 
                   : 'bg-red-100 text-red-600'
             }`}>
-              {playerAnswer === "timeout" ? (
+              {isTimeout ? (
                 <FaClock />
-              ) : playerResult?.isCorrect ? (
+              ) : isPlayerCorrect ? (
                 <FaCheckCircle />
               ) : (
                 <FaTimesCircle />
@@ -133,23 +146,23 @@ const VocabularyQuestion = ({
             </div>
             <div>
               <p className={`font-medium ${
-                playerAnswer === "timeout" 
+                isTimeout
                   ? 'text-yellow-800'
-                  : playerResult?.isCorrect 
+                  : isPlayerCorrect
                     ? 'text-green-800' 
                     : 'text-red-800'
               }`}>
-                {playerAnswer === "timeout" 
+                {isTimeout
                   ? 'Hết thời gian!' 
-                  : playerResult?.isCorrect 
+                  : isPlayerCorrect
                     ? 'Chính xác!' 
                     : 'Sai rồi!'}
               </p>
               <p className="text-sm text-gray-600">
-                {playerAnswer === "timeout" 
+                {isTimeout
                   ? '+0 điểm (hết thời gian)'
                   : playerResult
-                    ? `+${playerResult.points} điểm (${(playerResult.responseTime / 1000).toFixed(1)}s)`
+                    ? `+${playerResult.points || 0} điểm (${((playerResult.responseTime || 0) / 1000).toFixed(1)}s)`
                     : `Đáp án đúng là: ${question.correctAnswer}`}
               </p>
             </div>
@@ -157,8 +170,8 @@ const VocabularyQuestion = ({
         </div>
       )}
       
-      {/* Show waiting status */}
-      {waitingForOpponent && !isQuestionCompleted && (
+      {/* Enhanced waiting status */}
+      {/* {waitingForOpponent && !isQuestionCompleted && (
         <div className="p-4 bg-blue-50 border-t border-blue-100">
           <div className="flex items-center justify-center">
             <motion.div
@@ -166,10 +179,14 @@ const VocabularyQuestion = ({
               transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
               className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full mr-2"
             />
-            <span className="text-blue-700 font-medium">Đang chờ đối thủ trả lời...</span>
+            <span className="text-blue-700 font-medium">
+              {playerAnswer === "timeout" 
+                ? "Đang chờ đối thủ hoặc kết quả..." 
+                : "Đang chờ đối thủ trả lời..."}
+            </span>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

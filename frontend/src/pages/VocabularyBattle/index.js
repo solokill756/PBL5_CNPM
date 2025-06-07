@@ -1,362 +1,214 @@
-// import React, { useState, useEffect, useRef } from "react";
-// import { motion, AnimatePresence } from "framer-motion";
-// import { io } from "socket.io-client";
-// import { useAuthStore } from "@/store/useAuthStore";
-
-// // Import các component con
-// import BattleConnectionStatus from "@/components/Battle/BattleConnectionStatus";
-// import BattleWaitingScreen from "@/components/Battle/BattleWaitingScreen";
-// import BattleQueueScreen from "@/components/Battle/BattleQueueScreen";
-// import BattleGameFoundScreen from "@/components/Battle/BattleGameFoundScreen";
-// import BattleScoreHeader from "@/components/Battle/BattleScoreHeader";
-// import BattleTimer from "@/components/Battle/BattleTimer";
-// import BattleQuestion from "@/components/Battle/BattleQuestion";
-// import BattleQuestionResult from "@/components/Battle/BattleQuestionResult";
-// import FinalResult from "@/components/Battle/FinalResult";
-
-// const VocabularyBattle = () => {
-//   // Auth state
-//   const { accessToken, user } = useAuthStore();
-
-//   // Socket state
-//   const [socket, setSocket] = useState(null);
-//   const [connected, setConnected] = useState(false);
-//   const [connectionError, setConnectionError] = useState("");
-
-//   // Game states
-//   const [gameState, setGameState] = useState("waiting");
-//   const [gameData, setGameData] = useState(null);
-//   const [currentQuestion, setCurrentQuestion] = useState(null);
-//   const [questionNumber, setQuestionNumber] = useState(0);
-//   const [totalQuestions, setTotalQuestions] = useState(0);
-//   const [scores, setScores] = useState({});
-//   const [queuePosition, setQueuePosition] = useState(0);
-//   const [selectedAnswer, setSelectedAnswer] = useState(null);
-//   const [gameResults, setGameResults] = useState(null);
-//   const [questionResults, setQuestionResults] = useState(null);
-//   const [timeLeft, setTimeLeft] = useState(10);
-//   const [timerActive, setTimerActive] = useState(false);
-
-//   // UI states
-//   const [showQuestionResult, setShowQuestionResult] = useState(false);
-//   const [loading, setLoading] = useState(false);
-
-//   const timerRef = useRef(null);
-
-//   // Socket connection
-//   useEffect(() => {
-//     if (!accessToken) {
-//       setConnectionError("Vui lòng đăng nhập để chơi battle!");
-//       return;
-//     }
-
-//     const newSocket = io("https://backendserver-app.azurewebsites.net", {
-//       auth: { token: accessToken },
-//     });
-
-//     // Connection events
-//     newSocket.on("connect", () => {
-//       console.log("✅ Connected to battle server");
-//       setConnected(true);
-//       setConnectionError("");
-//     });
-
-//     newSocket.on("disconnect", () => {
-//       console.log("❌ Disconnected from server");
-//       setConnected(false);
-//       setGameState("waiting");
-//       resetTimer();
-//     });
-
-//     newSocket.on("connect_error", (error) => {
-//       console.error("❌ Connection error:", error);
-//       setConnectionError("Lỗi kết nối: " + error.message);
-//     });
-
-//     // Queue events
-//     newSocket.on("queue_joined", (data) => {
-//       console.log("🎯 Queue joined:", data);
-//       setGameState("inQueue");
-//       setQueuePosition(data.position);
-//       setLoading(false);
-//     });
-
-//     // Game events
-//     newSocket.on("game_found", (data) => {
-//       console.log("🎮 Game found:", data);
-//       setGameData(data);
-//       setGameState("gameFound");
-//       setTotalQuestions(data.totalQuestions);
-//       setScores({
-//         [user.user_id]: 0,
-//         [data.opponent.user_id]: 0,
-//       });
-
-//       setTimeout(() => {
-//         newSocket.emit("ready_to_start", { roomId: data.roomId });
-//       }, 2000);
-//     });
-
-//     newSocket.on("game_started", (data) => {
-//       console.log("🚀 Game started:", data);
-//       setGameState("playing");
-//       setCurrentQuestion(data.question);
-//       setQuestionNumber(data.questionNumber);
-//       setTotalQuestions(data.totalQuestions);
-//       setSelectedAnswer(null);
-//       setShowQuestionResult(false);
-//       startQuestionTimer();
-//     });
-
-//     newSocket.on("next_question", (data) => {
-//       console.log("➡️ Next question:", data);
-//       setCurrentQuestion(data.question);
-//       setQuestionNumber(data.questionNumber);
-//       setSelectedAnswer(null);
-//       setQuestionResults(null);
-//       setShowQuestionResult(false);
-//       startQuestionTimer();
-//     });
-
-//     newSocket.on("question_result", (data) => {
-//       console.log("📊 Question result:", data);
-//       setQuestionResults(data);
-//       setScores(data.scores);
-//       setShowQuestionResult(true);
-//       resetTimer();
-//     });
-
-//     newSocket.on("game_ended", (data) => {
-//       console.log("🏁 Game ended:", data);
-//       setGameState("ended");
-//       setGameResults(data);
-//       setScores(data.finalScores);
-//       resetTimer();
-//     });
-
-//     newSocket.on("error", (error) => {
-//       console.error("❌ Game error:", error);
-//       setConnectionError("Lỗi game: " + error.message);
-//     });
-
-//     newSocket.on("opponent_disconnected", (data) => {
-//       console.log("🚪 Opponent disconnected:", data);
-//       setGameState("ended");
-//       setGameResults({
-//         winner: { username: user.username, user_id: user.user_id },
-//         isDraw: false,
-//         finalScores: scores,
-//         totalQuestions: totalQuestions,
-//       });
-//       resetTimer();
-//     });
-
-//     setSocket(newSocket);
-
-//     return () => {
-//       resetTimer();
-//       newSocket.close();
-//     };
-//   }, [accessToken]);
-
-//   // Timer functions
-//   const startQuestionTimer = () => {
-//     setTimeLeft(10);
-//     setTimerActive(true);
-
-//     timerRef.current = setInterval(() => {
-//       setTimeLeft((prev) => {
-//         if (prev <= 1) {
-//           handleTimeEnd();
-//           return 0;
-//         }
-//         return prev - 1;
-//       });
-//     }, 1000);
-//   };
-
-//   const resetTimer = () => {
-//     if (timerRef.current) {
-//       clearInterval(timerRef.current);
-//       timerRef.current = null;
-//     }
-//     setTimerActive(false);
-//   };
-
-//   const handleTimeEnd = () => {
-//     resetTimer();
-//     if (socket && gameData && !selectedAnswer) {
-//       socket.emit("time_end", { roomId: gameData.roomId });
-//     }
-//   };
-
-//   // Game actions
-//   const handleJoinQueue = () => {
-//     if (socket && connected) {
-//       setLoading(true);
-//       socket.emit("join_queue", {});
-//     }
-//   };
-
-//   const handleLeaveQueue = () => {
-//     if (socket && connected) {
-//       socket.emit("leave_queue");
-//       setGameState("waiting");
-//       setQueuePosition(0);
-//       setLoading(false);
-//     }
-//   };
-
-//   const handleSubmitAnswer = (answer) => {
-//     if (socket && connected && gameData && selectedAnswer === null && timerActive) {
-//       setSelectedAnswer(answer);
-//       resetTimer();
-      
-//       socket.emit("submit_answer", {
-//         roomId: gameData.roomId,
-//         answer: answer,
-//       });
-//     }
-//   };
-
-//   const handlePlayAgain = () => {
-//     setGameState("waiting");
-//     setGameData(null);
-//     setCurrentQuestion(null);
-//     setQuestionNumber(0);
-//     setTotalQuestions(0);
-//     setScores({});
-//     setGameResults(null);
-//     setQuestionResults(null);
-//     setSelectedAnswer(null);
-//     setShowQuestionResult(false);
-//     setLoading(false);
-//   };
-
-//   const handleExit = () => {
-//     // Navigate to home or previous page
-//     window.history.back();
-//   };
-
-//   // Get player info
-//   const getPlayerInfo = (userId) => {
-//     if (!gameData) return null;
-    
-//     if (userId === user?.user_id) {
-//       return { username: user.username, user_id: user.user_id, isMe: true };
-//     } else if (userId === gameData.opponent?.user_id) {
-//       return { ...gameData.opponent, isMe: false };
-//     } else if (userId === gameData.player?.user_id) {
-//       return { ...gameData.player, isMe: false };
-//     }
-    
-//     return null;
-//   };
-
-//   // Transform gameResults for FinalResult component
-//   const getPlayerData = () => {
-//     if (!gameResults || !gameData) return null;
-    
-//     return {
-//       player: {
-//         name: user?.username,
-//         avatar: user?.profile_picture,
-//         score: gameResults.finalScores[user?.user_id] || 0
-//       },
-//       opponent: {
-//         name: gameData.opponent?.username,
-//         avatar: null, // No avatar for opponent
-//         score: gameResults.finalScores[gameData.opponent?.user_id] || 0
-//       }
-//     };
-//   };
-
-//   // Main render
-//   return (
-//     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-//       <div className="max-w-6xl mx-auto p-4 py-8">
-//         <motion.h1
-//           initial={{ opacity: 0, y: -30 }}
-//           animate={{ opacity: 1, y: 0 }}
-//           className="text-4xl md:text-5xl font-bold text-center mb-8 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent"
-//         >
-//           Đối kháng từ vựng
-//         </motion.h1>
-
-//         <BattleConnectionStatus 
-//           connected={connected}
-//           connectionError={connectionError}
-//           user={user}
-//         />
-
-//         <AnimatePresence mode="wait">
-//           {gameState === "waiting" && (
-//             <BattleWaitingScreen 
-//               onJoinQueue={handleJoinQueue}
-//               connected={connected}
-//               loading={loading}
-//             />
-//           )}
-          
-//           {gameState === "inQueue" && (
-//             <BattleQueueScreen 
-//               queuePosition={queuePosition}
-//               onLeaveQueue={handleLeaveQueue}
-//             />
-//           )}
-          
-//           {gameState === "gameFound" && (
-//             <BattleGameFoundScreen 
-//               user={user}
-//               gameData={gameData}
-//               totalQuestions={totalQuestions}
-//             />
-//           )}
-          
-//           {gameState === "playing" && (
-//             <div className="max-w-4xl mx-auto space-y-6">
-//               <BattleScoreHeader 
-//                 user={user}
-//                 gameData={gameData}
-//                 scores={scores}
-//                 questionNumber={questionNumber}
-//                 totalQuestions={totalQuestions}
-//               />
-              
-//               <BattleTimer 
-//                 timeLeft={timeLeft}
-//                 totalTime={10}
-//               />
-              
-//               <BattleQuestion 
-//                 currentQuestion={currentQuestion}
-//                 selectedAnswer={selectedAnswer}
-//                 timerActive={timerActive}
-//                 onSubmitAnswer={handleSubmitAnswer}
-//               />
-              
-//               <BattleQuestionResult 
-//                 showQuestionResult={showQuestionResult}
-//                 questionResults={questionResults}
-//                 getPlayerInfo={getPlayerInfo}
-//               />
-//             </div>
-//           )}
-          
-//           {gameState === "ended" && gameResults && (
-//             <FinalResult 
-//               {...getPlayerData()}
-//               onRetry={handlePlayAgain}
-//               onExit={handleExit}
-//             />
-//           )}
-//         </AnimatePresence>
-//       </div>
-//     </div>
-//   );
-// };
+// Chỉ giữ lại phần lobby, xóa phần playing state
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { io } from "socket.io-client";
+import { useAuthStore } from "@/store/useAuthStore";
+import {
+  IoGameController,
+  IoRocket,
+  IoTime,
+  IoTrophy,
+} from "react-icons/io5";
 
 const VocabularyBattle = () => {
-  return <div>VocabularyBattle</div>;
+  const navigate = useNavigate();
+  const { accessToken, user } = useAuthStore();
+
+  // Socket state
+  const [socket, setSocket] = useState(null);
+  const [connected, setConnected] = useState(false);
+  const [connectionError, setConnectionError] = useState("");
+
+  // Game states
+  const [gameState, setGameState] = useState("waiting"); // waiting, inQueue
+  const [queuePosition, setQueuePosition] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!accessToken) {
+      setConnectionError("Vui lòng đăng nhập để chơi battle!");
+      return;
+    }
+
+    const newSocket = io("https://backendserver-app.azurewebsites.net", {
+      auth: { token: accessToken },
+    });
+
+    newSocket.on("connect", () => {
+      console.log("✅ Connected to battle server");
+      setConnected(true);
+      setConnectionError("");
+    });
+
+    newSocket.on("disconnect", () => {
+      console.log("❌ Disconnected from server");
+      setConnected(false);
+      setGameState("waiting");
+    });
+
+    newSocket.on("connect_error", (error) => {
+      console.error("❌ Connection error:", error);
+      setConnectionError("Lỗi kết nối: " + error.message);
+    });
+
+    newSocket.on("queue_joined", (data) => {
+      console.log("🎯 Queue joined:", data);
+      setGameState("inQueue");
+      setQueuePosition(data.position);
+      setLoading(false);
+    });
+
+    newSocket.on("game_found", (data) => {
+      console.log("🎮 Game found:", data);
+      localStorage.setItem(`battle_game_${data.roomId}`, JSON.stringify(data));
+      // Chuyển đến phòng đấu
+      navigate(`/battle/${data.roomId}`);
+    });
+
+    newSocket.on("error", (error) => {
+      console.error("❌ Game error:", error);
+      setConnectionError("Lỗi game: " + error.message);
+      setLoading(false);
+    });
+
+    setSocket(newSocket);
+
+    return () => {
+      newSocket.close();
+    };
+  }, [accessToken, navigate]);
+
+  const handleJoinQueue = () => {
+    if (socket && connected) {
+      setLoading(true);
+      socket.emit("join_queue");
+    }
+  };
+
+  const handleLeaveQueue = () => {
+    if (socket) {
+      socket.emit("leave_queue");
+      setGameState("waiting");
+    }
+  };
+
+  // Waiting State Component
+  const WaitingState = () => (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="text-center max-w-md mx-auto"
+    >
+      <div className="bg-white rounded-2xl shadow-xl p-8">
+        <motion.div
+          animate={{ 
+            rotate: [0, 10, -10, 10, 0],
+            scale: [1, 1.1, 1, 1.1, 1]
+          }}
+          transition={{ 
+            duration: 2,
+            repeat: Infinity,
+            repeatType: "reverse"
+          }}
+          className="text-6xl mb-6"
+        >
+          ⚔️
+        </motion.div>
+        
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">
+          Thách đấu từ vựng
+        </h2>
+        <p className="text-gray-600 mb-8">
+          Tham gia trận chiến kiến thức và thể hiện khả năng từ vựng của bạn!
+        </p>
+        
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={handleJoinQueue}
+          disabled={!connected || loading}
+          className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Đang tìm đối thủ...
+            </div>
+          ) : (
+            <div className="flex items-center justify-center gap-2">
+              <IoRocket className="text-xl" />
+              Bắt đầu thách đấu
+            </div>
+          )}
+        </motion.button>
+      </div>
+    </motion.div>
+  );
+
+  // Queue State Component
+  const QueueState = () => (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="text-center max-w-md mx-auto"
+    >
+      <div className="bg-white rounded-2xl shadow-xl p-8">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full mx-auto mb-6"
+        />
+        
+        <h3 className="text-xl font-bold text-gray-800 mb-4">
+          Đang tìm đối thủ...
+        </h3>
+        <p className="text-gray-600 mb-2">
+          Vị trí trong hàng đợi: <span className="font-bold text-indigo-600">#{queuePosition}</span>
+        </p>
+        <p className="text-sm text-gray-500 mb-8">
+          Chúng tôi đang tìm đối thủ phù hợp cho bạn
+        </p>
+        
+        <button
+          onClick={handleLeaveQueue}
+          className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+        >
+          Hủy tìm kiếm
+        </button>
+      </div>
+    </motion.div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-4">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-8">
+          <IoGameController className="text-3xl text-indigo-600" />
+          <h1 className="text-2xl font-bold text-gray-800">Battle Arena</h1>
+        </div>
+
+        {/* Connection Error */}
+        {connectionError && (
+          <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-6">
+            <p className="text-red-600">{connectionError}</p>
+          </div>
+        )}
+
+        {/* Game States */}
+        <AnimatePresence mode="wait">
+          {gameState === "waiting" && <WaitingState key="waiting" />}
+          {gameState === "inQueue" && <QueueState key="queue" />}
+        </AnimatePresence>
+
+        {/* Info Section - Same as before */}
+        <div className="mt-16 w-[95%] flex justify-center bg-indigo-900 text-white rounded-xl shadow-lg overflow-hidden">
+          {/* ... existing info section ... */}
+        </div>
+      </div>
+    </div>
+  );
 };
+
 export default VocabularyBattle;

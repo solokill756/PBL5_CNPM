@@ -26,6 +26,8 @@ import Test from "@/pages/TestPage";
 import TestResult from "@/pages/TestPage/TestResult";
 import BattleTest from "@/components/BattleTest/battleTest";
 import ModernBattle from "@/components/Battle/ModernBattle";
+import BattleRoom from "@/components/Battle/BattleRoom";
+import BattleResult from "@/components/Battle/BattleResult";
 // Component bảo vệ route yêu cầu xác thực
 function PrivateRoute({ children }) {
   // const { auth } = useAuth();
@@ -81,10 +83,6 @@ const router = createBrowserRouter([
         path: "/vocabulary/:word",
         element: <Vocabulary />,
       },
-      // {
-      //   path: "/battle",
-      //   element: <RoomListing />,
-      // },
       {
         path: "/battle",
         element: <VocabularyBattle />,
@@ -96,8 +94,24 @@ const router = createBrowserRouter([
       {
         path: "/battle-test",
         element: <ModernBattle />,
-      },
+      }
     ],
+  },
+  {
+    path: "/battle/:roomId",
+    element: (
+      <PrivateRoute>
+        <BattleRoom />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: "/battle/:roomId/result",
+    element: (
+      <PrivateRoute>
+        <BattleResult />
+      </PrivateRoute>
+    ),
   },
   {
     path: "/accounts",

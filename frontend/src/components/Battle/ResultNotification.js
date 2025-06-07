@@ -9,7 +9,6 @@ const ResultNotification = ({
   opponentTime, 
   playerPoints,
   opponentPoints,
-  onContinue,
   questionResults 
 }) => {
   
@@ -96,16 +95,16 @@ const ResultNotification = ({
           </div>
         )}
         
-        <button
+        {/* <button
           onClick={onContinue}
           className="w-full py-3 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-colors"
         >
           Tiếp tục
-        </button>
+        </button> */}
         
-        <p className="text-xs text-gray-500 text-center mt-2">
+        {/* <p className="text-xs text-gray-500 text-center mt-2">
           Câu tiếp theo sẽ bắt đầu khi cả hai người chơi sẵn sàng
-        </p>
+        </p> */}
       </motion.div>
     </motion.div>
   );
