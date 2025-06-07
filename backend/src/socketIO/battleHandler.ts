@@ -167,7 +167,7 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
       }
 
       gameRoom.scores[socket.user_id] += points;
-      gameRoom.answers[socket.id] = {
+      gameRoom.answers[socket.user_id] = {
         username: socket.username,
         answer: data.answer,
         isCorrect,
