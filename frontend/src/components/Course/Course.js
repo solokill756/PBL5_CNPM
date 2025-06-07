@@ -11,7 +11,7 @@ const Course = ({vocabulary, author, avatar, lesson, listId}) => {
     return (
         <div>
             <div 
-                className='border border-gray-100 rounded-lg p-4 shadow-md mb-8 transition-all duration-300 hover:shadow-[inset_0px_-4px_0px_0px_rgb(252,165,165)] cursor-pointer hover:bg-gray-50'
+                className='border border-gray-100 rounded-lg p-4 shadow-md mb-8 transition-all duration-300 hover:shadow-[inset_0px_-4px_0px_0px_rgb(252,165,165)] cursor-pointer '
                 onClick={handleClick}
             >
                 <div className='flex flex-row mb-2'>

@@ -22,6 +22,9 @@ import Quiz from "@/pages/Quiz";
 import TopicDetail from "@/pages/TopicDetail";
 import VocabularyBattle from "@/pages/VocabularyBattle";
 import RoomListing from "@/components/RoomListing";
+import ListClass from "@/pages/Class/ListClass";
+import ClassDetail from "@/pages/Class/ClassDetail";
+import Members from "@/pages/Class/Members";
 // Component bảo vệ route yêu cầu xác thực
 function PrivateRoute({ children }) {
   // const { auth } = useAuth();
@@ -66,9 +69,18 @@ const router = createBrowserRouter([
         element: <Library />,
       },
       {
-        path: "/class",
-        element: <Library />,
+        path: "/classes",
+        element: <ListClass/>,
       },
+      {
+        path: "/classes/:classId",
+        element: <ClassDetail />
+      },
+      {
+        path: "/classes/:classId/members",
+        element: <Members/>,
+      },
+        
          {
         path: "/savedVocabulary",
         element: <Library />,
