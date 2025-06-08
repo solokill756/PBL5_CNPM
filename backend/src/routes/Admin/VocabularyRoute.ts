@@ -12,8 +12,14 @@ AdminVocabularyRoutes.all(
 );
 
 AdminVocabularyRoutes.post("/add", vocabularyController.addVocabulary);
-AdminVocabularyRoutes.post("/update/:vocabularyId");
-AdminVocabularyRoutes.delete("/delete/:vocabularyId");
+AdminVocabularyRoutes.post(
+  "/update/:vocabularyId",
+  vocabularyController.updateVocabulary
+);
+AdminVocabularyRoutes.delete(
+  "/delete/:vocabularyId",
+  vocabularyController.deleteVocabulary
+);
 AdminVocabularyRoutes.get("/all", vocabularyController.getAllVocabulary);
 AdminVocabularyRoutes.get(
   "/:vocabularyId",

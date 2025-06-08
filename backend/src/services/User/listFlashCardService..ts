@@ -70,10 +70,9 @@ const getForgetFlashcard = async (length: Number, user_id: string) => {
         user_id,
       },
       limit: length,
-      innclude: [
+      include: [
         {
           model: db.flashcard,
-          as: "flashcard",
         },
       ],
     });

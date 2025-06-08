@@ -88,19 +88,35 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
           console.log(`🎮 Game room created: ${roomId}`);
           console.log(`👥 Players: ${opponent.username} vs ${player.username}`);
 
-          // Thông báo cho cả 2 người chơi
-          io.to(roomId).emit("game_found", {
+          // Thông báo cho player (người vừa join)
+          socket.emit("game_found", {
             roomId,
-            opponent: {
-              username: opponent.username,
-              user_id: opponent.user_id,
-            },
             player: {
               username: player.username,
               user_id: player.user_id,
             },
+            opponent: {
+              username: opponent.username,
+              user_id: opponent.user_id,
+            },
             totalQuestions: questions.length,
           });
+
+          // Thông báo cho opponent
+          if (opponentSocket) {
+            opponentSocket.emit("game_found", {
+              roomId,
+              player: {
+                username: opponent.username,
+                user_id: opponent.user_id,
+              },
+              opponent: {
+                username: player.username,
+                user_id: player.user_id,
+              },
+              totalQuestions: questions.length,
+            });
+          }
         } catch (error) {
           console.error("❌ Error creating game room:", error);
           socket.emit("error", { message: "Lỗi khi tạo phòng đấu" });
@@ -136,20 +152,19 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
       });
 
       // Đặt timer cho câu hỏi (10 giây)
-      // setTimeout(() => {
-      //   handleQuestionTimeout(data.roomId);
-      // }, 10000);
+      setTimeout(() => {
+        handleQuestionTimeout(data.roomId);
+      }, 10000);
     });
-    socket.on("time_end", (data: any) => {
-      const gameRoom = gameRooms.get(data.roomId);
-      if (!gameRoom || gameRoom.status !== "playing") return;
-      console.log(`⏰ Time ended for question in room ${data.roomId}`);
-      handleQuestionTimeout(data.roomId);
-    });
+    // socket.on("time_end", (data: any) => {
+    //   const gameRoom = gameRooms.get(data.roomId);
+    //   if (!gameRoom || gameRoom.status !== "playing") return;
+    //   console.log(`⏰ Time ended for question in room ${data.roomId}`);
+    //   handleQuestionTimeout(data.roomId);
+    // });
     socket.on("submit_answer", (data: any) => {
       const gameRoom = gameRooms.get(data.roomId);
       if (!gameRoom || gameRoom.status !== "playing") return;
-
       const currentQ = gameRoom.questions[gameRoom.currentQuestion];
       const isCorrect = data.answer === currentQ.correct_answer;
       const responseTime = Date.now() - gameRoom.questionStartTime;
@@ -243,9 +258,9 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
           });
 
           // Timer cho câu hỏi mới
-          // setTimeout(() => {
-          //   handleQuestionTimeout(roomId);
-          // }, 10000);
+          setTimeout(() => {
+            handleQuestionTimeout(roomId);
+          }, 10000);
         }, 3000);
       } else {
         // Kết thúc game

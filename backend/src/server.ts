@@ -21,6 +21,8 @@ import achivermentRoutes from "./routes/User/achivermentRote.js";
 import classRoute from "./routes/User/classRoute.js";
 import listFlashCardRoute from "./routes/User/listFlashCardRoute.js";
 import AdminVocabularyRoutes from "./routes/Admin/VocabularyRoute.js";
+import AdminTopicRoutes from "./routes/Admin/topicRoute.js";
+import AdminUserRoutes from "./routes/Admin/userRoute.js";
 
 dotenv.config();
 
@@ -78,6 +80,8 @@ app.use("/api/achievement", achivermentRoutes);
 app.use("/api/class", classRoute);
 app.use("/api/listFlashcard", listFlashCardRoute);
 app.use("/api/admin/vocabulary", AdminVocabularyRoutes);
+app.use("/api/admin/topic", AdminTopicRoutes);
+app.use("/api/admin/user", AdminUserRoutes);
 // import Socket IO logic
 battleHandler(io, gameRooms, waitingPlayers);
 

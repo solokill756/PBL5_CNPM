@@ -1,8 +1,18 @@
 import db from "../../models";
 
-const addVocabulary = async (vocabulary: any): Promise<any> => {
+const addVocabulary = async (vocabularys: any[]): Promise<boolean> => {
   try {
-    return await db.vocabulary.create({ ...vocabulary });
+    if (!Array.isArray(vocabularys) || vocabularys.length === 0) {
+      throw new Error("Invalid input: vocabularys must be a non-empty array");
+    }
+    for (const vocabulary of vocabularys) {
+      await db.vocabularyTopic.update(
+        { vocab_count: db.sequelize.literal("vocab_count + 1") },
+        { where: { topic_id: vocabulary.topic_id } }
+      );
+    }
+    await db.vocabulary.bulkCreate(vocabularys);
+    return true;
   } catch (error) {
     throw error;
   }
@@ -10,7 +20,7 @@ const addVocabulary = async (vocabulary: any): Promise<any> => {
 
 const deleteVocabulary = async (vocabulary_id: string): Promise<boolean> => {
   try {
-    await db.vocabulary.destroy({ where: { vocabulary_id } });
+    await db.vocabulary.destroy({ where: { vocab_id: vocabulary_id } });
     return true;
   } catch (error) {
     throw new Error("Error deleting vocabulary");
@@ -24,7 +34,7 @@ const updateVocabulary = async (
   try {
     await db.vocabulary.update(
       { ...updateFields },
-      { where: { vocabulary_id } }
+      { where: { vocab_id: vocabulary_id } }
     );
     return true;
   } catch (error) {
@@ -38,6 +48,7 @@ const getAllVocabulary = async (): Promise<any> => {
       include: [
         {
           model: db.vocabularyTopic,
+          as: "Topic",
           required: false,
         },
       ],
@@ -51,10 +62,11 @@ const getAllVocabulary = async (): Promise<any> => {
 const getVocabularyById = async (vocabulary_id: string): Promise<any> => {
   try {
     const vocabulary = await db.vocabulary.findOne({
-      where: { vocabulary_id },
+      where: { vocab_id: vocabulary_id },
       include: [
         {
           model: db.vocabularyTopic,
+          as: "Topic",
           required: false,
         },
       ],

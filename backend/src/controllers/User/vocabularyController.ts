@@ -40,9 +40,11 @@ const getHistorySearch = async (req: Request, res: Response) => {
 const getAlToFindVocabulary = async (req: Request, res: Response) => {
   try {
     const { word, language } = req.body;
+    const user_id = (req as any).user.user_id;
     const vocabularies = await vocabularyService.getAlToFindVocabulary(
       word,
-      language
+      language,
+      user_id
     );
     sendSuccess(res, vocabularies);
   } catch (error) {

@@ -60,6 +60,7 @@ const getAllTopic = async (user_id: string) => {
           required: false,
         },
       ],
+      where: { is_show: true },
     });
     return topics;
   } catch (error) {
@@ -69,7 +70,7 @@ const getAllTopic = async (user_id: string) => {
 const getVocabularyByTopic = async (topic_id: string, user_id: string) => {
   try {
     const vocabularies = await db.vocabulary.findAll({
-      where: { topic_id },
+      where: { topic_id, is_show: true },
       include: [
         {
           model: db.vocabularyUser,
@@ -174,7 +175,11 @@ const requestNewVocabulary = async (
   }
 };
 
-const getAlToFindVocabulary = async (word: string, language: string) => {
+const getAlToFindVocabulary = async (
+  word: string,
+  language: string,
+  user_id: string
+) => {
   try {
     const response = await fetch(
       "http://itkotoba-al-server.azurewebsites.net/generate",
@@ -193,14 +198,17 @@ const getAlToFindVocabulary = async (word: string, language: string) => {
     const data = await response.json();
     if (language == "Japanese") {
       const findTopic = await db.vocabularyTopic.findOne({
-        where: { name: data.data.topic.trim() },
+        where: {
+          name: data.data.topic.trim(),
+        },
       });
       if (!findTopic) {
         await db.vocabularyTopic.create({
           name: data.data.topic.trim(),
+          description: data.data.description.trim(),
         });
       }
-      await db.vocabulary.create({
+      const result = await db.vocabulary.create({
         word: data.data.word,
         pronunciation: data.data.pronunciation,
         meaning: data.data.meaning,
@@ -213,6 +221,7 @@ const getAlToFindVocabulary = async (word: string, language: string) => {
         ai_suggested: "1",
         language: "Japanese",
       });
+      await addHistorySearch(user_id, result.vocabulary_id);
     }
     if (language == "Vietnamese") {
       const findTopic = await db.vocabularyTopic.findOne({
@@ -221,9 +230,10 @@ const getAlToFindVocabulary = async (word: string, language: string) => {
       if (!findTopic) {
         await db.vocabularyTopic.create({
           name: data.data.topic.trim(),
+          description: data.data.description.trim(),
         });
       }
-      await db.vocabulary.create({
+      const result = await db.vocabulary.create({
         word: data.data.meaning,
         meaning: data.data.word,
         type: data.data.type,
@@ -236,6 +246,7 @@ const getAlToFindVocabulary = async (word: string, language: string) => {
         ai_suggested: "1",
         language: "Vietnamese",
       });
+      await addHistorySearch(user_id, result.vocabulary_id);
     }
     return data.data;
   } catch (error) {
