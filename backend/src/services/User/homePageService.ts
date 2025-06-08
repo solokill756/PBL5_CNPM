@@ -168,6 +168,9 @@ const getTopTopicsByUserService = async (userId: string): Promise<any> => {
       attributes: ["topic_id", "name", "image_url", "description"],
       subQuery: false,
       limit: 5,
+      where: {
+        is_show: true,
+      },
     });
 
     return result;
