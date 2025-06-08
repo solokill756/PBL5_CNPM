@@ -22,6 +22,7 @@ const ModernBattle = () => {
   const [socket, setSocket] = useState(null);
   const [connected, setConnected] = useState(false);
   const [connectionError, setConnectionError] = useState("");
+  const roomIdRef = useRef(null);
 
   // Game states
   const [gameState, setGameState] = useState("waiting"); // waiting, inQueue, gameFound, playing, ended
@@ -130,13 +131,14 @@ const ModernBattle = () => {
     newSocket.on("game_found", (data) => {
       console.log("🎮 Game found:", data);
       setGameData(data);
+      roomIdRef.current = data.roomId; // Lưu roomId vào ref
       setGameState("gameFound");
       setTotalQuestions(data.totalQuestions);
       setScores({
         [data.player.user_id]: 0,
         [data.opponent.user_id]: 0,
       });
-  
+    
       // Auto ready after 2 seconds
       setTimeout(() => {
         newSocket.emit("ready_to_start", { roomId: data.roomId });
@@ -260,7 +262,7 @@ const ModernBattle = () => {
   }, []);
 
   // Helper function để start câu hỏi mới
-  const startNewQuestion = (data, roomId) => {
+  const startNewQuestion = (data) => {
     const transformedQuestion = transformQuestionFormat(data.question);
     setCurrentQuestion(transformedQuestion);
     setQuestionNumber(data.questionNumber);
@@ -270,8 +272,8 @@ const ModernBattle = () => {
     setWaitingForOpponent(false);
     setIsTimeUp(false);
   
-    // Start timer với roomId
-    startTimer(roomId);
+    // Start timer
+    startTimer();
   };
 
   // Transform backend question format
@@ -292,7 +294,7 @@ const ModernBattle = () => {
     };
   };
 
-  const startTimer = (roomId) => {
+  const startTimer = () => {
     setTimeLeft(10);
     setShowTimer(true);
     setIsTimeUp(false);
@@ -308,17 +310,16 @@ const ModernBattle = () => {
         const newTime = prev - 1;
   
         if (newTime <= 0) {
-          // Hết thời gian - emit time_end event để đồng bộ với backend
+          // Hết thời gian - emit time_end event
           console.log("⏰ Time's up! Emitting time_end event");
           
-          // Sử dụng socketRef.current để tránh closure issue
-          if (socketRef.current && roomId) {
-            console.log(`🔴 Emitting time_end for room: ${roomId}`);
-            socketRef.current.emit("time_end", { roomId: roomId });
+          if (socketRef.current && roomIdRef.current) {
+            console.log(`🔴 Emitting time_end for room: ${roomIdRef.current}`);
+            socketRef.current.emit("time_end", { roomId: roomIdRef.current });
           } else {
-            console.log("❌ Cannot emit time_end - socket or roomId missing", {
+            console.log("❌ Cannot emit time_end", {
               socket: !!socketRef.current,
-              roomId: roomId
+              roomId: roomIdRef.current
             });
           }
   
@@ -366,26 +367,20 @@ const ModernBattle = () => {
   };
 
   const handleSelectAnswer = (answer) => {
-    if (selectedAnswer !== null || isTimeUp) return; // Đã trả lời hoặc hết thời gian
+    if (selectedAnswer !== null || isTimeUp) return;
   
     const responseTime = Date.now() - questionStartTime.current;
   
     setSelectedAnswer(answer);
     setWaitingForOpponent(true);
-    stopTimer(); // Stop timer ngay khi trả lời
+    stopTimer();
   
-    // Sử dụng socketRef và lấy roomId từ state hiện tại
-    if (socketRef.current) {
-      setGameData((currentGameData) => {
-        if (currentGameData?.roomId) {
-          console.log(`💡 Submitting answer: ${answer} (${responseTime}ms)`);
-          socketRef.current.emit("submit_answer", {
-            roomId: currentGameData.roomId,
-            answer: answer === "timeout" ? null : answer,
-            responseTime: responseTime,
-          });
-        }
-        return currentGameData;
+    if (socketRef.current && roomIdRef.current) {
+      console.log(`💡 Submitting answer: ${answer} (${responseTime}ms)`);
+      socketRef.current.emit("submit_answer", {
+        roomId: roomIdRef.current,
+        answer: answer === "timeout" ? null : answer,
+        responseTime: responseTime,
       });
     }
   };
@@ -393,6 +388,7 @@ const ModernBattle = () => {
   const handlePlayAgain = () => {
     setGameState("waiting");
     setGameData(null);
+    roomIdRef.current = null; // Reset roomId
     setCurrentQuestion(null);
     setQuestionNumber(0);
     setTotalQuestions(0);
@@ -619,7 +615,7 @@ const ModernBattle = () => {
         <div className="flex items-center justify-center gap-8 mb-8">
           <div className="text-center">
             <img
-              src={player.profile_picture.profile_picture || DefaultAvatar}
+              src={player.profile_picture || DefaultAvatar}
               alt=""
               className="w-16 h-16 rounded-full mx-auto mb-2 border-3 border-indigo-500"
             />
@@ -630,7 +626,7 @@ const ModernBattle = () => {
 
           <div className="text-center">
             <img
-              src={opponent.profile_picture.profile_picture || DefaultAvatar}
+              src={opponent.profile_picture || DefaultAvatar}
               alt=""
               className="w-16 h-16 rounded-full mx-auto mb-2 border-3 border-purple-500"
             />
