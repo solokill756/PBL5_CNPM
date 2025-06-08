@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { io } from "socket.io-client";
 import { useAuthStore } from "@/store/useAuthStore";
+import useRefreshToken from "@/hooks/useRefreshToken";
 import DefaultAvatar from "@/assets/images/avatar.jpg"
 import {
   IoGameController,
@@ -18,7 +19,8 @@ import FinalResult from "./FinalResult";
 
 const ModernBattle = () => {
   // Auth state
-  const { accessToken, user } = useAuthStore();
+  const { accessToken, user, logout } = useAuthStore();
+  const refresh = useRefreshToken();
 
   // Socket state
   const [socket, setSocket] = useState(null);
@@ -50,16 +52,36 @@ const ModernBattle = () => {
 
   const timerRef = useRef(null);
   const questionStartTime = useRef(null);
+  const socketRef = useRef(null);
+
+  // Token refresh handler
+  const handleTokenRefresh = async () => {
+    try {
+      const newToken = await refresh();
+      if (newToken && socketRef.current) {
+        // Reconnect socket với token mới
+        socketRef.current.disconnect();
+        initializeSocket(newToken);
+      }
+      return newToken;
+    } catch (error) {
+      console.error("❌ Token refresh failed:", error);
+      logout();
+      setConnectionError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+      return null;
+    }
+  };
 
   // Initialize socket connection
-  useEffect(() => {
-    if (!accessToken) {
+  const initializeSocket = (token) => {
+    if (!token) {
       setConnectionError("Vui lòng đăng nhập để chơi battle!");
       return;
     }
 
     const newSocket = io("https://backendserver-app.azurewebsites.net", {
-      auth: { token: accessToken },
+      auth: { token: token },
+      transports: ['websocket', 'polling']
     });
 
     // Connection events
@@ -76,9 +98,19 @@ const ModernBattle = () => {
       stopTimer();
     });
 
-    newSocket.on("connect_error", (error) => {
+    newSocket.on("connect_error", async (error) => {
       console.error("❌ Connection error:", error);
-      setConnectionError("Lỗi kết nối: " + error.message);
+      
+      // Nếu lỗi authentication, thử refresh token
+      if (error.message.includes("Authentication") || error.message.includes("token")) {
+        console.log("🔄 Attempting token refresh...");
+        const newToken = await handleTokenRefresh();
+        if (!newToken) {
+          setConnectionError("Lỗi xác thực: " + error.message);
+        }
+      } else {
+        setConnectionError("Lỗi kết nối: " + error.message);
+      }
     });
 
     // Queue events
@@ -118,7 +150,7 @@ const ModernBattle = () => {
       setTimeout(() => {
         setShowNextQuestionDelay(false);
         startNewQuestion(data);
-      }, 1000); // Delay ngắn để UI mượt hơn
+      }, 1000);
     });
 
     newSocket.on("question_result", (data) => {
@@ -172,12 +204,21 @@ const ModernBattle = () => {
     });
 
     setSocket(newSocket);
+    socketRef.current = newSocket;
+
+    return newSocket;
+  };
+
+  useEffect(() => {
+    const newSocket = initializeSocket(accessToken);
 
     return () => {
       stopTimer();
-      newSocket.close();
+      if (newSocket) {
+        newSocket.close();
+      }
     };
-  }, [accessToken]);
+  }, []);
 
   // Helper function để start câu hỏi mới
   const startNewQuestion = (data) => {
@@ -228,11 +269,17 @@ const ModernBattle = () => {
         const newTime = prev - 1;
         
         if (newTime <= 0) {
-          // Hết thời gian - tự động submit timeout nếu chưa trả lời
+          // Hết thời gian - emit time_end event và tự động submit timeout
           if (selectedAnswer === null) {
             console.log("⏰ Time's up! Auto-submitting timeout");
             handleSelectAnswer("timeout");
           }
+          
+          // Emit time_end event để backend biết
+          if (socket && gameData) {
+            socket.emit("time_end", { roomId: gameData.roomId });
+          }
+          
           setIsTimeUp(true);
           stopTimer();
           return 0;
@@ -241,7 +288,7 @@ const ModernBattle = () => {
       });
     }, 1000);
   };
-  
+
   const stopTimer = () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -364,7 +411,17 @@ const ModernBattle = () => {
         )}
       </div>
       {connectionError && (
-        <p className="text-red-600 text-sm mt-2">{connectionError}</p>
+        <div className="mt-2">
+          <p className="text-red-600 text-sm">{connectionError}</p>
+          {connectionError.includes("hết hạn") && (
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-2 px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+            >
+              Tải lại trang
+            </button>
+          )}
+        </div>
       )}
     </motion.div>
   );
@@ -538,19 +595,13 @@ const ModernBattle = () => {
       
       const answersArray = Object.values(questionResults.answers);
       
-      // FIX: Tìm đúng player và opponent dựa trên user_id
+      // FIX: Tìm đúng player và opponent dựa trên username
       const playerAnswer = answersArray.find(
-        answer => {
-          // Tìm answer có username trùng với current user
-          return answer.username === user.username;
-        }
+        answer => answer.username === user.username
       );
       
       const opponentAnswer = answersArray.find(
-        answer => {
-          // Tìm answer không phải của current user
-          return answer.username !== user.username;
-        }
+        answer => answer.username !== user.username
       );
       
       return {
@@ -564,7 +615,7 @@ const ModernBattle = () => {
         opponentTimeout: opponentAnswer?.answer === null,
       };
     };
-  
+
     return (
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Score Display */}
@@ -588,7 +639,7 @@ const ModernBattle = () => {
             <CountdownTimer timeLeft={timeLeft} totalTime={10} />
           </motion.div>
         )}
-  
+
         {/* Waiting message */}
         {waitingForOpponent && !showQuestionResult && (
           <motion.div
@@ -606,7 +657,7 @@ const ModernBattle = () => {
             </div>
           </motion.div>
         )}
-  
+
         {/* Question */}
         {currentQuestion && (
           <VocabularyQuestion
@@ -621,7 +672,7 @@ const ModernBattle = () => {
             isTimeUp={isTimeUp}
           />
         )}
-  
+
         {/* Result Notification */}
         <AnimatePresence>
           {shouldShowResultNotification && (() => {
@@ -642,7 +693,7 @@ const ModernBattle = () => {
             ) : null;
           })()}
         </AnimatePresence>
-  
+
         {/* Next Question Delay */}
         <AnimatePresence>
           {showNextQuestionDelay && <NextQuestionDelay />}
