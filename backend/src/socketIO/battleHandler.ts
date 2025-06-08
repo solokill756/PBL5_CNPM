@@ -7,7 +7,7 @@ import db from "../models";
 dotenv.config();
 export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
   // Middleware xác thực
-  io.use(async (socket: any, next: NextFunction) => {
+  io.use((socket: any, next: NextFunction) => {
     const token = socket.handshake.auth.token;
     if (token) {
       try {
@@ -17,10 +17,7 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
         ) as UserPayload;
         socket.user_id = decoded.user_id;
         socket.username = decoded.username;
-        socket.profile_picture = await db.user.find({
-          where: { user_id: decoded.user_id },
-          attributes: ["profile_picture"],
-        });
+
         if (decoded) console.log(`✅ User ${socket.username} authenticated`);
         next();
       } catch (err) {
@@ -34,8 +31,14 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
   // Xử lý kết nối mới
   io.on("connection", (socket: any) => {
     console.log(`🔌 User ${socket.username} connected (ID: ${socket.id})`);
+
+    //)
     // Tham gia hàng đợi tìm trận
     socket.on("join_queue", async (_data: any) => {
+      socket.profile_picture = await db.user.findOne({
+        where: { user_id: socket.user_id },
+        attributes: ["profile_picture"],
+      });
       const player = {
         id: socket.id,
         user_id: socket.user_id,
