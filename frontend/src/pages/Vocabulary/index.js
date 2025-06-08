@@ -64,6 +64,11 @@ const Vocabulary = () => {
         }
       } else {
         setIsInitializing(false);
+        // Sync category progress nếu đã có data và user vừa quay lại từ topic detail
+        if (location.state?.fromTopicDetail) {
+          const { syncCategoryProgress } = useTopicStore.getState();
+          syncCategoryProgress(axios, location.state.topicId);
+        }
       }
     };
 
@@ -74,6 +79,7 @@ const Vocabulary = () => {
     };
   }, [
     location.key,
+    location.state, // Thêm để detect navigation từ topic detail
     axios,
     categories.length,
     userLevel.user_id,

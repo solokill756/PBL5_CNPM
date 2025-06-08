@@ -2,10 +2,11 @@ import React from "react";
 import { FaStar } from "react-icons/fa";
 import { MdMoreHoriz, MdOutlineBookmarkAdd, MdOutlineReportProblem } from "react-icons/md";
 import { RiShare2Line } from "react-icons/ri";
+import { IoArrowBack } from "react-icons/io5";
 import RoundButton from "../RoundButton";
 import { FaRegCopy } from "react-icons/fa6";
 import { useFlashcardStore } from "@/store/useflashcardStore";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, href } from "react-router-dom";
 import Skeleton from "react-loading-skeleton";
 
 const FlashCardHeader = ({ title, rating, ratingCount, onSave, onShare, onMore, onStar, loading = false }) => {
@@ -15,15 +16,13 @@ const FlashCardHeader = ({ title, rating, ratingCount, onSave, onShare, onMore, 
   
   const isSaved = isFlashcardSaved(flashcardId);
 
-  const handleCopyFlashcard = () => {
-    navigate('/add-flashcard', {
-      state: { copyFrom: flashcardId }
-    });
-  };
-
   const handleReport = () => {
     // TODO: Implement report functionality
     console.log('Report functionality to be implemented');
+  };
+
+  const handleBack = () => {
+    navigate(-1); // Quay lại trang trước đó
   };
 
   // Menu cho dropdown với logic xử lý
@@ -31,7 +30,7 @@ const FlashCardHeader = ({ title, rating, ratingCount, onSave, onShare, onMore, 
     {
       label: "Tạo một bản sao",
       icon: <FaRegCopy className="size-5"/>,
-      onClick: handleCopyFlashcard
+      href: `/add-flashcard?copyFrom=${flashcardId}`,
     },
     {
       label: "Báo cáo",
@@ -43,17 +42,29 @@ const FlashCardHeader = ({ title, rating, ratingCount, onSave, onShare, onMore, 
   return (
     <div className="w-full max-w-4xl px-4 py-4">
       <div className="flex items-center justify-between">
-      {loading ? (
-          <Skeleton 
-            width={350} 
-            height={36} 
-            baseColor="#fff4f4" 
-            highlightColor="#F0F0F0" 
-            borderRadius={4}
-          />
-        ) : (
-          <h1 className="text-3xl font-bold text-gray-800 truncate max-w-[350px]">{title}</h1>
-        )}
+        <div className="flex items-center gap-4">
+          {/* Back Button */}
+          <button
+            onClick={handleBack}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+          >
+            <IoArrowBack className="w-5 h-5 text-gray-600" />
+          </button>
+
+          {/* Title */}
+          {loading ? (
+            <Skeleton 
+              width={350} 
+              height={36} 
+              baseColor="#fff4f4" 
+              highlightColor="#F0F0F0" 
+              borderRadius={4}
+            />
+          ) : (
+            <h1 className="text-3xl font-bold text-gray-800 truncate max-w-[350px]">{title}</h1>
+          )}
+        </div>
+
         <div className="flex items-center gap-2">
           <RoundButton 
             icon={<MdOutlineBookmarkAdd />} 

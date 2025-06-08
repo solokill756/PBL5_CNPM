@@ -20,9 +20,14 @@ const Home = () => {
 
   useEffect(() => {
     setAxios(axiosPrivate);
-
     init(axiosPrivate);
   }, [init, axiosPrivate, setAxios]);
+
+  // Helper functions để check empty state
+  const hasClasses = classes && classes.length > 0;
+  const hasFlashcards = flashcards && flashcards.length > 0;
+  const hasAnyRecentActivity = hasClasses || hasFlashcards;
+  const isLoadingRecent = loading.classes || loading.flashcards;
 
   return (
     <main className="flex flex-1 flex-grow-1 flex-col">
@@ -35,19 +40,40 @@ const Home = () => {
             </span>
           </div>
           <div className="w-[80%]">
-            {!loading.classes &&
-            !loading.flashcards &&
-            classes?.length === 0 &&
-            flashcards?.length === 0 ? (
-              <NopeNotice type="lớp học" />
+            {!isLoadingRecent && !hasAnyRecentActivity ? (
+              <NopeNotice type="hoạt động" />
             ) : (
               <>
-                <ClassList classes={classes} loading={loading.classes} />
+                {/* Classes section */}
+                {hasClasses && (
+                  <ClassList classes={classes} loading={loading.classes} />
+                )}
+                {!hasClasses && !loading.classes && hasFlashcards && (
+                  <div className="mb-5">
+                    <NopeNotice 
+                      type="lớp học" 
+                      customMessage="Bạn chưa có lớp học gần đây nào"
+                      actionText="Tham gia lớp học"
+                      actionPath="/class"
+                    />
+                  </div>
+                )}
+
+                {/* Flashcards section */}
                 <div className="mt-5">
-                  <FlashCardList
-                    flashCards={flashcards}
-                    loading={loading.flashcards}
-                  />
+                  {hasFlashcards ? (
+                    <FlashCardList
+                      flashCards={flashcards}
+                      loading={loading.flashcards}
+                    />
+                  ) : !loading.flashcards && hasClasses ? (
+                    <NopeNotice 
+                      type="flashcard" 
+                      customMessage="Bạn chưa có flashcard gần đây nào"
+                      actionText="Tạo flashcard"
+                      actionPath="/flashcard/create"
+                    />
+                  ) : null}
                 </div>
               </>
             )}
@@ -59,7 +85,16 @@ const Home = () => {
             </span>
           </div>
           <div className="w-[80%]">
-            <AuthorList authors={topAuthors} loading={loading.authors} />
+            {!loading.authors && (!topAuthors || topAuthors.length === 0) ? (
+              <NopeNotice 
+                type="tác giả" 
+                customMessage="Chưa có tác giả hàng đầu nào"
+                actionText="Khám phá flashcards"
+                actionPath="/flashcard"
+              />
+            ) : (
+              <AuthorList authors={topAuthors} loading={loading.authors} />
+            )}
           </div>
         </div>
         <div className="flex-1 w-full flex flex-col items-center">
@@ -69,7 +104,16 @@ const Home = () => {
             </span>
           </div>
           <div className="w-[80%]">
-            <VocabList vocabs={vocabs} loading={loading.vocabs} />
+            {!loading.vocabs && (!vocabs || vocabs.length === 0) ? (
+              <NopeNotice 
+                type="từ vựng" 
+                customMessage="Chưa có gợi ý từ vựng nào"
+                actionText="Khám phá từ vựng"
+                actionPath="/vocabulary"
+              />
+            ) : (
+              <VocabList vocabs={vocabs} loading={loading.vocabs} />
+            )}
           </div>
           <div className="my-8 flex !justify-end !items-end">
             <BlueButton

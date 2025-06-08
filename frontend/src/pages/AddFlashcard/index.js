@@ -84,22 +84,32 @@ const AddFlashcard = () => {
     loading,
     checkForDraft,
     clearDraft,
-    title
+    title,
+    setLoading, // Add this action to the store
+    setCheckForDraft,
   } = useAddFlashcardStore();
 
-  const { originalDeck, flashcardMetadata } = useFlashcardStore();
+  const { 
+    originalDeck, 
+    flashcardMetadata,
+    fetchFlashcardList // Add this action
+  } = useFlashcardStore();
 
   // Check for draft on component mount
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const mode = params.get("mode");
-    const isFromCopy = location.state?.copyFrom;
+    const copyFromId = params.get("copyFrom");
 
-    // If coming from copy or specific mode, don't show draft modal
-    if (isFromCopy || mode) {
-      if (isFromCopy && originalDeck.length > 0) {
-        loadFromExisting({ originalDeck, flashcardMetadata });
-      } else if (mode === "forgotten") {
+    if (copyFromId) {
+      resetForm();
+      clearDraft();
+      handleCopyFlashcard(axios, copyFromId);
+      return;
+    }
+
+    if (mode) {
+      if (mode === "forgotten") {
         if (!title || title !== "Từ hay quên") {
           loadFromForgottenWords(axios, 40);
         }
@@ -107,11 +117,34 @@ const AddFlashcard = () => {
       return;
     }
 
-    // Check for existing draft
     if (checkForDraft()) {
       setShowDraftModal(true);
     }
-  }, [location.search, originalDeck, flashcardMetadata, title]);
+  }, [axios, location.search, location.state?.copyFrom, checkForDraft, loadFromForgottenWords]);
+
+  const handleCopyFlashcard = async (axios, flashcardId) => {
+    try {
+      setLoading(true);
+      
+      // Fetch the flashcard data
+      await fetchFlashcardList(axios, flashcardId);
+      
+      // Load the data into the form
+      const { originalDeck: deck, flashcardMetadata: metadata } = useFlashcardStore.getState();
+      
+      if (deck && deck.length > 0) {
+        loadFromExisting({ 
+          originalDeck: deck, 
+          flashcardMetadata: metadata 
+        });
+      }
+    } catch (error) {
+      console.error("Error copying flashcard:", error);
+      // You might want to show a toast error here
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleContinueDraft = () => {
     setShowDraftModal(false);
@@ -130,8 +163,9 @@ const AddFlashcard = () => {
         <DefaultHeader />
         <div className="pt-16 flex items-center justify-center min-h-[50vh]">
           <div className="text-center">
-            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">Đang tải dữ liệu...</p>
+            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600 text-lg">Đang tải dữ liệu...</p>
+            <p className="text-gray-500 text-sm mt-2">Vui lòng chờ trong giây lát</p>
           </div>
         </div>
       </div>

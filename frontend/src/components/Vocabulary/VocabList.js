@@ -10,6 +10,7 @@ const VocabList = ({ vocabs = [], loading }) => {
         {(loading ? skeletons : vocabs).map((item, index) => (
           <VocabItem
             key={index}
+            path={loading ? "" : `/vocabulary/topic/${item.topic_id}`}
             name={loading ? "" : item.name}
             description={loading ? "" : item.description}
             imgUrl={loading ? "" : item.image_url}
