@@ -406,23 +406,24 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
           );
 
           const remainingPlayer = gameRoom.players.find(
-            (p: any) => p.socket_id !== socket.id
+            (p: any) => p.id !== socket.id
           );
           const disconnectedPlayer = gameRoom.players.find(
-            (p: any) => p.socket_id === socket.id
+            (p: any) => p.id === socket.id
           );
 
           // Chuẩn hóa finalScores giống endGame
           const finalScores: Record<string, number> = {};
           if (remainingPlayer) {
-            finalScores[remainingPlayer.user_id] = remainingPlayer.score ?? 0;
+            finalScores[remainingPlayer.user_id] =
+              gameRoom.scores[remainingPlayer.user_id];
           }
           if (disconnectedPlayer) {
             finalScores[disconnectedPlayer.user_id] = 0;
           }
 
           socket.to(roomId).emit("opponent_disconnected", {
-            winner: remainingPlayer ? remainingPlayer.user_id : null,
+            winner: remainingPlayer ?? null,
             finalScores,
             totalQuestions: gameRoom.questions?.length ?? 0,
             isDraw: false,
@@ -443,7 +444,6 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
                 }
               : null,
           });
-         
 
           // Trao chiến thắng cho đối thủ
           const opponent = gameRoom.players.find(
