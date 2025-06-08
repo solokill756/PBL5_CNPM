@@ -9,11 +9,14 @@ const ResultNotification = ({
   opponentTime, 
   playerPoints,
   opponentPoints,
-  questionResults 
+  playerTimeout,
+  opponentTimeout,
+  questionResults,
+  currentUser
 }) => {
   const [showNotification, setShowNotification] = useState(true);
   
-  // Auto hide after 3 seconds (matching backend delay)
+  // Auto hide after 2.5 seconds
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowNotification(false);
@@ -22,22 +25,7 @@ const ResultNotification = ({
     return () => clearTimeout(timer);
   }, []);
   
-  // Get detailed results from BE
-  const getPlayerDetails = () => {
-    if (!questionResults?.answers) return null;
-    
-    const answersArray = Object.values(questionResults.answers);
-    return {
-      player: answersArray[0],
-      opponent: answersArray[1]
-    };
-  };
-  
-  const details = getPlayerDetails();
-  
-  const renderPlayerResult = (isPlayer, correct, time, points, answer) => {
-    const isTimeout = answer?.answer === null;
-    
+  const renderPlayerResult = (isPlayer, correct, time, points, isTimeout) => {
     return (
       <motion.div
         initial={{ opacity: 0, x: isPlayer ? -20 : 20 }}
@@ -98,21 +86,12 @@ const ResultNotification = ({
         </motion.h3>
         
         <div className="space-y-3 mb-6">
-          {details ? (
-            <>
-              {renderPlayerResult(true, details.player?.isCorrect, playerTime, details.player?.points || 0, details.player)}
-              {renderPlayerResult(false, details.opponent?.isCorrect, opponentTime, details.opponent?.points || 0, details.opponent)}
-            </>
-          ) : (
-            <>
-              {renderPlayerResult(true, playerCorrect, playerTime, playerPoints)}
-              {renderPlayerResult(false, opponentCorrect, opponentTime, opponentPoints)}
-            </>
-          )}
+          {renderPlayerResult(true, playerCorrect, playerTime, playerPoints, playerTimeout)}
+          {renderPlayerResult(false, opponentCorrect, opponentTime, opponentPoints, opponentTimeout)}
         </div>
         
-        {/* Show correct answer */}
-        {questionResults?.correctAnswer && (
+        {/* Show correct answer từ backend question */}
+        {questionResults?.question?.correct_answer && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -120,7 +99,7 @@ const ResultNotification = ({
             className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4"
           >
             <p className="text-sm text-blue-800">
-              <span className="font-semibold">Đáp án đúng:</span> {questionResults.correctAnswer}
+              <span className="font-semibold">Đáp án đúng:</span> {questionResults.question.correct_answer}
             </p>
           </motion.div>
         )}
