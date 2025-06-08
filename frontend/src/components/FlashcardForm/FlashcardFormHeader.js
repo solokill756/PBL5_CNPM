@@ -65,84 +65,6 @@ const FloatingInput = ({
   );
 };
 
-const SettingsModal = ({ isOpen, onClose, isPublic, setIsPublic, allowStudyFromClass, setAllowStudyFromClass }) => {
-  if (!isOpen) return null;
-
-  // Handle toggle changes - extract checked value from event
-  const handlePublicToggle = (e) => {
-    setIsPublic(e.target.checked);
-  };
-
-  const handleClassToggle = (e) => {
-    setAllowStudyFromClass(e.target.checked);
-  };
-
-  return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-        onClick={onClose}
-      >
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="bg-white rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Cài đặt học phần</h3>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 pr-4">
-                <h4 className="text-sm font-medium text-gray-900">Công khai</h4>
-                <p className="text-sm text-gray-500">Mọi người có thể tìm thấy và học bộ thẻ này</p>
-              </div>
-              <ToggleSwitch 
-                checked={isPublic} 
-                onChange={handlePublicToggle}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex-1 pr-4">
-                <h4 className="text-sm font-medium text-gray-900">Học từ lớp</h4>
-                <p className="text-sm text-gray-500">Thành viên trong lớp có thể truy cập và học</p>
-              </div>
-              <ToggleSwitch 
-                checked={allowStudyFromClass} 
-                onChange={handleClassToggle}
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end mt-6">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-            >
-              Xong
-            </button>
-          </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
-  );
-};
-
 const FlashcardFormHeader = () => {
   const [isSticky, setIsSticky] = useState(false)
   const headerRef = useRef(null)
@@ -165,7 +87,12 @@ const FlashcardFormHeader = () => {
     saveFlashcardSet,
     flashcards,
     resetForm,
+    successMessage
   } = useAddFlashcardStore()
+
+  const { addToast } = useToast();
+  const navigate = useNavigate();
+  const axios = useAxiosPrivate();
 
   // Optimized intersection observer
   useEffect(() => {
@@ -196,9 +123,12 @@ const FlashcardFormHeader = () => {
   const validFlashcards = flashcards.filter((card) => card.front.trim() && card.back.trim())
 
   const handleSave = useCallback(async () => {
-    const result = await saveFlashcardSet()
-    if (result.success) {
+    const result = await saveFlashcardSet(axios);
+    
+    if (result.status === "success") {
       resetForm()
+      addToast("Tạo bộ flashcard thành công!", TOAST_TYPES.SUCCESS)
+      navigate(`/flashcard/${result.data.list_id}`)
     }
   }, [saveFlashcardSet, resetForm])
 
@@ -223,7 +153,7 @@ const FlashcardFormHeader = () => {
         ref={headerRef}
         className={`transition-all duration-300 ease-out ${
           isSticky
-            ? "fixed top-0 left-0 right-0 calc mx-auto bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-lg z-50"
+            ? "fixed top-0 left-0 mb-8 right-0 mx-auto bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-lg z-50"
             : "relative mt-8 bg-white border-b border-gray-100"
         }`}
         style={{
@@ -327,7 +257,7 @@ const FlashcardFormHeader = () => {
       </motion.div>
 
       {/* Spacer when sticky */}
-      {isSticky && <div className="h-20" />}
+      {isSticky && <div className="h-40" />}
 
       {/* Form Fields - only show when not sticky */}
       <AnimatePresence>

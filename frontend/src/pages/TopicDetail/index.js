@@ -128,7 +128,8 @@ const TopicDetail = () => {
   };
 
   const handleWordLearned = async (vocabId) => {
-    if (isLearningUpdating) return; // Prevent double-click
+    const isThisLearningUpdating = loadingStates.learningUpdating.has(vocabId);
+    if (isThisLearningUpdating) return; // Prevent double-click với loading state chính xác
 
     try {
       const vocab = topicVocabularies.find((v) => v.vocab_id === vocabId);
@@ -140,11 +141,6 @@ const TopicDetail = () => {
         vocabId,
         topicId
       );
-      const newMasteredCount = getLearnedCount();
-
-      if (currentTopic) {
-        updateCategoryProgress(currentTopic.topic_id, newMasteredCount);
-      }
 
       addToast(
         newLearningStatus
@@ -153,13 +149,14 @@ const TopicDetail = () => {
         TOAST_TYPES.SUCCESS
       );
 
+      // Cập nhật user stats với debounce để tránh multiple calls
       if (newLearningStatus !== wasLearned) {
-        setTimeout(() => {
-          const { calculateUserStats } = useTopicStore.getState();
-          calculateUserStats();
-        }, 100);
+        // Đã được cập nhật trong updateLearningStatus, không cần setTimeout
+        const { calculateUserStats } = useTopicStore.getState();
+        calculateUserStats();
       }
 
+      // Kiểm tra level up chỉ khi học từ mới (không phải unlearn)
       if (!wasLearned && newLearningStatus) {
         try {
           const levelResult = await refreshUserLevel(axios);
@@ -171,9 +168,15 @@ const TopicDetail = () => {
               wordsLearned: vocab.word,
             });
             setShowLevelUpModal(true);
+          } else if (levelResult.error) {
+            // Nếu có lỗi level check, chỉ log không hiển thị lỗi cho user
+            console.warn(
+              "Level check encountered an error but word learning was successful"
+            );
           }
         } catch (levelError) {
           console.error("Error checking level:", levelError);
+          // Không hiển thị lỗi level check cho user vì learning đã thành công
         }
       }
     } catch (error) {
@@ -218,7 +221,14 @@ const TopicDetail = () => {
       <div className="w-full max-w-full px-12 py-4">
         <TopicHeader
           topic={currentTopic}
-          onBack={() => navigate("/vocabulary")}
+          onBack={() =>
+            navigate("/vocabulary", {
+              state: {
+                fromTopicDetail: true,
+                topicId: topicId,
+              },
+            })
+          }
           onTakeTest={() => navigate(`/vocabulary/topic/${topicId}/Test`)}
           onCreateFlashcard={handleCreateFlashcards}
           topicProgress={calculateProgress()}

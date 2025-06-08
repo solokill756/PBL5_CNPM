@@ -45,6 +45,7 @@ const FlashcardFormItem = ({ flashcard, index }) => {
 
   const dragControls = useDragControls()
   const itemRef = useRef<HTMLDivElement>(null)
+  const axios = useAxiosPrivate();
 
   const { updateFlashcard, removeFlashcard, duplicateFlashcard, reorderFlashcards, flashcards, addFlashcardAt } =
     useAddFlashcardStore()
@@ -61,7 +62,7 @@ const FlashcardFormItem = ({ flashcard, index }) => {
       }
 
       try {
-        const results = await searchVocabulary(null, term, "Japanese")
+        const results = await searchVocabulary(axios, term, "Japanese")
         setSuggestions(results || [])
         setShowSuggestions(results && results.length > 0)
       } catch (error) {
@@ -249,7 +250,7 @@ const FlashcardFormItem = ({ flashcard, index }) => {
                 onBlur={() => {
                   setTimeout(() => {
                     setFrontFocused(false)
-                    setShowSuggestions(false)
+                    // setShowSuggestions(false)
                   }, 150)
                 }}
                 className={`w-full px-3 py-2.5 rounded-lg border transition-all duration-200 text-sm ${
