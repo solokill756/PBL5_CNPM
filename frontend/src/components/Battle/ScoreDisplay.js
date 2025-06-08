@@ -1,12 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { FaFire } from 'react-icons/fa';
+import DefaultAvatar from '../../assets/images/avatar.jpg';
 
 const ScoreDisplay = ({ player, opponent }) => {
   return (
     <div className="flex justify-between items-center bg-indigo-100 rounded-lg p-4 mb-4">
       <div className="flex items-center">
-        <img src={player.avatar} alt={player.name} className="w-10 h-10 rounded-full mr-2 border-2 border-indigo-500" />
+        <img src={player.profile_picture || DefaultAvatar} alt={player.name} className="w-10 h-10 rounded-full mr-2 border-2 border-indigo-500" />
         <div>
           <p className="font-bold text-sm">{player.name}</p>
           <div className="flex items-center">
@@ -43,7 +44,7 @@ const ScoreDisplay = ({ player, opponent }) => {
             <span className="text-gray-500 text-sm ml-1">điểm</span>
           </div>
         </div>
-        <img src={opponent.avatar} alt={opponent.name} className="w-10 h-10 rounded-full border-2 border-indigo-500" />
+        <img src={opponent.profile_picture || DefaultAvatar} alt={opponent.name} className="w-10 h-10 rounded-full border-2 border-indigo-500" />
       </div>
     </div>
   );
