@@ -146,7 +146,13 @@ const ModernBattle = () => {
     newSocket.on("game_started", (data) => {
       console.log("🚀 Game started:", data);
       setGameState("playing");
-      startNewQuestion(data);
+      
+      // Pass roomId từ gameData
+      setGameData((currentGameData) => {
+        const roomId = currentGameData?.roomId;
+        startNewQuestion(data, roomId);
+        return currentGameData;
+      });
     });
   
     newSocket.on("next_question", (data) => {
@@ -162,10 +168,16 @@ const ModernBattle = () => {
       setShowNextQuestionDelay(true);
       setTimeout(() => {
         setShowNextQuestionDelay(false);
-        startNewQuestion({
-          question: data.question,
-          questionNumber: data.questionNumber + 1, // Backend gửi index 0-based, frontend cần 1-based
-          totalQuestions: totalQuestions
+        
+        // Get roomId từ gameData hiện tại
+        setGameData((currentGameData) => {
+          const roomId = currentGameData?.roomId;
+          startNewQuestion({
+            question: data.question,
+            questionNumber: data.questionNumber + 1, // Backend gửi index 0-based, frontend cần 1-based
+            totalQuestions: totalQuestions
+          }, roomId);
+          return currentGameData;
         });
       }, 1000);
     });
@@ -248,7 +260,7 @@ const ModernBattle = () => {
   }, []);
 
   // Helper function để start câu hỏi mới
-  const startNewQuestion = (data) => {
+  const startNewQuestion = (data, roomId) => {
     const transformedQuestion = transformQuestionFormat(data.question);
     setCurrentQuestion(transformedQuestion);
     setQuestionNumber(data.questionNumber);
@@ -257,9 +269,9 @@ const ModernBattle = () => {
     setShowQuestionResult(false);
     setWaitingForOpponent(false);
     setIsTimeUp(false);
-
-    // Start timer đồng bộ với backend
-    startTimer();
+  
+    // Start timer với roomId
+    startTimer(roomId);
   };
 
   // Transform backend question format
@@ -280,7 +292,7 @@ const ModernBattle = () => {
     };
   };
 
-  const startTimer = () => {
+  const startTimer = (roomId) => {
     setTimeLeft(10);
     setShowTimer(true);
     setIsTimeUp(false);
@@ -299,18 +311,28 @@ const ModernBattle = () => {
           // Hết thời gian - emit time_end event để đồng bộ với backend
           console.log("⏰ Time's up! Emitting time_end event");
           
-          if (socket && gameData) {
-            socket.emit("time_end", { roomId: gameData.roomId });
+          // Sử dụng socketRef.current để tránh closure issue
+          if (socketRef.current && roomId) {
+            console.log(`🔴 Emitting time_end for room: ${roomId}`);
+            socketRef.current.emit("time_end", { roomId: roomId });
+          } else {
+            console.log("❌ Cannot emit time_end - socket or roomId missing", {
+              socket: !!socketRef.current,
+              roomId: roomId
+            });
           }
   
           setIsTimeUp(true);
           stopTimer();
           
           // Nếu user chưa trả lời, tự động set timeout
-          if (selectedAnswer === null) {
-            setSelectedAnswer("timeout");
-            setWaitingForOpponent(true);
-          }
+          setSelectedAnswer((currentAnswer) => {
+            if (currentAnswer === null) {
+              setWaitingForOpponent(true);
+              return "timeout";
+            }
+            return currentAnswer;
+          });
           
           return 0;
         }
@@ -352,12 +374,18 @@ const ModernBattle = () => {
     setWaitingForOpponent(true);
     stopTimer(); // Stop timer ngay khi trả lời
   
-    if (socket && gameData) {
-      console.log(`💡 Submitting answer: ${answer} (${responseTime}ms)`);
-      socket.emit("submit_answer", {
-        roomId: gameData.roomId,
-        answer: answer === "timeout" ? null : answer,
-        responseTime: responseTime,
+    // Sử dụng socketRef và lấy roomId từ state hiện tại
+    if (socketRef.current) {
+      setGameData((currentGameData) => {
+        if (currentGameData?.roomId) {
+          console.log(`💡 Submitting answer: ${answer} (${responseTime}ms)`);
+          socketRef.current.emit("submit_answer", {
+            roomId: currentGameData.roomId,
+            answer: answer === "timeout" ? null : answer,
+            responseTime: responseTime,
+          });
+        }
+        return currentGameData;
       });
     }
   };
