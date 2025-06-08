@@ -218,9 +218,16 @@ const ModernBattle = () => {
     setIsTimeUp(false);
     questionStartTime.current = Date.now();
     
+    // Clear any existing timer first
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
-        if (prev <= 1) {
+        const newTime = prev - 1;
+        
+        if (newTime <= 0) {
           // Hết thời gian - tự động submit timeout nếu chưa trả lời
           if (selectedAnswer === null) {
             console.log("⏰ Time's up! Auto-submitting timeout");
@@ -230,11 +237,11 @@ const ModernBattle = () => {
           stopTimer();
           return 0;
         }
-        return prev - 1;
+        return newTime;
       });
     }, 1000);
   };
-
+  
   const stopTimer = () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -530,11 +537,20 @@ const ModernBattle = () => {
       if (!questionResults?.answers) return null;
       
       const answersArray = Object.values(questionResults.answers);
+      
+      // FIX: Tìm đúng player và opponent dựa trên user_id
       const playerAnswer = answersArray.find(
-        answer => answer.username === player.name
+        answer => {
+          // Tìm answer có username trùng với current user
+          return answer.username === user.username;
+        }
       );
+      
       const opponentAnswer = answersArray.find(
-        answer => answer.username === opponent.name
+        answer => {
+          // Tìm answer không phải của current user
+          return answer.username !== user.username;
+        }
       );
       
       return {
@@ -544,9 +560,11 @@ const ModernBattle = () => {
         opponentTime: (opponentAnswer?.responseTime || 0) / 1000,
         playerPoints: playerAnswer?.points || 0,
         opponentPoints: opponentAnswer?.points || 0,
+        playerTimeout: playerAnswer?.answer === null,
+        opponentTimeout: opponentAnswer?.answer === null,
       };
     };
-
+  
     return (
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Score Display */}
@@ -570,7 +588,7 @@ const ModernBattle = () => {
             <CountdownTimer timeLeft={timeLeft} totalTime={10} />
           </motion.div>
         )}
-
+  
         {/* Waiting message */}
         {waitingForOpponent && !showQuestionResult && (
           <motion.div
@@ -588,7 +606,7 @@ const ModernBattle = () => {
             </div>
           </motion.div>
         )}
-
+  
         {/* Question */}
         {currentQuestion && (
           <VocabularyQuestion
@@ -603,7 +621,7 @@ const ModernBattle = () => {
             isTimeUp={isTimeUp}
           />
         )}
-
+  
         {/* Result Notification */}
         <AnimatePresence>
           {shouldShowResultNotification && (() => {
@@ -616,12 +634,15 @@ const ModernBattle = () => {
                 opponentTime={results.opponentTime}
                 playerPoints={results.playerPoints}
                 opponentPoints={results.opponentPoints}
+                playerTimeout={results.playerTimeout}
+                opponentTimeout={results.opponentTimeout}
                 questionResults={questionResults}
+                currentUser={user}
               />
             ) : null;
           })()}
         </AnimatePresence>
-
+  
         {/* Next Question Delay */}
         <AnimatePresence>
           {showNextQuestionDelay && <NextQuestionDelay />}
