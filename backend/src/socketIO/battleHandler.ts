@@ -405,19 +405,27 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
             `🚪 ${socket.username} disconnected from active game ${roomId}`
           );
 
-          // Thông báo đối thủ
-          // socket.to(roomId).emit("opponent_disconnected", {
-          //   message: "Đối thủ đã rời khỏi trận đấu. Bạn thắng!",
-          // });
           const remainingPlayer = gameRoom.players.find(
             (p: any) => p.socket_id !== socket.id
           );
           const disconnectedPlayer = gameRoom.players.find(
-            (p : any) => p.socket_id === socket.id
+            (p: any) => p.socket_id === socket.id
           );
 
+          // Chuẩn hóa finalScores giống endGame
+          const finalScores: Record<string, number> = {};
+          if (remainingPlayer) {
+            finalScores[remainingPlayer.user_id] = remainingPlayer.score ?? 0;
+          }
+          if (disconnectedPlayer) {
+            finalScores[disconnectedPlayer.user_id] = 0;
+          }
+
           socket.to(roomId).emit("opponent_disconnected", {
-            message: "Đối thủ đã rời khỏi trận đấu. Bạn thắng!",
+            winner: remainingPlayer ? remainingPlayer.user_id : null,
+            finalScores,
+            totalQuestions: gameRoom.questions?.length ?? 0,
+            isDraw: false,
             player: remainingPlayer
               ? {
                   user_id: remainingPlayer.user_id,
@@ -431,10 +439,11 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
                   user_id: disconnectedPlayer.user_id,
                   username: disconnectedPlayer.username,
                   profile_picture: disconnectedPlayer.profile_picture,
-                  score: disconnectedPlayer.score ?? 0,
+                  score: 0,
                 }
               : null,
           });
+         
 
           // Trao chiến thắng cho đối thủ
           const opponent = gameRoom.players.find(
@@ -444,7 +453,7 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
             gameService
               .updatePlayScore(
                 opponent.user_id,
-                gameRoom.scores[opponent.user_id] + 100, // Bonus thắng
+                gameRoom.scores[opponent.user_id],
                 true
                 // playerInRoom.user_id
               )
