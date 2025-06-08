@@ -290,9 +290,6 @@ const ModernBattle = () => {
   const [timerActive, setTimerActive] = useState(false);
   const [timeEndEmitted, setTimeEndEmitted] = useState(false);
 
-  // Thêm state để track xem đã emit time_end chưa
-const [timeEndEmitted, setTimeEndEmitted] = useState(false);
-
 // Sửa lại hàm startTimer
 const startTimer = () => {
   // Nếu timer đang active, không start timer mới
