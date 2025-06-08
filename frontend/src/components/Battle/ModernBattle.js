@@ -4,30 +4,21 @@ import { io } from "socket.io-client";
 import { useAuthStore } from "@/store/useAuthStore";
 import DefaultAvatar from "@/assets/images/avatar.jpg"
 import {
-  IoTrophy,
   IoGameController,
   IoClose,
-  IoShield,
-  IoFlash,
-  IoHeart,
   IoRocket,
-  IoSearch,
-  IoLogOut,
 } from "react-icons/io5";
-import { FiUsers, FiClock } from "react-icons/fi";
 
 // Import các component đẹp đã có
 import VocabularyQuestion from "./VocabularyQuestion";
 import ScoreDisplay from "./ScoreDisplay";
 import CountdownTimer from "./CountdownTimer";
-import OpponentStatus from "./OpponentStatus";
 import ResultNotification from "./ResultNotification";
 import FinalResult from "./FinalResult";
 
 const ModernBattle = () => {
   // Auth state
   const { accessToken, user } = useAuthStore();
-  console.log("user", user);
 
   // Socket state
   const [socket, setSocket] = useState(null);
@@ -46,14 +37,16 @@ const ModernBattle = () => {
   const [gameResults, setGameResults] = useState(null);
   const [questionResults, setQuestionResults] = useState(null);
 
-  // Timer states - Đơn giản hóa
+  // Timer states - Đồng bộ với backend
   const [timeLeft, setTimeLeft] = useState(10);
   const [showTimer, setShowTimer] = useState(false);
+  const [isTimeUp, setIsTimeUp] = useState(false);
 
   // UI states
   const [showQuestionResult, setShowQuestionResult] = useState(false);
   const [loading, setLoading] = useState(false);
   const [waitingForOpponent, setWaitingForOpponent] = useState(false);
+  const [showNextQuestionDelay, setShowNextQuestionDelay] = useState(false);
 
   const timerRef = useRef(null);
   const questionStartTime = useRef(null);
@@ -93,6 +86,7 @@ const ModernBattle = () => {
       console.log("🎯 Queue joined:", data);
       setGameState("inQueue");
       setQueuePosition(data.position);
+      setLoading(false);
     });
 
     newSocket.on("game_found", (data) => {
@@ -119,7 +113,12 @@ const ModernBattle = () => {
 
     newSocket.on("next_question", (data) => {
       console.log("➡️ Next question:", data);
-      startNewQuestion(data);
+      // Hiển thị delay trước khi start câu mới
+      setShowNextQuestionDelay(true);
+      setTimeout(() => {
+        setShowNextQuestionDelay(false);
+        startNewQuestion(data);
+      }, 1000); // Delay ngắn để UI mượt hơn
     });
 
     newSocket.on("question_result", (data) => {
@@ -132,7 +131,7 @@ const ModernBattle = () => {
       setShowQuestionResult(true);
       setWaitingForOpponent(false);
       
-      // Nếu player chưa trả lời thì set timeout
+      // Kiểm tra nếu player timeout
       const answersArray = Object.values(data.answers);
       const playerAnswer = answersArray.find(
         answer => answer.username === user.username
@@ -141,6 +140,7 @@ const ModernBattle = () => {
       if (selectedAnswer === null && playerAnswer && playerAnswer.answer === null) {
         console.log("🕐 Player timed out");
         setSelectedAnswer("timeout");
+        setIsTimeUp(true);
       }
     });
 
@@ -164,8 +164,9 @@ const ModernBattle = () => {
       setGameResults({
         winner: { username: user.username, user_id: user.id },
         isDraw: false,
-        finalScores: scores,
+        finalScores: { ...scores, [user.id]: (scores[user.id] || 0) + 100 },
         totalQuestions: totalQuestions,
+        reason: "opponent_disconnected"
       });
       stopTimer();
     });
@@ -187,8 +188,9 @@ const ModernBattle = () => {
     setQuestionResults(null);
     setShowQuestionResult(false);
     setWaitingForOpponent(false);
+    setIsTimeUp(false);
     
-    // Start timer
+    // Start timer đồng bộ với backend
     startTimer();
   };
 
@@ -213,6 +215,7 @@ const ModernBattle = () => {
   const startTimer = () => {
     setTimeLeft(10);
     setShowTimer(true);
+    setIsTimeUp(false);
     questionStartTime.current = Date.now();
     
     timerRef.current = setInterval(() => {
@@ -220,9 +223,11 @@ const ModernBattle = () => {
         if (prev <= 1) {
           // Hết thời gian - tự động submit timeout nếu chưa trả lời
           if (selectedAnswer === null) {
+            console.log("⏰ Time's up! Auto-submitting timeout");
             handleSelectAnswer("timeout");
           }
-          stopTimer(); // Dừng timer khi hết thời gian
+          setIsTimeUp(true);
+          stopTimer();
           return 0;
         }
         return prev - 1;
@@ -250,6 +255,7 @@ const ModernBattle = () => {
     if (socket) {
       socket.emit("leave_queue");
       setGameState("waiting");
+      setLoading(false);
     }
   };
 
@@ -284,6 +290,8 @@ const ModernBattle = () => {
     setQuestionResults(null);
     setShowQuestionResult(false);
     setWaitingForOpponent(false);
+    setShowNextQuestionDelay(false);
+    setIsTimeUp(false);
     stopTimer();
   };
 
@@ -343,7 +351,7 @@ const ModernBattle = () => {
         </div>
         {user && (
           <div className="flex items-center gap-2">
-            <img src={user.profile_picture} alt="" className="w-8 h-8 rounded-full" />
+            <img src={user.profile_picture || DefaultAvatar} alt="" className="w-8 h-8 rounded-full" />
             <span className="text-sm font-medium">{user.username}</span>
           </div>
         )}
@@ -464,14 +472,14 @@ const ModernBattle = () => {
         
         <div className="flex items-center justify-center gap-8 mb-8">
           <div className="text-center">
-            <img src={user?.profile_picture} alt="" className="w-16 h-16 rounded-full mx-auto mb-2 border-3 border-indigo-500" />
+            <img src={user?.profile_picture || DefaultAvatar} alt="" className="w-16 h-16 rounded-full mx-auto mb-2 border-3 border-indigo-500" />
             <p className="font-semibold">{user?.username}</p>
           </div>
           
           <div className="text-4xl">⚔️</div>
           
           <div className="text-center">
-            <img src={gameData?.opponent?.profile_picture} alt="" className="w-16 h-16 rounded-full mx-auto mb-2 border-3 border-purple-500" />
+            <img src={gameData?.opponent?.profile_picture || DefaultAvatar} alt="" className="w-16 h-16 rounded-full mx-auto mb-2 border-3 border-purple-500" />
             <p className="font-semibold">{gameData?.opponent?.username}</p>
           </div>
         </div>
@@ -485,6 +493,31 @@ const ModernBattle = () => {
           </p>
         </div>
       </div>
+    </motion.div>
+  );
+
+  // Next Question Delay Component
+  const NextQuestionDelay = () => (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <motion.div
+        initial={{ scale: 0.8 }}
+        animate={{ scale: 1 }}
+        className="bg-white rounded-2xl p-8 text-center"
+      >
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full mx-auto mb-4"
+        />
+        <p className="text-lg font-semibold text-gray-800">
+          Chuẩn bị câu tiếp theo...
+        </p>
+      </motion.div>
     </motion.div>
   );
 
@@ -521,7 +554,11 @@ const ModernBattle = () => {
         
         {/* Timer - Chỉ hiển thị khi showTimer = true */}
         {showTimer && (
-          <div className="bg-white rounded-xl shadow-lg p-4">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-xl shadow-lg p-4"
+          >
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-gray-600">
                 Câu {questionNumber}/{totalQuestions}
@@ -531,19 +568,25 @@ const ModernBattle = () => {
               </span>
             </div>
             <CountdownTimer timeLeft={timeLeft} totalTime={10} />
-          </div>
+          </motion.div>
         )}
 
         {/* Waiting message */}
         {waitingForOpponent && !showQuestionResult && (
-          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4"
+          >
             <div className="flex items-center justify-center gap-3">
               <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
               <span className="text-blue-700 font-medium">
-                {selectedAnswer === "timeout" ? "Hết thời gian! Đang chờ đối thủ..." : "Đang chờ đối thủ trả lời..."}
+                {isTimeUp || selectedAnswer === "timeout" 
+                  ? "Hết thời gian! Đang chờ đối thủ..." 
+                  : "Đang chờ đối thủ trả lời..."}
               </span>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Question */}
@@ -557,6 +600,7 @@ const ModernBattle = () => {
             questionResults={questionResults}
             waitingForOpponent={waitingForOpponent}
             currentUser={user}
+            isTimeUp={isTimeUp}
           />
         )}
 
@@ -577,11 +621,16 @@ const ModernBattle = () => {
             ) : null;
           })()}
         </AnimatePresence>
+
+        {/* Next Question Delay */}
+        <AnimatePresence>
+          {showNextQuestionDelay && <NextQuestionDelay />}
+        </AnimatePresence>
       </div>
     );
   };
 
-  // Game Ended State Component - Updated to show rewards
+  // Game Ended State Component
   const GameEndedState = () => {
     const { player, opponent } = getPlayersData();
     
@@ -615,8 +664,8 @@ const ModernBattle = () => {
           </button>
         </div>
 
-        {/* Connection Status */}
-        {/* <ConnectionStatus /> */}
+        {/* Connection Status - Chỉ hiển thị khi có lỗi */}
+        {(!connected || connectionError) && <ConnectionStatus />}
 
         {/* Game States */}
         <AnimatePresence mode="wait">

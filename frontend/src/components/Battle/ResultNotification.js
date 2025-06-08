@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaCheckCircle, FaTimesCircle, FaClock } from 'react-icons/fa';
 
@@ -11,6 +11,16 @@ const ResultNotification = ({
   opponentPoints,
   questionResults 
 }) => {
+  const [showNotification, setShowNotification] = useState(true);
+  
+  // Auto hide after 3 seconds (matching backend delay)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowNotification(false);
+    }, 2500);
+    
+    return () => clearTimeout(timer);
+  }, []);
   
   // Get detailed results from BE
   const getPlayerDetails = () => {
@@ -29,7 +39,12 @@ const ResultNotification = ({
     const isTimeout = answer?.answer === null;
     
     return (
-      <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50 mb-3">
+      <motion.div
+        initial={{ opacity: 0, x: isPlayer ? -20 : 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: isPlayer ? 0.1 : 0.2 }}
+        className="flex justify-between items-center p-3 rounded-lg bg-gray-50 mb-3"
+      >
         <div className="flex items-center">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-2 ${
             isTimeout 
@@ -48,29 +63,39 @@ const ResultNotification = ({
           </div>
           <span className="font-semibold">{isPlayer ? "Bạn" : "Đối thủ"}</span>
         </div>
-        <div>
-          <span className="text-gray-600 mr-2">
+        <div className="text-right">
+          <div className="text-gray-600 text-sm">
             {isTimeout ? "Hết giờ" : `${time.toFixed(1)}s`}
-          </span>
-          <span className="font-bold text-lg text-indigo-600">+{points}</span>
+          </div>
+          <div className="font-bold text-lg text-indigo-600">+{points}</div>
         </div>
-      </div>
+      </motion.div>
     );
   };
   
+  if (!showNotification) return null;
+  
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
     >
       <motion.div
-        initial={{ y: 20 }}
-        animate={{ y: 0 }}
-        className="bg-white rounded-lg shadow-2xl p-6 max-w-md w-full"
+        initial={{ scale: 0.8, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.8, y: 20 }}
+        className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full"
       >
-        <h3 className="text-2xl font-bold mb-4 text-center">Kết quả lượt này</h3>
+        <motion.h3
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="text-2xl font-bold mb-4 text-center text-gray-800"
+        >
+          Kết quả lượt này
+        </motion.h3>
         
         <div className="space-y-3 mb-6">
           {details ? (
@@ -88,23 +113,34 @@ const ResultNotification = ({
         
         {/* Show correct answer */}
         {questionResults?.correctAnswer && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4"
+          >
             <p className="text-sm text-blue-800">
               <span className="font-semibold">Đáp án đúng:</span> {questionResults.correctAnswer}
             </p>
-          </div>
+          </motion.div>
         )}
         
-        {/* <button
-          onClick={onContinue}
-          className="w-full py-3 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-colors"
+        {/* Progress indicator */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="text-center"
         >
-          Tiếp tục
-        </button> */}
-        
-        {/* <p className="text-xs text-gray-500 text-center mt-2">
-          Câu tiếp theo sẽ bắt đầu khi cả hai người chơi sẵn sàng
-        </p> */}
+          <div className="flex items-center justify-center gap-2 text-gray-500 text-sm">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+              className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full"
+            />
+            <span>Chuẩn bị câu tiếp theo...</span>
+          </div>
+        </motion.div>
       </motion.div>
     </motion.div>
   );
