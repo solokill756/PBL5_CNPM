@@ -3,10 +3,11 @@ import jwt from "jsonwebtoken";
 import gameService from "../services/User/gameService";
 import { NextFunction } from "express";
 import { UserPayload } from "../services/User/authService";
+import db from "../models";
 dotenv.config();
 export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
   // Middleware xác thực
-  io.use((socket: any, next: NextFunction) => {
+  io.use(async (socket: any, next: NextFunction) => {
     const token = socket.handshake.auth.token;
     if (token) {
       try {
@@ -16,7 +17,11 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
         ) as UserPayload;
         socket.user_id = decoded.user_id;
         socket.username = decoded.username;
-        console.log(`✅ User ${socket.username} authenticated`);
+        socket.profile_picture = await db.user.find({
+          where: { user_id: decoded.user_id },
+          attributes: ["profile_picture"],
+        });
+        if (decoded) console.log(`✅ User ${socket.username} authenticated`);
         next();
       } catch (err) {
         console.log("❌ Authentication failed:", (err as Error).message);
@@ -35,6 +40,7 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
         id: socket.id,
         user_id: socket.user_id,
         username: socket.username,
+        profile_picture: socket.profile_picture,
       };
       // Tìm đối thủ ngẫu nhiên
       const opponentIndex =
