@@ -94,6 +94,9 @@ const loginService = async (user: {
     if (findUser.Authentications[0].verified == 0) {
       return { error: "Tài khoản của bạn chưa được xác thực" };
     }
+    if (findUser.is_blocked) {
+      return { error: "Tài khoản của bạn đã bị khóa" };
+    }
     const payLoad: UserPayload = {
       username: userData.username,
       email: userData.email,

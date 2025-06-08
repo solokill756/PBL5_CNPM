@@ -14,7 +14,7 @@ interface VocabularyAttributes {
   language: string;
   level: string;
   type: string;
-  is_show?: boolean;
+  is_show: boolean;
 }
 
 interface VocabularyCreationAttributes

@@ -7,13 +7,17 @@ interface VocabularyTopicAttributes {
   description?: string;
   created_at: Date;
   require_level: number;
-  total_words : number;
-  points : number;
+  total_words: number;
+  points: number;
+  is_show: boolean;
 }
 
 interface VocabularyTopicCreationAttributes
   extends Partial<
-    Pick<VocabularyTopicAttributes, "description" | "created_at" | "image_url">
+    Pick<
+      VocabularyTopicAttributes,
+      "description" | "created_at" | "image_url" | "topic_id"
+    >
   > {}
 
 class VocabularyTopic
@@ -28,6 +32,7 @@ class VocabularyTopic
   declare require_level: number;
   declare total_words: number;
   declare points: number;
+  declare is_show: boolean;
 }
 
 export default (sequelize: Sequelize) => {
@@ -71,8 +76,11 @@ export default (sequelize: Sequelize) => {
         allowNull: false,
         defaultValue: 0,
       },
-
-
+      is_show: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+      },
     },
     {
       sequelize,
@@ -81,9 +89,9 @@ export default (sequelize: Sequelize) => {
       indexes: [
         {
           unique: true,
-          fields: ["topic_id"]
-        }
-      ]
+          fields: ["topic_id"],
+        },
+      ],
     }
   );
 
