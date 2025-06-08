@@ -160,7 +160,10 @@ const updatePlayScore = async (
     if (!user) {
       throw new Error("User not found");
     }
-    vocabularyService.checkLevelUser(userId, points);
+    if (isWinner) {
+      await vocabularyService.checkLevelUser(userId, points);
+    }
+    // Cập nhật điểm cho người chơi
     const winCount = isWinner ? 1 : 0;
     const check = db.battleStats.findOne({
       where: {
@@ -172,7 +175,8 @@ const updatePlayScore = async (
         {
           games_played: user.games_played + 1,
           games_won: user.games_won + winCount,
-          total_battle_points: user.total_battle_points + points,
+          total_battle_points:
+            user.total_battle_points + winCount == 1 ? points : 0,
         },
         { where: { user_id: userId } }
       );
@@ -181,7 +185,7 @@ const updatePlayScore = async (
         user_id: userId,
         games_played: 1,
         games_won: winCount,
-        total_battle_points: points,
+        total_battle_points: winCount == 1 ? points : 0,
       });
     }
     // if (opponentId) {

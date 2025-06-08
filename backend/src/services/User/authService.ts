@@ -39,7 +39,7 @@ const registerService = async (
       return checkEmail;
     }
     const newUser = await db.user.create(
-      { ...user, tokenVersion: 0, level: 0, points: 0, levelThreshold: 500 },
+      { ...user, tokenVersion: 0, level: 1, points: 0, levelThreshold: 500 },
       { transaction }
     );
     await db.authentication.create(

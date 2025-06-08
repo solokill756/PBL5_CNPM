@@ -4,10 +4,12 @@ import gameService from "../services/User/gameService";
 import { NextFunction } from "express";
 import { UserPayload } from "../services/User/authService";
 import db from "../models";
+
 dotenv.config();
+
 export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
   // Middleware xác thực
-  io.use((socket: any, next: NextFunction) => {
+  io.use(async (socket: any, next: NextFunction) => {
     const token = socket.handshake.auth.token;
     if (token) {
       try {
@@ -18,7 +20,22 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
         socket.user_id = decoded.user_id;
         socket.username = decoded.username;
 
-        if (decoded) console.log(`✅ User ${socket.username} authenticated`);
+        // Cache profile picture during authentication
+        try {
+          const user = await db.user.findOne({
+            where: { user_id: decoded.user_id },
+            attributes: ["profile_picture"],
+          });
+          socket.profile_picture = user?.profile_picture || null;
+        } catch (dbError) {
+          console.warn(
+            `⚠️ Could not fetch profile picture for ${socket.username}:`,
+            dbError
+          );
+          socket.profile_picture = null;
+        }
+
+        console.log(`✅ User ${socket.username} authenticated`);
         next();
       } catch (err) {
         console.log("❌ Authentication failed:", (err as Error).message);
@@ -35,10 +52,6 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
     //)
     // Tham gia hàng đợi tìm trận
     socket.on("join_queue", async (_data: any) => {
-      socket.profile_picture = await db.user.findOne({
-        where: { user_id: socket.user_id },
-        attributes: ["profile_picture"],
-      });
       const player = {
         id: socket.id,
         user_id: socket.user_id,
@@ -63,14 +76,12 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
         try {
           // Lấy câu hỏi từ database
           const questions = await gameService.getRandomQuestion();
-
           if (questions.length === 0) {
             socket.emit("error", {
               message: "Không tìm thấy câu hỏi cho chủ đề này",
             });
             return;
           }
-
           const gameRoom = {
             id: roomId,
             players: [opponent, player],
@@ -83,9 +94,7 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
             status: "waiting",
             answers: {},
             questionStartTime: null,
-            checkQuestionTimeOut: {},
           };
-
           gameRooms.set(roomId, gameRoom);
 
           // Join socket rooms
@@ -157,7 +166,6 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
       console.log(`🚀 Starting game in room ${data.roomId}`);
       gameRoom.status = "playing";
       gameRoom.questionStartTime = Date.now();
-      gameRoom.currentQuestion = 1;
       // Gửi câu hỏi đầu tiên
       io.to(data.roomId).emit("game_started", {
         question: gameRoom.questions[0],
@@ -169,21 +177,6 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
       // setTimeout(() => {
       //   handleQuestionTimeout(data.roomId);
       // }, 10000);
-    });
-    socket.on("time_end", (data: any) => {
-      const gameRoom = gameRooms.get(data.roomId);
-      if (!gameRoom || gameRoom.status !== "playing") return;
-      console.log(`⏰ Time ended for question in room ${data.roomId}`);
-      gameRoom.checkQuestionTimeOut[socket.user_id] = true;
-      let count = 0;
-      for (const key in gameRoom.checkQuestionTimeOut) {
-        if (gameRoom.checkQuestionTimeOut[key] == true) {
-          count++;
-        }
-      }
-      if (count == 2) {
-        handleQuestionTimeout(data.roomId);
-      }
     });
     socket.on("submit_answer", (data: any) => {
       const gameRoom = gameRooms.get(data.roomId);
@@ -269,7 +262,6 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
       // Reset cho câu tiếp theo
       gameRoom.answers = {};
       gameRoom.currentQuestion++;
-      gameRoom.checkQuestionTimeOut = {};
 
       // Kiểm tra xem còn câu hỏi không
       if (gameRoom.currentQuestion < gameRoom.questions.length) {
@@ -278,7 +270,7 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
           gameRoom.questionStartTime = Date.now();
           io.to(roomId).emit("next_question", {
             question: gameRoom.questions[gameRoom.currentQuestion],
-            questionNumber: gameRoom.currentQuestion,
+            questionNumber: gameRoom.currentQuestion + 1,
           });
 
           // Timer cho câu hỏi mới
@@ -291,32 +283,32 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
         endGame(roomId);
       }
     };
-    const handleQuestionTimeout = (roomId: string) => {
-      const gameRoom = gameRooms.get(roomId);
-      if (!gameRoom) return;
+    // const handleQuestionTimeout = (roomId: string) => {
+    //   const gameRoom = gameRooms.get(roomId);
+    //   if (!gameRoom) return;
 
-      const answeredCount = Object.keys(gameRoom.answers).length;
+    //   const answeredCount = Object.keys(gameRoom.answers).length;
 
-      if (answeredCount < 2) {
-        console.log(
-          `⏰ Question timeout in room ${roomId}. Answered: ${answeredCount}/2`
-        );
+    //   if (answeredCount < 2) {
+    //     console.log(
+    //       `⏰ Question timeout in room ${roomId}. Answered: ${answeredCount}/2`
+    //     );
 
-        // Tự động submit cho những người chưa trả lời
-        gameRoom.players.forEach((player: any) => {
-          if (!gameRoom.answers[player.user_id]) {
-            gameRoom.answers[player.user_id] = {
-              answer: null,
-              isCorrect: false,
-              points: 0,
-              responseTime: 10000,
-            };
-          }
-        });
+    //     // Tự động submit cho những người chưa trả lời
+    //     gameRoom.players.forEach((player: any) => {
+    //       if (!gameRoom.answers[player.user_id]) {
+    //         gameRoom.answers[player.user_id] = {
+    //           answer: null,
+    //           isCorrect: false,
+    //           points: 0,
+    //           responseTime: 10000,
+    //         };
+    //       }
+    //     });
 
-        handleQuestionComplete(roomId);
-      }
-    };
+    //     handleQuestionComplete(roomId);
+    //   }
+    // };
     const endGame = async (roomId: string) => {
       const gameRoom = gameRooms.get(roomId);
       if (!gameRoom) return;
@@ -364,12 +356,37 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
       }
 
       // Gửi kết quả cuối game
-      io.to(roomId).emit("game_ended", {
-        winner,
-        finalScores,
-        totalQuestions: gameRoom.questions.length,
-        isDraw: !winner,
-      });
+      // io.to(roomId).emit("game_ended", {
+      //   winner,
+      //   finalScores,
+      //   totalQuestions: gameRoom.questions.length,
+      //   isDraw: !winner,
+      // });
+      for (const player of gameRoom.players) {
+        const opponent = gameRoom.players.find(
+          (p: any) => p.user_id !== player.user_id
+        );
+        io.to(player.socket_id).emit("game_ended", {
+          winner,
+          finalScores,
+          totalQuestions: gameRoom.questions.length,
+          isDraw: !winner,
+          player: {
+            user_id: player.user_id,
+            username: player.username,
+            profile_picture: player.profile_picture,
+            score: finalScores[player.user_id] ?? 0,
+          },
+          opponent: opponent
+            ? {
+                user_id: opponent.user_id,
+                username: opponent.username,
+                profile_picture: opponent.profile_picture,
+                score: finalScores[opponent.user_id] ?? 0,
+              }
+            : null,
+        });
+      }
 
       // Cleanup
       setTimeout(() => {
@@ -389,8 +406,34 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
           );
 
           // Thông báo đối thủ
+          // socket.to(roomId).emit("opponent_disconnected", {
+          //   message: "Đối thủ đã rời khỏi trận đấu. Bạn thắng!",
+          // });
+          const remainingPlayer = gameRoom.players.find(
+            (p: any) => p.socket_id !== socket.id
+          );
+          const disconnectedPlayer = gameRoom.players.find(
+            (p : any) => p.socket_id === socket.id
+          );
+
           socket.to(roomId).emit("opponent_disconnected", {
             message: "Đối thủ đã rời khỏi trận đấu. Bạn thắng!",
+            player: remainingPlayer
+              ? {
+                  user_id: remainingPlayer.user_id,
+                  username: remainingPlayer.username,
+                  profile_picture: remainingPlayer.profile_picture,
+                  score: remainingPlayer.score ?? 0,
+                }
+              : null,
+            opponent: disconnectedPlayer
+              ? {
+                  user_id: disconnectedPlayer.user_id,
+                  username: disconnectedPlayer.username,
+                  profile_picture: disconnectedPlayer.profile_picture,
+                  score: disconnectedPlayer.score ?? 0,
+                }
+              : null,
           });
 
           // Trao chiến thắng cho đối thủ
