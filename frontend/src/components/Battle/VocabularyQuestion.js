@@ -57,7 +57,7 @@ const VocabularyQuestion = ({
               Thuật ngữ tiếng Nhật
             </span>
             <span className="text-sm text-gray-500 font-medium">
-              Câu {currentQuestion + 1}/{questionCount}
+              Câu {currentQuestion}/{questionCount}
             </span>
           </div>
           <h2 className="text-3xl font-bold text-gray-800">
@@ -185,7 +185,7 @@ const VocabularyQuestion = ({
       )}
       
       {/* Enhanced waiting status */}
-      {waitingForOpponent && !isQuestionCompleted && (
+      {/* {waitingForOpponent && !isQuestionCompleted && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -204,7 +204,7 @@ const VocabularyQuestion = ({
             </span>
           </div>
         </motion.div>
-      )}
+      )} */}
     </motion.div>
   );
 };
