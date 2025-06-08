@@ -263,6 +263,7 @@ const ModernBattle = () => {
     setShowQuestionResult(false);
     setWaitingForOpponent(false);
     setIsTimeUp(false);
+    setTimeEndEmitted(false); // Reset flag cho câu hỏi mới
   
     // Start timer
     startTimer();
@@ -287,77 +288,90 @@ const ModernBattle = () => {
   };
 
   const [timerActive, setTimerActive] = useState(false);
+  const [timeEndEmitted, setTimeEndEmitted] = useState(false);
 
-  const startTimer = () => {
-    // Nếu timer đang active, không start timer mới
-    if (timerActive) {
-      console.log("⚠️ Timer already active, skipping start");
-      return;
-    }
-  
-    // Clear any existing timer
-    if (timerRef.current) {
-      console.log("🔄 Clearing existing timer");
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-  
-    setTimeLeft(10);
-    setShowTimer(true);
-    setIsTimeUp(false);
-    setTimerActive(true);
-    questionStartTime.current = Date.now();
-  
-    console.log("⏰ Starting new timer");
-    timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        const newTime = prev - 1;
-  
-        if (newTime <= 0) {
-          console.log("⏰ Time's up! Emitting time_end event");
-          
-          // Set timer inactive immediately
-          setTimerActive(false);
-          
-          // Clear timer
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-            timerRef.current = null;
-          }
-          
-          if (socketRef.current && roomIdRef.current) {
-            console.log(`🔴 Emitting time_end for room: ${roomIdRef.current}`);
-            socketRef.current.emit("time_end", { roomId: roomIdRef.current });
-          }
-  
-          setIsTimeUp(true);
-          setShowTimer(false);
-          
-          // Auto set timeout if no answer
-          setSelectedAnswer((currentAnswer) => {
-            if (currentAnswer === null) {
-              setWaitingForOpponent(true);
-              return "timeout";
-            }
-            return currentAnswer;
-          });
-          
-          return 0;
+  // Thêm state để track xem đã emit time_end chưa
+const [timeEndEmitted, setTimeEndEmitted] = useState(false);
+
+// Sửa lại hàm startTimer
+const startTimer = () => {
+  // Nếu timer đang active, không start timer mới
+  if (timerActive) {
+    console.log("⚠️ Timer already active, skipping start");
+    return;
+  }
+
+  // Clear any existing timer
+  if (timerRef.current) {
+    console.log("🔄 Clearing existing timer");
+    clearInterval(timerRef.current);
+    timerRef.current = null;
+  }
+
+  setTimeLeft(10);
+  setShowTimer(true);
+  setIsTimeUp(false);
+  setTimerActive(true);
+  setTimeEndEmitted(false); // Reset flag khi bắt đầu timer mới
+  questionStartTime.current = Date.now();
+
+  console.log("⏰ Starting new timer");
+  timerRef.current = setInterval(() => {
+    setTimeLeft((prev) => {
+      const newTime = prev - 1;
+
+      if (newTime <= 0) {
+        console.log("⏰ Time's up!");
+        
+        // Set timer inactive immediately
+        setTimerActive(false);
+        
+        // Clear timer
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
         }
-        return newTime;
-      });
-    }, 1000);
-  };
-  
-  const stopTimer = () => {
-    console.log("🛑 Stopping timer");
-    setTimerActive(false);
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    setShowTimer(false);
-  };
+
+        setIsTimeUp(true);
+        setShowTimer(false);
+        
+        // Chỉ emit time_end nếu chưa emit và user chưa trả lời
+        setSelectedAnswer((currentAnswer) => {
+          if (currentAnswer === null) {
+            // Chỉ emit nếu chưa emit trước đó
+            setTimeEndEmitted((prevEmitted) => {
+              if (!prevEmitted && socketRef.current && roomIdRef.current) {
+                console.log(`🔴 Emitting time_end for room: ${roomIdRef.current}`);
+                socketRef.current.emit("time_end", { roomId: roomIdRef.current });
+                return true; // Đánh dấu đã emit
+              }
+              return prevEmitted;
+            });
+            
+            setWaitingForOpponent(true);
+            return "timeout";
+          }
+          return currentAnswer;
+        });
+        
+        return 0;
+      }
+      return newTime;
+    });
+  }, 1000);
+};
+
+// Sửa lại hàm stopTimer để reset flag
+const stopTimer = () => {
+  console.log("🛑 Stopping timer");
+  setTimerActive(false);
+  setTimeEndEmitted(false); // Reset flag khi stop timer
+  if (timerRef.current) {
+    clearInterval(timerRef.current);
+    timerRef.current = null;
+  }
+  setShowTimer(false);
+};
 
   useEffect(() => {
     return () => {
@@ -399,6 +413,7 @@ const ModernBattle = () => {
     setSelectedAnswer(answer);
     setWaitingForOpponent(true);
     stopTimer(); // Dừng timer ngay khi user trả lời
+    setTimeEndEmitted(true); // Đánh dấu để không emit time_end nữa
   
     if (socketRef.current && roomIdRef.current) {
       console.log(`📤 Submitting answer: ${answer} (${responseTime}ms)`);
