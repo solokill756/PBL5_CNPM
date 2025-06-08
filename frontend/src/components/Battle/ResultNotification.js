@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 import { FaCheckCircle, FaTimesCircle, FaClock } from 'react-icons/fa';
 
-const ResultNotification = ({ 
+const ResultNotification = memo(({ 
   playerCorrect, 
   opponentCorrect, 
   playerTime, 
@@ -14,17 +14,6 @@ const ResultNotification = ({
   questionResults,
   currentUser
 }) => {
-  const [showNotification, setShowNotification] = useState(true);
-  
-  // Auto hide after 2.5 seconds
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowNotification(false);
-    }, 2500);
-    
-    return () => clearTimeout(timer);
-  }, []);
-  
   const renderPlayerResult = (isPlayer, correct, time, points, isTimeout) => {
     return (
       <motion.div
@@ -61,19 +50,19 @@ const ResultNotification = ({
     );
   };
   
-  if (!showNotification) return null;
-  
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
     >
       <motion.div
         initial={{ scale: 0.8, y: 20 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.8, y: 20 }}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
         className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full"
       >
         <motion.h3
@@ -123,6 +112,8 @@ const ResultNotification = ({
       </motion.div>
     </motion.div>
   );
-};
+});
+
+ResultNotification.displayName = 'ResultNotification';
 
 export default ResultNotification;
