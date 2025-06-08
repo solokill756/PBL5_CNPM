@@ -149,12 +149,8 @@ const ModernBattle = () => {
       console.log("🚀 Game started:", data);
       setGameState("playing");
       
-      // Pass roomId từ gameData
-      setGameData((currentGameData) => {
-        const roomId = currentGameData?.roomId;
-        startNewQuestion(data, roomId);
-        return currentGameData;
-      });
+      // Trực tiếp start question đầu tiên
+      startNewQuestion(data);
     });
   
     newSocket.on("next_question", (data) => {
@@ -171,15 +167,11 @@ const ModernBattle = () => {
       setTimeout(() => {
         setShowNextQuestionDelay(false);
         
-        // Get roomId từ gameData hiện tại
-        setGameData((currentGameData) => {
-          const roomId = currentGameData?.roomId;
-          startNewQuestion({
-            question: data.question,
-            questionNumber: data.questionNumber + 1, // Backend gửi index 0-based, frontend cần 1-based
-            totalQuestions: totalQuestions
-          }, roomId);
-          return currentGameData;
+        // Start câu mới với questionNumber đã được backend tính đúng
+        startNewQuestion({
+          question: data.question,
+          questionNumber: data.questionNumber + 1, // Backend gửi index 0-based
+          totalQuestions: totalQuestions
         });
       }, 1000);
     });
@@ -294,39 +286,54 @@ const ModernBattle = () => {
     };
   };
 
+  const [timerActive, setTimerActive] = useState(false);
+
   const startTimer = () => {
-    setTimeLeft(10);
-    setShowTimer(true);
-    setIsTimeUp(false);
-    questionStartTime.current = Date.now();
+    // Nếu timer đang active, không start timer mới
+    if (timerActive) {
+      console.log("⚠️ Timer already active, skipping start");
+      return;
+    }
   
     // Clear any existing timer
     if (timerRef.current) {
+      console.log("🔄 Clearing existing timer");
       clearInterval(timerRef.current);
+      timerRef.current = null;
     }
   
+    setTimeLeft(10);
+    setShowTimer(true);
+    setIsTimeUp(false);
+    setTimerActive(true);
+    questionStartTime.current = Date.now();
+  
+    console.log("⏰ Starting new timer");
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         const newTime = prev - 1;
   
         if (newTime <= 0) {
-          // Hết thời gian - emit time_end event
           console.log("⏰ Time's up! Emitting time_end event");
+          
+          // Set timer inactive immediately
+          setTimerActive(false);
+          
+          // Clear timer
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
           
           if (socketRef.current && roomIdRef.current) {
             console.log(`🔴 Emitting time_end for room: ${roomIdRef.current}`);
             socketRef.current.emit("time_end", { roomId: roomIdRef.current });
-          } else {
-            console.log("❌ Cannot emit time_end", {
-              socket: !!socketRef.current,
-              roomId: roomIdRef.current
-            });
           }
   
           setIsTimeUp(true);
-          stopTimer();
+          setShowTimer(false);
           
-          // Nếu user chưa trả lời, tự động set timeout
+          // Auto set timeout if no answer
           setSelectedAnswer((currentAnswer) => {
             if (currentAnswer === null) {
               setWaitingForOpponent(true);
@@ -343,12 +350,23 @@ const ModernBattle = () => {
   };
   
   const stopTimer = () => {
+    console.log("🛑 Stopping timer");
+    setTimerActive(false);
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
     setShowTimer(false);
   };
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, []);
 
   // Game actions
   const handleJoinQueue = () => {
@@ -367,16 +385,23 @@ const ModernBattle = () => {
   };
 
   const handleSelectAnswer = (answer) => {
-    if (selectedAnswer !== null || isTimeUp) return;
+    if (selectedAnswer !== null || isTimeUp) {
+      console.log("❌ Cannot select answer - already answered or time up", {
+        selectedAnswer,
+        isTimeUp
+      });
+      return;
+    }
   
     const responseTime = Date.now() - questionStartTime.current;
   
+    console.log(`💡 User selecting answer: ${answer}`);
     setSelectedAnswer(answer);
     setWaitingForOpponent(true);
-    stopTimer();
+    stopTimer(); // Dừng timer ngay khi user trả lời
   
     if (socketRef.current && roomIdRef.current) {
-      console.log(`💡 Submitting answer: ${answer} (${responseTime}ms)`);
+      console.log(`📤 Submitting answer: ${answer} (${responseTime}ms)`);
       socketRef.current.emit("submit_answer", {
         roomId: roomIdRef.current,
         answer: answer === "timeout" ? null : answer,
