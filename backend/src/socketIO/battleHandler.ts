@@ -83,6 +83,7 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
             status: "waiting",
             answers: {},
             questionStartTime: null,
+            checkQuestionTimeOut: {},
           };
 
           gameRooms.set(roomId, gameRoom);
@@ -103,10 +104,12 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
             player: {
               username: player.username,
               user_id: player.user_id,
+              profile_picture: player.profile_picture,
             },
             opponent: {
               username: opponent.username,
               user_id: opponent.user_id,
+              profile_picture: opponent.profile_picture,
             },
             totalQuestions: questions.length,
           });
@@ -118,10 +121,12 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
               player: {
                 username: opponent.username,
                 user_id: opponent.user_id,
+                profile_picture: opponent.profile_picture,
               },
               opponent: {
                 username: player.username,
                 user_id: player.user_id,
+                profile_picture: player.profile_picture,
               },
               totalQuestions: questions.length,
             });
@@ -161,16 +166,25 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
       });
 
       // Đặt timer cho câu hỏi (10 giây)
-      setTimeout(() => {
-        handleQuestionTimeout(data.roomId);
-      }, 10000);
+      // setTimeout(() => {
+      //   handleQuestionTimeout(data.roomId);
+      // }, 10000);
     });
-    // socket.on("time_end", (data: any) => {
-    //   const gameRoom = gameRooms.get(data.roomId);
-    //   if (!gameRoom || gameRoom.status !== "playing") return;
-    //   console.log(`⏰ Time ended for question in room ${data.roomId}`);
-    //   handleQuestionTimeout(data.roomId);
-    // });
+    socket.on("time_end", (data: any) => {
+      const gameRoom = gameRooms.get(data.roomId);
+      if (!gameRoom || gameRoom.status !== "playing") return;
+      console.log(`⏰ Time ended for question in room ${data.roomId}`);
+      gameRoom.checkQuestionTimeOut[socket.user_id] = true;
+      let count = 0;
+      for (const key in gameRoom.checkQuestionTimeOut) {
+        if (gameRoom.checkQuestionTimeOut[key] == true) {
+          count++;
+        }
+      }
+      if (count == 2) {
+        handleQuestionTimeout(data.roomId);
+      }
+    });
     socket.on("submit_answer", (data: any) => {
       const gameRoom = gameRooms.get(data.roomId);
       if (!gameRoom || gameRoom.status !== "playing") return;
@@ -255,6 +269,7 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
       // Reset cho câu tiếp theo
       gameRoom.answers = {};
       gameRoom.currentQuestion++;
+      gameRoom.checkQuestionTimeOut = {};
 
       // Kiểm tra xem còn câu hỏi không
       if (gameRoom.currentQuestion < gameRoom.questions.length) {
@@ -267,9 +282,9 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
           });
 
           // Timer cho câu hỏi mới
-          setTimeout(() => {
-            handleQuestionTimeout(roomId);
-          }, 10000);
+          // setTimeout(() => {
+          //   handleQuestionTimeout(roomId);
+          // }, 10000);
         }, 3000);
       } else {
         // Kết thúc game
