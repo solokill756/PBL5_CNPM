@@ -12,6 +12,7 @@ const ClassList = ({ classes = [], loading }) => {
           name={loading ? "" : classData.class_name}
           author={loading ? "" : classData.User.username}
           member={loading ? 0 : classData.studentCount}
+          classId={loading ? "" : classData.class_id}
           loading={loading}
         />
       ))}

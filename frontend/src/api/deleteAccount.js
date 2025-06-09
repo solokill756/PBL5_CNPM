@@ -1,7 +1,7 @@
 
 export const deleteAccount = async (axiosPrivate) => {
   try {
-    const response = await axiosPrivate.delete('http://localhost:9000/api/profile/deleteUser');
+    const response = await axiosPrivate.delete('/api/profile/deleteUser');
     return response.data;
   } catch (error) {
     console.error('Error deleting user:', error);

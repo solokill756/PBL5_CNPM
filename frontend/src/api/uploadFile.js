@@ -4,7 +4,7 @@ export const uploadFile = async (axiosPrivate, image) => {
     formData.append('image', image);
 
     const response = await axiosPrivate.post(
-      'http://localhost:9000/api/profile/updateProfilePicture',
+      '/api/profile/updateProfilePicture',
       formData,
       {
         headers: {

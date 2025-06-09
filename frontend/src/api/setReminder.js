@@ -1,7 +1,7 @@
 export const setReminder = async (axiosPrivate, reminder_time, reminder_status) => {
     try {
         const response = await axiosPrivate.post(
-            'http://localhost:9000/api/profile/setReminder', 
+            '/api/profile/setReminder', 
             {
                 reminderTime: reminder_time, 
                 reminderStatus: reminder_status

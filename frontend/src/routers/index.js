@@ -29,6 +29,9 @@ import BattleTest from "@/components/BattleTest/battleTest";
 import ModernBattle from "@/components/Battle/ModernBattle";
 import BattleRoom from "@/components/Battle/BattleRoom";
 import BattleResult from "@/components/Battle/BattleResult";
+import ListClass from "@/pages/Class/ListClass";
+import ClassDetail from "@/pages/Class/ClassDetail";
+import Members from "@/pages/Class/Members";
 // Component bảo vệ route yêu cầu xác thực
 function PrivateRoute({ children }) {
   // const { auth } = useAuth();
@@ -69,9 +72,18 @@ const router = createBrowserRouter([
         element: <Library />,
       },
       {
-        path: "/class",
-        element: <Library />,
+        path: "/classes",
+        element: <ListClass/>,
       },
+      {
+        path: "/classes/:classId",
+        element: <ClassDetail />
+      },
+      {
+        path: "/classes/:classId/members",
+        element: <Members/>,
+      },
+        
          {
         path: "/savedVocabulary",
         element: <Library />,
@@ -99,14 +111,6 @@ const router = createBrowserRouter([
       {
         path: "/add-flashcard",
         element: <AddFlashcard />
-      },
-      {
-        path: "/vocabulary/topic/:topicId/Test",
-        element: <Test/>
-      },
-       {
-        path: "/vocabulary/topic/:topicId/TestResult",
-        element: <TestResult/>
       },
     ],
   },
