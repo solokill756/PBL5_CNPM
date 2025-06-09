@@ -6,6 +6,10 @@ import CourseInfoComponent from '@/components/ClassCard/ClassCard'
 import { fetchRecentClasses } from '@/api/recentClass'
 import useAxiosPrivate from '@/hooks/useAxiosPrivate'
 import { useNavigate } from 'react-router-dom'
+import { IoAddCircleOutline } from "react-icons/io5";
+import CreateClassModal from '@/components/Modal/CreateClassModal'
+import { useAuthStore } from '@/store/useAuthStore'
+import { deleteClass } from '@/api/deleteClass'
 
 const ListClass = () => {
   const axiosPrivate = useAxiosPrivate();
@@ -13,6 +17,20 @@ const ListClass = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const user = useAuthStore(state => state.user);
+
+  const handleDeleteClass = async (classId) => {
+    try {
+      const response = await deleteClass(axiosPrivate, classId);
+      setClassData(prevData => 
+      prevData.filter(classItem => classItem.class_id !== classId)
+    );
+    } catch (error) {
+     
+    }
+  };
 
   useEffect(() => {
     const loadClassData = async () => {
@@ -25,12 +43,15 @@ const ListClass = () => {
         if (data && data.data) {                   
           if (Array.isArray(data.data)) {
             const formattedClasses = data.data.map(item => {
+              const canDelete = user && user.id === item.created_by;
               return {
                 id: item.id || item.class_id, 
                 class_id: item.id || item.class_id,
                 listCount: item.listFlashCardCount || item.listCount || 0, 
                 studentCount: item.studentCount || item.student_count || 0,
                 class_name: item.class_name || item.className || 'Không có tên',
+                created_by: item.created_by,
+                canDelete: canDelete
               };
             });
             setClassData(formattedClasses);
@@ -53,44 +74,40 @@ const ListClass = () => {
     if (axiosPrivate) {
       loadClassData();
     }
-  }, [axiosPrivate]);
+  }, [axiosPrivate, refreshTrigger, user]); 
 
   return (
     <main className='min-h-screen flex flex-col'>
       <DefaultHeader />
       
-      <div className="bg-white shadow-sm border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-6 py-12 text-center mb-8">
-           <h1 className='text-5xl font-bold text-center'>
-              <span className="text-red-800">
-                Thư viện của bạn
-              </span>
-          </h1>
-        </div>
-      </div>
+    <div className="bg-white shadow-sm border-b border-gray-100">
+      <div className="max-w-7xl mx-auto px-6 py-12 text-center">
+        <h1 className='text-5xl font-bold text-center mb-4'>
+          <span className="text-red-800">
+            Thư viện của bạn
+          </span>
+        </h1>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className=" text-red-800 px-4 py-3 rounded-full font-medium transition-colors duration-200 flex items-center gap-2 mx-auto"
+        >
+          <IoAddCircleOutline size={60} />
+        </button>
+      </div>       
+    </div>
 
       <div className="flex-1 max-w-7xl mx-auto w-full px-6 py-8">
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
+        <div className="bg-whitemb-4">
           <div className="mb-6">
             <OptionItem />
           </div>
           
-          <div className="flex justify-center">
-            <div className="w-full max-w-2xl">
-              <div className="flex items-center justify-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-800">Tìm kiếm khóa học</h3>
-              </div>
-              <div className='flex items-center justify-center mb-4'>
-                  <SearchInput />
-              </div>
-            </div>
-          </div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center">
-              <div className="w-1 h-6 bg-indigo-500 rounded-full mr-3"></div>
+              <div className="w-1 h-6 bg-red-800 rounded-full mr-3"></div>
               <h3 className="text-xl font-semibold text-gray-800">Danh sách lớp học</h3>
             </div>
             <div className="text-sm text-gray-500">
@@ -135,24 +152,26 @@ const ListClass = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {classData.map((classItem) => (
-                  <div 
-                      key={classItem.id}
-                      onClick={() => navigate(`/classes/${classItem.class_id}`)} 
-                      className="cursor-pointer" 
-                    >
-                <CourseInfoComponent
-                  key={classItem.id} 
-                  studentCount={classItem.studentCount}
-                  listCount={classItem.listCount}
-                  class_name={classItem.class_name}
-                  class_id={classItem.class_id}
-                />
+                <div 
+                  key={classItem.id}
+                  onClick={() => navigate(`/classes/${classItem.class_id}`)} 
+                  className="cursor-pointer" 
+                >
+                  <CourseInfoComponent
+                    studentCount={classItem.studentCount}
+                    listCount={classItem.listCount}
+                    class_name={classItem.class_name}
+                    class_id={classItem.class_id}
+                    canDelete={classItem.canDelete}
+                    onDelete={handleDeleteClass}
+                  />
                 </div>
               ))}
             </div>
           )}
         </div>
       </div>
+      <CreateClassModal isOpen={isModalOpen} setIsOpen={setIsModalOpen} onClassCreated={() => setRefreshTrigger(prev => prev + 1)}/>
     </main>
   );
 
