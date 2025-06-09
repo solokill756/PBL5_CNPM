@@ -50,7 +50,6 @@ function LeftSideBar({ onToggle }) {
     { id: "library", title: "Thư viện", icon: <LuLibraryBig className="size-6" />, path: "/library" },
     { id: "vocabulary", title: "Từ vựng", icon: <FaLanguage className="size-6" />, path: "/vocabulary" },
     { id: "battle", title: "Đối kháng", icon: <TbSwords className="size-6" />, path: "/battle" },
-    { id: "forum", title: "Diễn đàn", icon: <MdOutlineForum className="size-6" />, path: "/forum" },
     { id: "notification", title: "Thông báo", icon: <MdOutlineNotificationsActive className="size-6" /> },
   ];
 

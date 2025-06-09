@@ -75,10 +75,6 @@ const router = createBrowserRouter([
         element: <Library />,
       },
       {
-        path: "/forum",
-        element: <Forum />,
-      },
-      {
         path: "/vocabulary",
         element: <Vocabulary />,
       },
