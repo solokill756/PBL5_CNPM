@@ -120,8 +120,8 @@ const ListFlashcard = ({ lists, createdBy,currentUserId, classCreatorId, onDelet
                 return {
                     list_id: item.list_id,
                     vocabulary: item.flashcardCount || 0, 
-                    author: createdBy?.username || 'Unknown',
-                    avatar: createdBy?.profile_picture || null,
+                    author: item.created_by_username || 'Unknown',
+                    avatar: item.profile_picture || null,
                     lesson: item.title || 'Untitled', 
                     created_at: item.created_at || new Date().toISOString()
                 };
