@@ -36,8 +36,10 @@ const Vocabulary = () => {
 
   useEffect(() => {
     const shouldRefresh = () => {
+      const state = useTopicStore.getState();
       return (
         !hasInitialized ||
+        state.needsRefresh ||
         lastLocationKey.current !== location.key ||
         categories.length === 0 ||
         !userLevel.user_id
@@ -49,10 +51,11 @@ const Vocabulary = () => {
         setIsInitializing(true);
 
         try {
-          const forceRefresh =
+          const forceRefresh = 
             lastLocationKey.current !== location.key ||
             categories.length === 0 ||
-            !userLevel.user_id;
+            !userLevel.user_id ||
+            useTopicStore.getState().needsRefresh;
 
           await initializeUserData(axios, forceRefresh);
           setHasInitialized(true);
@@ -74,11 +77,35 @@ const Vocabulary = () => {
     };
   }, [
     location.key,
+    location.state,
     axios,
     categories.length,
     userLevel.user_id,
     hasInitialized,
+    initializeUserData,
+    clearError,
   ]);
+
+  // Thêm effect để listen navigation từ các trang khác
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'user_data_updated') {
+        // Khi có signal từ localStorage, refresh data
+        const { markNeedsRefresh } = useTopicStore.getState();
+        markNeedsRefresh();
+        
+        setTimeout(async () => {
+          await initializeUserData(axios, true);
+        }, 100);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [axios, initializeUserData]);
 
   useEffect(() => {
     if (

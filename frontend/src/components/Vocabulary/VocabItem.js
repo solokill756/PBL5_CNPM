@@ -1,10 +1,12 @@
 import React from "react";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import { Link } from "react-router-dom";
 
-const VocabItem = ({ imgUrl, name, description, onError, loading = false }) => {
+const VocabItem = ({ imgUrl, path, name, description, onError, loading = false }) => {
   return (
-    <div
+    <Link
+      to={path}
       className={`flex items-center rounded-2xl p-4 w-full shadow-sm transition-all cursor-pointer
         hover:shadow-md hover:bg-red-50 hover:-translate-y-1`}
       style={{ minHeight: 80 }}
@@ -35,7 +37,7 @@ const VocabItem = ({ imgUrl, name, description, onError, loading = false }) => {
           </>
         )}
       </div>
-    </div>
+    </Link>
   );
 };
 

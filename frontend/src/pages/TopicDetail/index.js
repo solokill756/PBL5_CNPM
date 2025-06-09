@@ -29,6 +29,9 @@ const TopicDetail = () => {
     checkLevel,
     refreshUserLevel,
     updateCategoryProgress,
+    userLevel,
+    markTopicTestCompleted, // Sửa tên function
+    hasTopicTestCompleted, // Thêm function này
   } = useTopicStore();
 
   const [selectedVocabulary, setSelectedVocabulary] = useState(null);
@@ -43,6 +46,39 @@ const TopicDetail = () => {
   const isLoading = loadingStates.topicVocabularies;
   const isBookmarkUpdating = loadingStates.bookmarkUpdate;
   const isLearningUpdating = loadingStates.learningUpdate;
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Khi user quay lại tab, mark cần refresh
+        const { markNeedsRefresh } = useTopicStore.getState();
+        markNeedsRefresh();
+        
+        // Refresh user level để lấy điểm mới nhất
+        setTimeout(async () => {
+          try {
+            await refreshUserLevel(axios);
+          } catch (error) {
+            console.error("Error refreshing user level:", error);
+          }
+        }, 100);
+      }
+    };
+
+    const handleFocus = () => {
+      // Khi window được focus, cũng mark cần refresh
+      const { markNeedsRefresh } = useTopicStore.getState();
+      markNeedsRefresh();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [axios, refreshUserLevel]);
 
   useEffect(() => {
     const fetchTopicData = async () => {
@@ -118,8 +154,8 @@ const TopicDetail = () => {
 
       addToast(
         newBookmarkStatus
-          ? `Đã thêm "${vocab.word}" vào bookmark`
-          : `Đã xóa "${vocab.word}" khỏi bookmark`,
+          ? `Đã lưu "${vocab.word}" vào từ vựng đã lưu`
+          : `Đã xóa "${vocab.word}" khỏi từ vựng đã lưu`,
         TOAST_TYPES.SUCCESS
       );
     } catch (error) {
@@ -128,57 +164,64 @@ const TopicDetail = () => {
   };
 
   const handleWordLearned = async (vocabId) => {
-    if (isLearningUpdating) return; // Prevent double-click
+    // Prevent double-click bằng cách check loading state
+    const isCurrentlyUpdating = loadingStates.learningUpdating.has(vocabId);
+    if (isCurrentlyUpdating) {
+      console.log('Already processing, skipping...');
+      return;
+    }
 
     try {
       const vocab = topicVocabularies.find((v) => v.vocab_id === vocabId);
-      const wasLearned =
-        vocab.VocabularyUsers?.[0]?.had_learned || vocab.isKnown;
+      if (!vocab) return;
+
+      const wasLearned = vocab.VocabularyUsers?.[0]?.had_learned || vocab.isKnown;
 
       const newLearningStatus = await updateLearningStatus(
         axios,
         vocabId,
         topicId
       );
-      const newMasteredCount = getLearnedCount();
 
-      if (currentTopic) {
-        updateCategoryProgress(currentTopic.topic_id, newMasteredCount);
-      }
+      // Chỉ show toast nếu thực sự có thay đổi
+      if (newLearningStatus !== undefined && newLearningStatus !== wasLearned) {
+        addToast(
+          newLearningStatus
+            ? `Đã đánh dấu "${vocab.word}" là đã học`
+            : `Đã đánh dấu "${vocab.word}" là chưa học`,
+          TOAST_TYPES.SUCCESS
+        );
 
-      addToast(
-        newLearningStatus
-          ? `Đã đánh dấu "${vocab.word}" là đã học`
-          : `Đã đánh dấu "${vocab.word}" là chưa học`,
-        TOAST_TYPES.SUCCESS
-      );
+        // Stats đã được tự động cập nhật trong updateLearningStatus
+        // Không cần gọi calculateUserStats ở đây nữa
 
-      if (newLearningStatus !== wasLearned) {
-        setTimeout(() => {
-          const { calculateUserStats } = useTopicStore.getState();
-          calculateUserStats();
-        }, 100);
-      }
-
-      if (!wasLearned && newLearningStatus) {
-        try {
-          const levelResult = await refreshUserLevel(axios);
-          if (levelResult.leveledUp) {
-            setLevelUpResults({
-              oldLevel: levelResult.oldLevel,
-              newLevel: levelResult.newLevel,
-              totalPoints: levelResult.totalPoints,
-              wordsLearned: vocab.word,
-            });
-            setShowLevelUpModal(true);
+        // Kiểm tra level up chỉ khi học từ mới
+        if (!wasLearned && newLearningStatus) {
+          try {
+            const levelResult = await refreshUserLevel(axios);
+            if (levelResult.leveledUp) {
+              setLevelUpResults({
+                oldLevel: levelResult.oldLevel,
+                newLevel: levelResult.newLevel,
+                totalPoints: levelResult.totalPoints,
+                wordsLearned: vocab.word,
+              });
+              setShowLevelUpModal(true);
+            }
+          } catch (levelError) {
+            console.error("Error checking level:", levelError);
           }
-        } catch (levelError) {
-          console.error("Error checking level:", levelError);
         }
       }
     } catch (error) {
       addToast("Không thể cập nhật trạng thái học", TOAST_TYPES.ERROR);
     }
+  };
+
+  const handleTakeTest = () => {
+    // Mark test completed cho topic này thay vì level
+    markTopicTestCompleted(parseInt(topicId));
+    navigate(`/vocabulary/topic/${topicId}/Test`);
   };
 
   const handleCreateFlashcards = () => {
@@ -218,13 +261,22 @@ const TopicDetail = () => {
       <div className="w-full max-w-full px-12 py-4">
         <TopicHeader
           topic={currentTopic}
-          onBack={() => navigate("/vocabulary")}
-          onTakeTest={() => navigate(`/vocabulary/topic/${topicId}/Test`)}
+          onBack={() =>
+            navigate("/vocabulary", {
+              state: {
+                fromTopicDetail: true,
+                topicId: topicId,
+              },
+            })
+          }
+          onTakeTest={handleTakeTest}
           onCreateFlashcard={handleCreateFlashcards}
           topicProgress={calculateProgress()}
           learnedCount={getLearnedCount()}
           totalCount={topicVocabularies.length}
           isTopicCompleted={getLearnedCount() === topicVocabularies.length}
+          userLevel={userLevel}
+          hasTestTaken={hasTopicTestCompleted(parseInt(topicId))}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

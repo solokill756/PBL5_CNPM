@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { IoArrowBack, IoSchool } from 'react-icons/io5';
 import { TbCards } from 'react-icons/tb';
 
+// ... existing code ...
+
 const TopicHeader = ({ 
   topic, 
   onBack, 
@@ -11,8 +13,13 @@ const TopicHeader = ({
   topicProgress,
   learnedCount,
   totalCount,
-  isTopicCompleted = false
+  isTopicCompleted = false,
+  hasTestTaken = false // Prop để check test đã làm chưa cho topic này
 }) => {
+  // Logic: phải học hết từ vựng và chưa làm test
+  const canTakeTest = isTopicCompleted && !hasTestTaken;
+  const testButtonText = hasTestTaken ? "Đã hoàn thành test" : "Làm bài test";
+
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
       <div className="flex items-center gap-4">
@@ -42,7 +49,7 @@ const TopicHeader = ({
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row items-center gap-4">
+      <div className="flex flex-col md:flex-row items-end md:items-center gap-4">
         {/* Progress indicator */}
         <div className="flex flex-col items-end justify-center">
           <div className="flex items-center gap-2 mb-1">
@@ -72,8 +79,9 @@ const TopicHeader = ({
           )}
         </div>
 
-        <div className="flex gap-2">
-          {isTopicCompleted && (
+        <div className="flex flex-col md:flex-row gap-3">
+          {/* Test button - hiển thị khi học xong và chưa làm test */}
+          {canTakeTest && (
             <motion.button
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -83,8 +91,28 @@ const TopicHeader = ({
               className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-full hover:bg-sky-700 transition-colors"
             >
               <IoSchool className="w-5 h-5" />
-              Làm bài test
+              {testButtonText}
             </motion.button>
+          )}
+
+          {/* Test button disabled - hiển thị khi đã làm test */}
+          {hasTestTaken && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              disabled
+              className="flex items-center gap-2 px-4 py-2 bg-gray-400 text-white rounded-full cursor-not-allowed"
+            >
+              <IoSchool className="w-5 h-5" />
+              {testButtonText}
+            </motion.button>
+          )}
+
+          {/* Hiển thị thông báo nếu chưa học hết */}
+          {!isTopicCompleted && (
+            <div className="text-sm flex items-center text-gray-500 px-4 py-2 bg-gray-100 rounded-full">
+              Học hết {totalCount - learnedCount} từ còn lại để mở khóa test
+            </div>
           )}
 
           <motion.button

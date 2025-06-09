@@ -30,6 +30,10 @@ export const useAddFlashcardStore = create(
       draggedOverIndex: null,
 
       // Actions
+      setLoading: (loading) => set({ loading }),
+
+      setCheckForDraft: (checkForDraft) => set({ checkForDraft }),
+
       setTitle: (title) => {
         set({ title });
         get().autoSave();
@@ -49,7 +53,12 @@ export const useAddFlashcardStore = create(
       setDraggedOverIndex: (index) => set({ draggedOverIndex: index }),
       clearDragState: () => set({ draggedItem: null, draggedOverIndex: null }),
 
-      // Flashcard operations
+      getNextId: () => {
+        const state = get();
+        if (state.flashcards.length === 0) return 1;
+        return Math.max(...state.flashcards.map((c) => c.id || 0)) + 1;
+      },
+
       updateFlashcard: (id, field, value) => {
         set((state) => ({
           flashcards: state.flashcards.map((card) =>
@@ -61,7 +70,7 @@ export const useAddFlashcardStore = create(
 
       addFlashcard: () => {
         set((state) => {
-          const newId = Math.max(...state.flashcards.map((c) => c.id)) + 1;
+          const newId = get().getNextId();
           return {
             flashcards: [
               ...state.flashcards,
@@ -74,7 +83,7 @@ export const useAddFlashcardStore = create(
 
       addFlashcardAt: (afterIndex) => {
         set((state) => {
-          const newId = Math.max(...state.flashcards.map((c) => c.id)) + 1;
+          const newId = get().getNextId();
           const newFlashcard = { id: newId, front: "", back: "", note: "" };
           const newFlashcards = [...state.flashcards];
           newFlashcards.splice(afterIndex + 1, 0, newFlashcard);
@@ -96,7 +105,7 @@ export const useAddFlashcardStore = create(
           const cardToDuplicate = state.flashcards[index];
           if (!cardToDuplicate) return state;
 
-          const newId = Math.max(...state.flashcards.map((c) => c.id)) + 1;
+          const newId = get().getNextId();
           const newFlashcards = [...state.flashcards];
           newFlashcards.splice(index + 1, 0, {
             ...cardToDuplicate,
@@ -155,7 +164,6 @@ export const useAddFlashcardStore = create(
         );
       },
 
-      // Load flashcard from existing (for copy functionality)
       loadFromExisting: (flashcardData) => {
         const { originalDeck, flashcardMetadata } = flashcardData;
 
@@ -171,19 +179,20 @@ export const useAddFlashcardStore = create(
             id: index + 1,
             front: card.front_text || "",
             back: card.back_text || "",
-            note: card.custom_note || "",
           })),
-          isPublic: flashcardMetadata?.is_public !== false,
-          allowStudyFromClass:
-            flashcardMetadata?.allow_study_from_class !== false,
+          loading: false, // Make sure to clear loading state
         });
+
+        get().autoSave();
       },
 
       // Load from forgotten words
       loadFromForgottenWords: async (axios, length) => {
         set({ loading: true });
         try {
-          const response = await axios.get(`/api/listFlashcard/get-list-foget-flashcard?length=${length}`);
+          const response = await axios.get(
+            `/api/listFlashcard/get-list-foget-flashcard?length=${length}`
+          );
           const words = response.data.data || [];
 
           set({
@@ -195,6 +204,8 @@ export const useAddFlashcardStore = create(
               back: word.Flashcard.back_text || word.definition || "",
             })),
           });
+
+          get().autoSave();
         } catch (error) {
           console.error("Error loading forgotten words:", error);
           set({ error: "Không thể tải từ hay quên" });
@@ -246,6 +257,9 @@ export const useAddFlashcardStore = create(
           draggedItem: null,
           draggedOverIndex: null,
         });
+
+        // Thêm để clear localStorage ngay lập tức
+        get().clearDraft();
       },
 
       // Save flashcard set
@@ -268,15 +282,16 @@ export const useAddFlashcardStore = create(
           const payload = {
             title: state.title.trim(),
             description: state.description.trim(),
-            is_public: state.isPublic,
-            allow_study_from_class: state.allowStudyFromClass,
             flashcards: validFlashcards.map((card) => ({
               front_text: card.front.trim(),
               back_text: card.back.trim(),
             })),
           };
 
-          const response = await axios.post("/api/listFlashcard/add-list-flashcard", payload);
+          const response = await axios.post(
+            "/api/listFlashcard/add-list-flashcard",
+            payload
+          );
 
           set({
             successMessage: "Tạo bộ flashcard thành công!",

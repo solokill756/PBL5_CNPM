@@ -5,6 +5,11 @@ const useTopicStore = create((set, get) => ({
   categories: [],
   currentTopic: null,
   topicVocabularies: [],
+  // Thêm lastRefreshTime để track lần refresh gần nhất
+  lastRefreshTime: 0,
+  
+  // Thêm flag để detect khi cần refresh
+  needsRefresh: false,
 
   // User level data
   userLevel: {
@@ -21,6 +26,8 @@ const useTopicStore = create((set, get) => ({
     user_id: "",
     is_active: false,
   },
+
+  completedTopicTests: new Set(),
 
   loadingStates: {
     categories: false,
@@ -39,6 +46,10 @@ const useTopicStore = create((set, get) => ({
   // Flashcard sets
   flashcardSets: [],
 
+  markNeedsRefresh: () => {
+    set({ needsRefresh: true });
+  },
+
   setLoadingState: (key, value) =>
     set((state) => ({
       loadingStates: {
@@ -46,6 +57,46 @@ const useTopicStore = create((set, get) => ({
         [key]: value,
       },
     })),
+
+    hasTopicTestCompleted: (topicId) => {
+      return get().completedTopicTests.has(topicId);
+    },
+  
+    // Method để mark test completed cho topic
+    markTopicTestCompleted: (topicId) => {
+      const currentCompleted = get().completedTopicTests;
+      const newCompleted = new Set([...currentCompleted, topicId]);
+      
+      set({
+        completedTopicTests: newCompleted,
+      });
+  
+      // Lưu vào localStorage để persist
+      const { userLevel } = get();
+      if (userLevel.user_id) {
+        localStorage.setItem(
+          `topic_tests_completed_${userLevel.user_id}`, 
+          JSON.stringify([...newCompleted])
+        );
+      }
+    },
+  
+    // Load completed tests từ localStorage
+    loadCompletedTopicTests: (userId) => {
+      try {
+        const completed = JSON.parse(
+          localStorage.getItem(`topic_tests_completed_${userId}`) || '[]'
+        );
+        set({
+          completedTopicTests: new Set(completed),
+        });
+      } catch (error) {
+        console.error('Error loading completed topic tests:', error);
+        set({
+          completedTopicTests: new Set(),
+        });
+      }
+    },
 
   // Thêm methods để quản lý loading theo vocabulary ID
   setVocabLoadingState: (type, vocabId, isLoading) =>
@@ -125,7 +176,6 @@ const useTopicStore = create((set, get) => ({
         username: data.username,
         user_id: data.user_id,
         is_active: data.is_active,
-        // These will be calculated from other endpoints or derived
         total_words_mastered: 0,
         total_topics_completed: 0,
       };
@@ -133,6 +183,9 @@ const useTopicStore = create((set, get) => ({
       set({
         userLevel: updatedUserLevel,
       });
+
+      // Load completed topic tests
+      get().loadCompletedTopicTests(data.user_id);
 
       get().updateCategoriesUnlockStatus(updatedUserLevel.current_level);
 
@@ -177,6 +230,9 @@ const useTopicStore = create((set, get) => ({
     );
     
     set({ categories: updatedCategories });
+    
+    // Tự động tính lại user stats sau khi update category
+    get().calculateUserStats();
   },
 
   updateCategoriesUnlockStatus: (userLevel) => {
@@ -202,6 +258,7 @@ const useTopicStore = create((set, get) => ({
       (category) => category.mastered_words >= category.total_words
     ).length;
 
+    // Cập nhật userLevel với stats mới
     set({
       userLevel: {
         ...userLevel,
@@ -209,6 +266,11 @@ const useTopicStore = create((set, get) => ({
         total_topics_completed: totalTopicsCompleted,
       },
     });
+
+    return {
+      totalWordsMastered,
+      totalTopicsCompleted
+    };
   },
 
   refreshUserStats: async (axios) => {
@@ -270,23 +332,29 @@ const useTopicStore = create((set, get) => ({
   },
 
   updateLearningStatus: async (axios, vocabulary_id, topic_id) => {
+    // Check nếu đang process vocabulary này rồi thì skip
+    if (get().loadingStates.learningUpdating.has(vocabulary_id)) {
+      console.log(`Already processing vocabulary ${vocabulary_id}, skipping...`);
+      return;
+    }
+
     try {
       // Set loading cho vocabulary cụ thể
       get().setVocabLoadingState('learningUpdating', vocabulary_id, true);
       
       const currentVocabs = get().topicVocabularies;
       const vocab = currentVocabs.find((v) => v.vocab_id === vocabulary_id);
+      
+      if (!vocab) {
+        throw new Error('Vocabulary not found');
+      }
+
       const isCurrentlyLearned =
         vocab?.VocabularyUsers?.[0]?.had_learned || vocab?.isKnown || false;
 
       const param = isCurrentlyLearned ? 0 : 1;
 
-      await axios.post("/api/vocabulary/updateVocabularyUser", {
-        vocabulary_id,
-        had_learned: param,
-        topic_id,
-      });
-
+      // Optimistic update - cập nhật UI ngay lập tức
       const updatedVocabs = currentVocabs.map((v) =>
         v.vocab_id === vocabulary_id
           ? {
@@ -304,13 +372,100 @@ const useTopicStore = create((set, get) => ({
 
       set({ topicVocabularies: updatedVocabs });
 
+      // Cập nhật category progress ngay lập tức (sẽ trigger calculateUserStats)
+      const newMasteredCount = updatedVocabs.filter(v => 
+        v.VocabularyUsers?.[0]?.had_learned || v.isKnown
+      ).length;
+      
+      get().updateCategoryProgress(topic_id, newMasteredCount);
+
+      // Gọi API để sync với server
+      const apiCall = async () => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+        try {
+          const response = await axios.post("/api/vocabulary/updateVocabularyUser", {
+            vocabulary_id,
+            had_learned: param,
+            topic_id,
+          }, {
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+          return response;
+        } catch (error) {
+          clearTimeout(timeoutId);
+          throw error;
+        }
+      };
+
+      await apiCall();
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user_data_updated', Date.now().toString());
+        // Remove sau 1 giây để cleanup
+        setTimeout(() => {
+          localStorage.removeItem('user_data_updated');
+        }, 1000);
+      }
+
       return !isCurrentlyLearned;
     } catch (error) {
       console.error("Error updating learning status:", error);
+      
+      // Rollback optimistic update nếu API fail
+      const currentVocabs = get().topicVocabularies;
+      const originalVocab = currentVocabs.find((v) => v.vocab_id === vocabulary_id);
+      
+      if (originalVocab) {
+        const revertedVocabs = currentVocabs.map((v) =>
+          v.vocab_id === vocabulary_id
+            ? {
+                ...v,
+                VocabularyUsers: [
+                  {
+                    ...(v.VocabularyUsers?.[0] || {}),
+                    had_learned: !v.isKnown, // Revert lại
+                  },
+                ],
+                isKnown: !v.isKnown, // Revert lại
+              }
+            : v
+        );
+        
+        set({ topicVocabularies: revertedVocabs });
+        
+        // Revert category progress (sẽ trigger calculateUserStats)
+        const revertedMasteredCount = revertedVocabs.filter(v => 
+          v.VocabularyUsers?.[0]?.had_learned || v.isKnown
+        ).length;
+        
+        get().updateCategoryProgress(topic_id, revertedMasteredCount);
+      }
+      
       throw error;
     } finally {
-      // Clear loading cho vocabulary cụ thể
-      get().setVocabLoadingState('learningUpdating', vocabulary_id, false);
+      // Clear loading cho vocabulary cụ thể với delay để tránh rapid clicks
+      setTimeout(() => {
+        get().setVocabLoadingState('learningUpdating', vocabulary_id, false);
+      }, 300);
+    }
+  },
+
+  // Thêm method để sync categories khi cần thiết
+  syncCategoryProgress: async (axios, topicId) => {
+    try {
+      const currentTopic = get().currentTopic;
+      if (currentTopic && currentTopic.topic_id === topicId) {
+        const masteredWords = get().topicVocabularies.filter(v => 
+          v.VocabularyUsers?.[0]?.had_learned || v.isKnown
+        ).length;
+        
+        get().updateCategoryProgress(topicId, masteredWords);
+      }
+    } catch (error) {
+      console.error("Error syncing category progress:", error);
     }
   },
 
@@ -460,22 +615,37 @@ const useTopicStore = create((set, get) => ({
 
   initializeUserData: async (axios, forceRefresh = false) => {
     try {
-      // Kiểm tra xem có cần refresh không
-      const needsRefresh = forceRefresh || 
-                          get().categories.length === 0 || 
-                          !get().userLevel.user_id;
+      const state = get();
+      const now = Date.now();
+      const timeSinceLastRefresh = now - state.lastRefreshTime;
+      const shouldRefresh = forceRefresh || 
+                           state.needsRefresh || 
+                           timeSinceLastRefresh > 60000 || // Refresh mỗi 1 phút
+                           !state.categories.length || 
+                           !state.userLevel.user_id;
 
-      if (!needsRefresh) {
+      if (!shouldRefresh) {
         return;
       }
 
-      // Clear error trước khi bắt đầu
-      set({ error: null });
+      console.log("🔄 Refreshing user data...");
+      
+      // Clear error và needsRefresh flag
+      set({ error: null, needsRefresh: false });
 
-      // Thực hiện fetch song song để tối ưu performance
+      // Thực hiện fetch song song với timeout
+      const fetchWithTimeout = (promise, timeout = 10000) => {
+        return Promise.race([
+          promise,
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Request timeout')), timeout)
+          )
+        ]);
+      };
+
       const promises = [
-        get().fetchCategories(axios),
-        get().checkLevel(axios)
+        fetchWithTimeout(get().fetchCategories(axios)),
+        fetchWithTimeout(get().checkLevel(axios))
       ];
 
       const results = await Promise.allSettled(promises);
@@ -492,19 +662,25 @@ const useTopicStore = create((set, get) => ({
 
       if (results[1].status === 'rejected') {
         console.error('Failed to fetch user level:', results[1].reason);
+        if (!hasError) {
+          errorMessage = 'Không thể tải thông tin cấp độ';
+        } else {
+          errorMessage = 'Không thể tải dữ liệu người dùng';
+        }
         hasError = true;
-        errorMessage = hasError ? 'Không thể tải dữ liệu người dùng' : 'Không thể tải thông tin cấp độ';
       }
 
-      // Nếu có lỗi, set error state
-      if (hasError) {
-        set({ error: errorMessage });
-        return;
-      }
-
-      // Nếu cả hai thành công, tính toán stats
-      if (results[0].status === 'fulfilled' && results[1].status === 'fulfilled') {
+      // Nếu có ít nhất 1 request thành công, tính toán stats
+      if (!hasError || (results[0].status === 'fulfilled' || results[1].status === 'fulfilled')) {
         get().calculateUserStats();
+        
+        // Update lastRefreshTime
+        set({ lastRefreshTime: now });
+      }
+
+      // Chỉ set error nếu cả 2 requests đều fail
+      if (results[0].status === 'rejected' && results[1].status === 'rejected') {
+        set({ error: errorMessage });
       }
 
     } catch (error) {
@@ -518,10 +694,17 @@ const useTopicStore = create((set, get) => ({
   refreshUserLevel: async (axios) => {
     try {
       const oldLevel = get().userLevel.current_level;
-      const updatedLevel = await get().checkLevel(axios);
+      
+      // Gọi API với error handling tốt hơn
+      const updatedLevel = await get().checkLevel(axios, 0);
       
       // Trả về thông tin level up nếu có
       if (updatedLevel.current_level > oldLevel) {
+        // Refresh categories sau khi level up để unlock topics mới
+        setTimeout(() => {
+          get().fetchCategories(axios);
+        }, 100);
+        
         return {
           leveledUp: true,
           oldLevel,
@@ -533,15 +716,17 @@ const useTopicStore = create((set, get) => ({
       return { leveledUp: false };
     } catch (error) {
       console.error("Error refreshing user level:", error);
-      throw error;
+      
+      // Nếu lỗi level check, chỉ log và không throw để không break UI
+      return { leveledUp: false, error: true };
     }
   },
 
-  // Reset store
   reset: () => {
     set({
       categories: [],
       topicVocabularies: [],
+      completedTopicTests: new Set(),
       userLevel: {
         current_level: 1,
         total_points: 0,
@@ -573,5 +758,18 @@ const useTopicStore = create((set, get) => ({
   // Clear error
   clearError: () => set({ error: null }),
 }));
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('focus', () => {
+    const { markNeedsRefresh } = useTopicStore.getState();
+    markNeedsRefresh();
+  });
+
+  // Listen for browser back/forward navigation
+  window.addEventListener('popstate', () => {
+    const { markNeedsRefresh } = useTopicStore.getState();
+    markNeedsRefresh();
+  });
+}
 
 export default useTopicStore;

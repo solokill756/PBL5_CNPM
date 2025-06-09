@@ -29,11 +29,11 @@ const TestResultPage = () => {
               </div>
               <p className="text-2xl mb-6">{q.definition}</p>
 
-              {!isCorrect && (
+              {/* {!isCorrect && (
                 <p className="text-red-600 font-semibold mb-4">
                   Chưa đúng, hãy cố gắng nhé!
                 </p>
-              )}
+              )} */}
 
               <div className="grid grid-cols-2 gap-6 text-lg">
                 {q.options.map((opt) => {

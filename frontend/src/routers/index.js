@@ -123,6 +123,14 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: "/battle/:roomId/result",
+    element: (
+      <PrivateRoute>
+        <BattleResult />
+      </PrivateRoute>
+    ),
+  },
+  {
     path: "/accounts",
     element: (
       <GuestRoute>

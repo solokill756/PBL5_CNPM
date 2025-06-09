@@ -6,8 +6,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import { useFlashcardStore } from "@/store/useflashcardStore";
 
-
-
 function QuizResult() {
   const { flashcardId } = useParams();
   const [open, setOpen] = useState(true);
