@@ -62,6 +62,7 @@ const CreateModal = ({ isOpen, onClose }) => {
       textColor: 'text-green-600',
       onClick: () => {
         console.log('Create class functionality');
+         navigate('/classes');
         onClose();
       }
     }

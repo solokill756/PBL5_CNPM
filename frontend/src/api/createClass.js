@@ -1,6 +1,6 @@
-export const addMember = async (axiosPrivate, className,description) => {
+export const CreateClass = async (axiosPrivate, className,description) => {
     try {
-        console.log('Request data:', { classId, email }); 
+        console.log('Request data:', { className, description }); 
         const response = await axiosPrivate.post(
             '/api/class/add-class', 
             {

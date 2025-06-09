@@ -244,7 +244,7 @@ const ClassDetail = () => {
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center">
-              <div className="w-1 h-6 bg-indigo-500 rounded-full mr-3"></div>
+              <div className="w-1 h-6 bg-red-700 rounded-full mr-3"></div>
               <h3 className="text-xl font-semibold text-gray-800">Danh sách học phần</h3>
             </div>
             <div className="text-sm text-gray-500">

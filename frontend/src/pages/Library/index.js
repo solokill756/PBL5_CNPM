@@ -26,23 +26,10 @@ const Library = () => {
       <div className="flex-1 max-w-7xl mx-auto w-full px-6 py-8">
         
         {/* Filter Options and Search Combined */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
+        <div className="bg-white mb-4">
           {/* Filter Options */}
           <div className="mb-6">
             <OptionItem />
-          </div>
-          
-          {/* Search Section - Centered */}
-          <div className="flex justify-center">
-            <div className="w-full max-w-2xl">
-              <div className="flex items-center justify-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-800">Tìm kiếm khóa học</h3>
-              </div>
-              <div className='flex items-center justify-center mb-4'>
-                  <SearchInput />
-              </div>
-              
-            </div>
           </div>
         </div>
 
@@ -50,7 +37,7 @@ const Library = () => {
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center">
-              <div className="w-1 h-6 rounded-full mr-3"></div>
+               <div className="w-1 h-6 bg-red-800 rounded-full mr-3"></div>
               <h3 className="text-xl font-semibold text-gray-800">Danh sách khóa học</h3>
             </div>
           </div>
