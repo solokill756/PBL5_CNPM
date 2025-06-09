@@ -1,505 +1,914 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { io } from "socket.io-client";
+import { useAuthStore } from "@/store/useAuthStore";
+import useRefreshToken from "@/hooks/useRefreshToken";
+import DefaultAvatar from "@/assets/images/avatar.jpg";
 import {
-  IoTimeOutline,
-  IoFlashOutline,
-  IoPersonOutline,
+  IoGameController,
+  IoClose,
+  IoRocket,
+  IoTrophy,
+  IoTime,
   IoRocketOutline,
 } from "react-icons/io5";
-import { FaUserFriends } from "react-icons/fa";
-import ScoreDisplay from "@/components/Battle/ScoreDisplay";
-import OpponentStatus from "@/components/Battle/OpponentStatus";
-import CountdownTimer from "@/components/Battle/CountdownTimer";
+
+// Import các component đẹp đã có
 import VocabularyQuestion from "@/components/Battle/VocabularyQuestion";
+import ScoreDisplay from "@/components/Battle/ScoreDisplay";
+import CountdownTimer from "@/components/Battle/CountdownTimer";
 import ResultNotification from "@/components/Battle/ResultNotification";
 import FinalResult from "@/components/Battle/FinalResult";
+import { useNavigate } from "react-router-dom";
 
-// Mock data
-const mockWebSocket = {
-  onmessage: null,
-  send: (data) => {
-    console.log("WebSocket sent:", data);
-    // Giả lập phản hồi từ server
-    setTimeout(() => {
-      if (mockWebSocket.onmessage) {
-        // Mô phỏng đối thủ trả lời đúng sau 3-7 giây
-        const delay = Math.floor(Math.random() * 4000) + 3000;
-        setTimeout(() => {
-          const event = {
-            data: JSON.stringify({
-              type: "opponent_answer",
-              correct: Math.random() > 0.3, // 70% khả năng đối thủ trả lời đúng
-              time: delay / 1000,
-            }),
-          };
-          mockWebSocket.onmessage(event);
-        }, delay);
-      }
-    }, 100);
-  },
-};
-
-// Dữ liệu mẫu cho bộ câu hỏi
-const mockQuestions = [
-  {
-    id: 1,
-    term: "データベース",
-    pronunciation: "でーたべーす",
-    definition: "Cơ sở dữ liệu",
-    options: ["Cơ sở dữ liệu", "Máy chủ", "Mạng máy tính", "Phần mềm"],
-    correctAnswer: "Cơ sở dữ liệu",
-  },
-  {
-    id: 2,
-    term: "ネットワーク",
-    pronunciation: "ねっとわーく",
-    definition: "Mạng",
-    options: ["Internet", "Mạng", "Website", "Ứng dụng"],
-    correctAnswer: "Mạng",
-  },
-  {
-    id: 3,
-    term: "サーバー",
-    pronunciation: "さーばー",
-    definition: "Máy chủ",
-    options: ["Trình duyệt", "Máy tính", "Máy chủ", "Phần cứng"],
-    correctAnswer: "Máy chủ",
-  },
-  {
-    id: 4,
-    term: "プログラミング",
-    pronunciation: "ぷろぐらみんぐ",
-    definition: "Lập trình",
-    options: ["Thiết kế", "Lập trình", "Kiểm thử", "Phân tích"],
-    correctAnswer: "Lập trình",
-  },
-  {
-    id: 5,
-    term: "アルゴリズム",
-    pronunciation: "あるごりずむ",
-    definition: "Thuật toán",
-    options: ["Mã nguồn", "Biến", "Thuật toán", "Hàm"],
-    correctAnswer: "Thuật toán",
-  },
-];
-
-// Dữ liệu giả cho người chơi và đối thủ
-const mockPlayers = {
-  player: {
-    id: "p1",
-    name: "Người chơi",
-    avatar: "https://i.pravatar.cc/150?img=11",
-    score: 0,
-  },
-  opponent: {
-    id: "p2",
-    name: "Đối thủ",
-    avatar: "https://i.pravatar.cc/150?img=12",
-    score: 0,
-  },
-};
-
-// Component chính của trò chơi
 const VocabularyBattle = () => {
+  // Auth state
+  const { accessToken, user, logout } = useAuthStore();
+  const refresh = useRefreshToken();
   const navigate = useNavigate();
 
-  // State cho game
-  const [gameState, setGameState] = useState("waiting"); // 'waiting', 'ready', 'playing', 'finished'
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [questions, setQuestions] = useState([]);
+  // Socket state
+  const [socket, setSocket] = useState(null);
+  const [connected, setConnected] = useState(false);
+  const [connectionError, setConnectionError] = useState("");
+  const roomIdRef = useRef(null);
+
+  // Game states
+  const [gameState, setGameState] = useState("waiting");
+  const [gameData, setGameData] = useState(null);
+  const [currentQuestion, setCurrentQuestion] = useState(null);
+  const [questionNumber, setQuestionNumber] = useState(1);
+  const [totalQuestions, setTotalQuestions] = useState(0);
+  const [scores, setScores] = useState({});
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [gameResults, setGameResults] = useState(null);
+  const [questionResults, setQuestionResults] = useState(null);
+
+  // Timer states - OPTIMIZE: Sử dụng ref để tránh re-render
+  const timeLeftRef = useRef(10);
   const [timeLeft, setTimeLeft] = useState(10);
-  const [player, setPlayer] = useState(mockPlayers.player);
-  const [opponent, setOpponent] = useState(mockPlayers.opponent);
-  const [playerAnswer, setPlayerAnswer] = useState(null);
-  const [opponentAnswer, setOpponentAnswer] = useState(null);
-  const [playerAnswerTime, setPlayerAnswerTime] = useState(null);
-  const [opponentAnswerTime, setOpponentAnswerTime] = useState(null);
-  const [showResult, setShowResult] = useState(false);
-  const [showFinalResult, setShowFinalResult] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
+  const [showTimer, setShowTimer] = useState(false);
+  const [isTimeUp, setIsTimeUp] = useState(false);
+  const [timerActive, setTimerActive] = useState(false);
 
-  const websocketRef = useRef(null);
+  // UI states
+  const [showQuestionResult, setShowQuestionResult] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [waitingForOpponent, setWaitingForOpponent] = useState(false);
+
   const timerRef = useRef(null);
+  const questionStartTime = useRef(null);
+  const socketRef = useRef(null);
+  const initializingRef = useRef(false);
+  const questionIdRef = useRef(0); // Track current question to prevent race conditions
 
-  // Khởi tạo WebSocket và bắt đầu trò chơi
-  useEffect(() => {
-    // Trong thực tế, kết nối WebSocket tới server
-    // websocketRef.current = new WebSocket('ws://your-server-url/battle');
-    websocketRef.current = mockWebSocket;
+  // Stable references
+  const stableUser = useMemo(() => user, [user?.id, user?.username]);
 
-    // Xử lý tin nhắn từ WebSocket
-    websocketRef.current.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-
-      switch (data.type) {
-        case "opponent_joined":
-          // Xử lý khi đối thủ tham gia
-          setGameState("ready");
-          break;
-        case "game_start":
-          // Bắt đầu trò chơi với câu hỏi nhận được
-          setGameState("playing");
-          break;
-        case "opponent_answer":
-          // Xử lý khi nhận được câu trả lời của đối thủ
-          setOpponentAnswer(data.correct);
-          setOpponentAnswerTime(data.time);
-          break;
-        default:
-          break;
-      }
-    };
-
-    // Làm giả dữ liệu - trong thực tế sẽ nhận từ server
-    setQuestions(mockQuestions);
-
-    // Cleanup
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
+  // OPTIMIZE: Debounced timer update để giảm re-render
+  const updateTimer = useCallback((newTime) => {
+    timeLeftRef.current = newTime;
+    
+    // Chỉ update UI mỗi giây, không phải mỗi render
+    requestAnimationFrame(() => {
+      setTimeLeft(newTime);
+    });
   }, []);
 
-  // Bắt đầu tìm kiếm đối thủ
-  const handleFindOpponent = () => {
-    setIsSearching(true);
+  // Token refresh handler
+  const handleTokenRefresh = useCallback(async () => {
+    try {
+      const newToken = await refresh();
+      if (newToken && socketRef.current) {
+        socketRef.current.disconnect();
+        initializeSocket(newToken);
+      }
+      return newToken;
+    } catch (error) {
+      console.error("❌ Token refresh failed:", error);
+      logout();
+      setConnectionError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+      return null;
+    }
+  }, [refresh, logout]);
 
-    // Giả lập tìm kiếm đối thủ trong 3 giây
-    setTimeout(() => {
-      setIsSearching(false);
-      setGameState("ready");
-    }, 3000);
-  };
+  // OPTIMIZE: Complete timer cleanup function
+  const stopTimer = useCallback(() => {
+    console.log("🛑 Stopping timer");
+    
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    
+    setTimerActive(false);
+    setShowTimer(false);
+    timeLeftRef.current = 10;
+  }, []);
 
-  // Bắt đầu trò chơi
-  const handleStartGame = () => {
-    setGameState("playing");
-    startTimer();
-  };
-
-  // Bắt đầu đếm ngược
-  const startTimer = () => {
+  // OPTIMIZE: Reset all question-related states
+  const resetQuestionStates = useCallback(() => {
+    console.log("🔄 Resetting question states");
+    
+    // Stop any existing timer first
+    stopTimer();
+    
+    // Reset all states
+    setShowQuestionResult(false);
+    setQuestionResults(null);
+    setSelectedAnswer(null);
+    setWaitingForOpponent(false);
+    setIsTimeUp(false);
+    setShowTimer(false);
+    setTimerActive(false);
+    
+    // Reset timer refs
+    timeLeftRef.current = 10;
     setTimeLeft(10);
+    
+    // Increment question ID to prevent race conditions
+    questionIdRef.current += 1;
+  }, [stopTimer]);
+
+  // OPTIMIZE: Improved timer with race condition prevention
+  const startTimer = useCallback(() => {
+    console.log("⏰ Starting new timer");
+    
+    // Store current question ID
+    const currentQuestionId = questionIdRef.current;
+    
+    // Reset timer state
+    timeLeftRef.current = 10;
+    updateTimer(10);
+    setShowTimer(true);
+    setIsTimeUp(false);
+    setTimerActive(true);
+    questionStartTime.current = Date.now();
+
+    // Clear any existing timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
     timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current);
-          // Nếu hết thời gian mà chưa trả lời thì tính là sai
-          if (playerAnswer === null) {
-            setPlayerAnswer(false);
-            setPlayerAnswerTime(10);
-          }
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
-  // Xử lý khi người chơi chọn đáp án
-  const handleAnswerSelect = (answer) => {
-    if (playerAnswer !== null) return; // Đã trả lời rồi, không cho trả lời lại
-
-    const isCorrect = answer === questions[currentQuestion].correctAnswer;
-    const answerTime = 10 - timeLeft;
-
-    setPlayerAnswer(isCorrect);
-    setPlayerAnswerTime(answerTime);
-
-    // Tính điểm: 20 điểm nếu trả lời đúng, +5 điểm nếu trả lời trong 5 giây
-    if (isCorrect) {
-      const points = answerTime < 5 ? 25 : 15;
-      setPlayer((prev) => ({
-        ...prev,
-        score: prev.score + points,
-      }));
-    }
-
-    // Gửi câu trả lời tới server qua WebSocket
-    websocketRef.current.send(
-      JSON.stringify({
-        type: "player_answer",
-        correct: isCorrect,
-        time: answerTime,
-      })
-    );
-
-    // Dừng đồng hồ đếm ngược
-    clearInterval(timerRef.current);
-  };
-
-  // Xử lý khi kết thúc hiển thị kết quả và chuyển sang câu hỏi tiếp theo
-  const handleContinue = () => {
-    setShowResult(false);
-    setPlayerAnswer(null);
-    setOpponentAnswer(null);
-
-    if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion((prev) => prev + 1);
-      startTimer();
-    } else {
-      // Kết thúc trò chơi, hiển thị kết quả cuối cùng
-      setGameState("finished");
-      setShowFinalResult(true);
-    }
-  };
-
-  // Hiển thị kết quả sau khi cả hai người chơi đã trả lời
-  useEffect(() => {
-    if (playerAnswer !== null && opponentAnswer !== null) {
-      // Cập nhật điểm cho đối thủ nếu trả lời đúng
-      if (opponentAnswer) {
-        const points = opponentAnswerTime < 5 ? 25 : 15;
-        setOpponent((prev) => ({
-          ...prev,
-          score: prev.score + points,
-        }));
+      // Prevent race condition - check if this timer is still valid
+      if (currentQuestionId !== questionIdRef.current) {
+        console.log("⚠️ Timer obsolete, stopping");
+        clearInterval(timerRef.current);
+        return;
       }
 
-      // Hiển thị kết quả sau 1 giây
-      setTimeout(() => {
-        setShowResult(true);
-      }, 1000);
+      const newTime = timeLeftRef.current - 1;
+      
+      if (newTime <= 0) {
+        console.log("⏰ Time's up!");
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+        
+        updateTimer(0);
+        setTimerActive(false);
+        setIsTimeUp(true);
+        setShowTimer(false);
+        
+        // Auto submit if no answer
+        if (selectedAnswer === null) {
+          handleTimeUp();
+        }
+      } else {
+        updateTimer(newTime);
+      }
+    }, 1000);
+  }, [updateTimer, selectedAnswer]);
+
+  const handleTimeUp = useCallback(() => {
+    console.log("🔴 Auto-submitting null answer due to timeout");
+    setSelectedAnswer("timeout");
+    setWaitingForOpponent(true);
+
+    if (socketRef.current && roomIdRef.current) {
+      socketRef.current.emit("submit_answer", {
+        roomId: roomIdRef.current,
+        answer: null,
+        responseTime: 10000,
+      });
     }
-  }, [playerAnswer, opponentAnswer, opponentAnswerTime]);
+  }, []);
 
-  // Xử lý thử lại trò chơi
-  const handleRetry = () => {
-    setShowFinalResult(false);
-    setCurrentQuestion(0);
-    setPlayer({ ...mockPlayers.player, score: 0 });
-    setOpponent({ ...mockPlayers.opponent, score: 0 });
-    setGameState("ready");
+  // Initialize socket - OPTIMIZE với proper cleanup
+  const initializeSocket = useCallback((token) => {
+    if (!token || initializingRef.current) {
+      if (!token) {
+        setConnectionError("Vui lòng đăng nhập để chơi battle!");
+      }
+      return;
+    }
+
+    initializingRef.current = true;
+
+    // Cleanup existing socket
+    if (socketRef.current) {
+      socketRef.current.removeAllListeners();
+      socketRef.current.disconnect();
+    }
+
+    const newSocket = io("https://backendserver-app.azurewebsites.net", {
+      auth: { token: token },
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5,
+    });
+
+    // Connection events
+    newSocket.on("connect", () => {
+      console.log("✅ Connected to battle server");
+      setConnected(true);
+      setConnectionError("");
+      initializingRef.current = false;
+    });
+
+    newSocket.on("disconnect", (reason) => {
+      console.log("❌ Disconnected from server:", reason);
+      setConnected(false);
+      initializingRef.current = false;
+
+      if (reason !== "io client disconnect") {
+        setGameState("waiting");
+        setLoading(false);
+        stopTimer();
+      }
+    });
+
+    newSocket.on("connect_error", async (error) => {
+      console.error("❌ Connection error:", error);
+      initializingRef.current = false;
+
+      if (
+        error.message.includes("Authentication") ||
+        error.message.includes("token")
+      ) {
+        console.log("🔄 Attempting token refresh...");
+        const newToken = await handleTokenRefresh();
+        if (!newToken) {
+          setConnectionError("Lỗi xác thực: " + error.message);
+        }
+      } else {
+        setConnectionError("Lỗi kết nối: " + error.message);
+      }
+    });
+
+    // OPTIMIZE: Throttle socket event handlers
+    newSocket.on("queue_joined", (data) => {
+      console.log("🎯 Queue joined:", data);
+    });
+
+    newSocket.on("game_found", (data) => {
+      console.log("🎮 Game found:", data);
+      setGameData(data);
+      roomIdRef.current = data.roomId;
+      setGameState("gameFound");
+      setLoading(false);
+      setTotalQuestions(data.totalQuestions);
+      setScores({
+        [data.player.user_id]: 0,
+        [data.opponent.user_id]: 0,
+      });
+
+      setTimeout(() => {
+        if (newSocket.connected) {
+          newSocket.emit("ready_to_start", { roomId: data.roomId });
+        }
+      }, 2000);
+    });
+
+    newSocket.on("game_started", (data) => {
+      console.log("🚀 Game started:", data);
+      setGameState("playing");
+      startNewQuestion(data);
+    });
+
+    // OPTIMIZE: Improved next_question handler
+    newSocket.on("next_question", (data) => {
+      console.log("➡️ Next question:", data);
+      
+      // Complete reset before starting new question
+      resetQuestionStates();
+      
+        startNewQuestion({
+          question: data.question,
+          questionNumber: data.questionNumber,
+          totalQuestions: totalQuestions,
+        });
+    });
+
+    newSocket.on("question_result", (data) => {
+      console.log("📊 Question result:", data);
+      
+      stopTimer();
+      setQuestionResults(data);
+      setScores(data.scores);
+      setShowQuestionResult(true);
+      setWaitingForOpponent(false);
+
+      // Sync timeout state
+      if (selectedAnswer === null) {
+        const answersArray = Object.values(data.answers);
+        const playerAnswer = answersArray.find(
+          (answer) => answer.username === stableUser?.username
+        );
+
+        if (playerAnswer && playerAnswer.answer === null) {
+          console.log("🕐 Player timed out - syncing with backend");
+          setSelectedAnswer("timeout");
+          setIsTimeUp(true);
+        }
+      }
+    });
+
+    newSocket.on("game_ended", handleGameEnd);
+    newSocket.on("error", (error) => {
+      console.error("❌ Game error:", error);
+      setConnectionError("Lỗi game: " + error.message);
+      setLoading(false);
+    });
+    newSocket.on("opponent_disconnected", handleOpponentDisconnected);
+
+    setSocket(newSocket);
+    socketRef.current = newSocket;
+
+    return newSocket;
+  }, [handleTokenRefresh, totalQuestions, selectedAnswer, stableUser?.username, 
+      stopTimer, resetQuestionStates, startTimer]);
+
+  // Start new question with proper state management
+  const startNewQuestion = useCallback((data) => {
+    console.log("🎯 Starting new question:", data.questionNumber);
+    
+    const transformedQuestion = transformQuestionFormat(data.question);
+    setCurrentQuestion(transformedQuestion);
+    setQuestionNumber(data.questionNumber);
+    
+    // Ensure clean state
+    setSelectedAnswer(null);
+    setQuestionResults(null);
+    setShowQuestionResult(false);
+    setWaitingForOpponent(false);
+    setIsTimeUp(false);
+    
+    // Start timer after a brief delay to ensure UI is ready
+    setTimeout(() => {
+      startTimer();
+    }, 150);
+  }, [startTimer]);
+
+  // Transform backend question format
+  const transformQuestionFormat = (backendQuestion) => {
+    if (!backendQuestion) return null;
+
+    return {
+      term: backendQuestion.question || backendQuestion.term,
+      pronunciation: backendQuestion.pronunciation || "",
+      definition: backendQuestion.definition || "",
+      options: [
+        backendQuestion.option_a,
+        backendQuestion.option_b,
+        backendQuestion.option_c,
+        backendQuestion.option_d,
+      ].filter(Boolean),
+      correctAnswer: backendQuestion.correct_answer,
+    };
   };
 
-  // Xử lý thoát khỏi trò chơi
-  const handleExit = () => {
-    navigate("/vocabulary");
-  };
+  // Game event handlers
+  const handleGameEnd = useCallback((data) => {
+    console.log("🏁 Game ended:", data);
+    stopTimer();
+    
+    const resultData = {
+      ...data,
+      roomId: roomIdRef.current,
+      timestamp: Date.now(),
+      reason: "normal_game_end",
+    };
 
-  // Render giao diện khi đang tìm đối thủ
-  const renderWaiting = () => {
-    return (
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
-        <div className="text-center">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1, rotate: [0, 5, -5, 5, 0] }}
-            transition={{ duration: 0.8 }}
-            className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"
+    localStorage.setItem(
+      `battle_result_${roomIdRef.current}`,
+      JSON.stringify(resultData)
+    );
+    navigate(`/battle/${roomIdRef.current}/result`);
+  }, [navigate, stopTimer]);
+
+  const handleOpponentDisconnected = useCallback((data) => {
+    console.log("🚪 Opponent disconnected:", data);
+    stopTimer();
+    
+    const resultData = {
+      ...data,
+      roomId: roomIdRef.current,
+      timestamp: Date.now(),
+      reason: "opponent_disconnected",
+    };
+
+    localStorage.setItem(
+      `battle_result_${roomIdRef.current}`,
+      JSON.stringify(resultData)
+    );
+    navigate(`/battle/${roomIdRef.current}/result`);
+  }, [navigate, stopTimer]);
+
+  // Socket initialization effect - CHỈ chạy 1 lần
+  useEffect(() => {
+    if (accessToken && !socketRef.current && !initializingRef.current) {
+      initializeSocket(accessToken);
+    }
+
+    return () => {
+      stopTimer();
+      initializingRef.current = false;
+      if (socketRef.current) {
+        socketRef.current.removeAllListeners();
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+  }, []); // Empty dependency array
+
+  // Game actions
+  const handleJoinQueue = useCallback(() => {
+    if (socket && connected) {
+      setLoading(true);
+      socket.emit("join_queue");
+    }
+  }, [socket, connected]);
+
+  const handleLeaveQueue = useCallback(() => {
+    if (socket) {
+      socket.emit("leave_queue");
+      setGameState("waiting");
+      setLoading(false);
+    }
+  }, [socket]);
+
+  const handleSelectAnswer = useCallback((answer) => {
+    if (selectedAnswer !== null || isTimeUp || !timerActive) {
+      console.log("❌ Cannot select answer", {
+        selectedAnswer,
+        isTimeUp,
+        timerActive,
+      });
+      return;
+    }
+
+    const responseTime = Date.now() - questionStartTime.current;
+
+    console.log(`💡 User selecting answer: ${answer}`);
+    setSelectedAnswer(answer);
+    setWaitingForOpponent(true);
+    stopTimer();
+
+    if (socketRef.current && roomIdRef.current) {
+      console.log(`📤 Submitting answer: ${answer} (${responseTime}ms)`);
+      socketRef.current.emit("submit_answer", {
+        roomId: roomIdRef.current,
+        answer: answer === "timeout" ? null : answer,
+        responseTime: responseTime,
+      });
+    }
+  }, [selectedAnswer, isTimeUp, timerActive, stopTimer]);
+
+  const handleExitBattle = useCallback(() => {
+    stopTimer();
+    setGameState("waiting");
+    setLoading(false);
+
+    if (socket) {
+      if (loading) {
+        socket.emit("leave_queue");
+      }
+      socket.disconnect();
+    }
+
+    window.history.back();
+  }, [socket, loading, stopTimer]);
+
+  // OPTIMIZE: Memoized player data
+  const { player, opponent } = useMemo(() => {
+    if (!gameData) {
+      return {
+        player: {
+          name: "Bạn",
+          profile_picture: DefaultAvatar,
+          score: 0,
+          user_id: stableUser?.id,
+        },
+        opponent: {
+          name: "Đối thủ",
+          profile_picture: DefaultAvatar,
+          score: 0,
+          user_id: null,
+        },
+      };
+    }
+
+    return {
+      player: {
+        name: gameData.player?.username || "Bạn",
+        profile_picture: gameData.player?.profile_picture || DefaultAvatar,
+        score: scores[gameData.player?.user_id] || 0,
+        user_id: gameData.player?.user_id,
+      },
+      opponent: {
+        name: gameData.opponent?.username || "Đối thủ",
+        profile_picture: gameData.opponent?.profile_picture || DefaultAvatar,
+        score: scores[gameData.opponent?.user_id] || 0,
+        user_id: gameData.opponent?.user_id,
+      },
+    };
+  }, [gameData, scores, stableUser?.id]);
+
+  // Connection Status Component
+  const ConnectionStatus = () => (
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`p-4 rounded-xl mb-6 ${
+        connected
+          ? "bg-green-50 border-2 border-green-200"
+          : "bg-red-50 border-2 border-red-200"
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div
+            className={`w-3 h-3 rounded-full ${
+              connected ? "bg-green-500" : "bg-red-500"
+            }`}
+          />
+          <span
+            className={`font-medium ${
+              connected ? "text-green-700" : "text-red-700"
+            }`}
           >
-            🎮
-          </motion.div>
+            {connected ? "Đã kết nối server" : "Mất kết nối"}
+          </span>
+        </div>
+        {user && (
+          <div className="flex items-center gap-2">
+            <img
+              src={user.profile_picture || DefaultAvatar}
+              alt=""
+              className="w-8 h-8 rounded-full"
+            />
+            <span className="text-sm font-medium">{user.username}</span>
+          </div>
+        )}
+      </div>
+      {connectionError && (
+        <div className="mt-2">
+          <p className="text-red-600 text-sm">{connectionError}</p>
+          {connectionError.includes("hết hạn") && (
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-2 px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+            >
+              Tải lại trang
+            </button>
+          )}
+        </div>
+      )}
+    </motion.div>
+  );
 
-          <h2 className="text-2xl font-bold mb-4 text-indigo-800">
-            Chế độ đối kháng từ vựng
-          </h2>
-          <p className="text-gray-600 mb-8">
-            Thi đấu trực tiếp với người chơi khác để kiểm tra kỹ năng từ vựng
-            của bạn!
+  // Updated Waiting State Component - Tích hợp queue loading
+  const WaitingState = () => (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="text-center max-w-md mx-auto"
+    >
+      <div className="bg-white rounded-2xl shadow-xl p-8">
+        {!loading ? (
+          // Trạng thái chờ bắt đầu
+          <>
+            <motion.div
+              animate={{
+                rotate: [0, 10, -10, 10, 0],
+                scale: [1, 1.1, 1, 1.1, 1],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                repeatType: "reverse",
+              }}
+              className="text-6xl mb-6"
+            >
+              ⚔️
+            </motion.div>
+
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+              Thách đấu từ vựng
+            </h2>
+            <p className="text-gray-600 mb-8">
+              Tham gia trận chiến kiến thức và thể hiện khả năng từ vựng của
+              bạn!
+            </p>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleJoinQueue}
+              disabled={!connected}
+              className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <div className="flex items-center justify-center gap-2">
+                <IoRocket className="text-xl" />
+                Bắt đầu thách đấu
+              </div>
+            </motion.button>
+          </>
+        ) : (
+          // Trạng thái đang tìm đối thủ (loading)
+          <>
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full mx-auto mb-6"
+            />
+
+            <h3 className="text-xl font-bold text-gray-800 mb-4">
+              Đang tìm đối thủ...
+            </h3>
+            <p className="text-sm text-gray-500 mb-8">
+              Chúng tôi đang tìm đối thủ phù hợp cho bạn
+            </p>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleLeaveQueue}
+              className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+            >
+              Hủy tìm kiếm
+            </motion.button>
+          </>
+        )}
+      </div>
+    </motion.div>
+  );
+
+  // const { player, opponent } = getPlayersData();
+
+  // Game Found State Component
+  const GameFoundState = () => (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="text-center max-w-lg mx-auto"
+    >
+      <div className="bg-white rounded-2xl shadow-xl p-8">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+          className="text-6xl mb-6"
+        >
+          🎯
+        </motion.div>
+
+        <h3 className="text-2xl font-bold text-gray-800 mb-6">
+          Đã tìm thấy đối thủ!
+        </h3>
+
+        <div className="flex items-center justify-center gap-8 mb-8">
+          <div className="text-center">
+            <img
+              src={player.profile_picture || DefaultAvatar}
+              alt=""
+              className="w-16 h-16 rounded-full mx-auto mb-2 border-3 border-indigo-500"
+            />
+            <p className="font-semibold">{player.name}</p>
+          </div>
+
+          <div className="text-4xl">⚔️</div>
+
+          <div className="text-center">
+            <img
+              src={opponent.profile_picture || DefaultAvatar}
+              alt=""
+              className="w-16 h-16 rounded-full mx-auto mb-2 border-3 border-purple-500"
+            />
+            <p className="font-semibold">{opponent.name}</p>
+          </div>
+        </div>
+
+        <div className="bg-indigo-50 rounded-lg p-4">
+          <p className="font-medium text-indigo-800">Chuẩn bị chiến đấu...</p>
+          <p className="text-sm text-indigo-600">
+            Trận đấu sẽ bắt đầu sau ít giây
           </p>
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  const PlayingState = () => {
+    // const { player, opponent } = getPlayersData();
+
+    const shouldShowResultNotification = showQuestionResult && questionResults;
+
+    const getAnswerResults = useMemo(() => {
+      if (!questionResults?.answers) return null;
+
+      const answersArray = Object.values(questionResults.answers);
+
+      // Tìm đúng player và opponent dựa trên username
+      const playerAnswer = answersArray.find(
+        (answer) => answer.username === user.username
+      );
+
+      const opponentAnswer = answersArray.find(
+        (answer) => answer.username !== user.username
+      );
+
+      return {
+        playerCorrect: playerAnswer?.isCorrect || false,
+        opponentCorrect: opponentAnswer?.isCorrect || false,
+        playerTime: (playerAnswer?.responseTime || 0) / 1000,
+        opponentTime: (opponentAnswer?.responseTime || 0) / 1000,
+        playerPoints: playerAnswer?.points || 0,
+        opponentPoints: opponentAnswer?.points || 0,
+        playerTimeout: playerAnswer?.answer === null,
+        opponentTimeout: opponentAnswer?.answer === null,
+      };
+    }, [questionResults, user.username]);
+
+    // Memoize player data để tránh re-render
+    const memoizedPlayer = useMemo(
+      () => player,
+      [player.score, player.name, player.profile_picture]
+    );
+    const memoizedOpponent = useMemo(
+      () => opponent,
+      [opponent.score, opponent.name, opponent.profile_picture]
+    );
+
+    return (
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Score Display */}
+        <ScoreDisplay player={memoizedPlayer} opponent={memoizedOpponent} />
+
+        {/* Timer - Chỉ hiển thị khi đang trong câu hỏi và chưa có kết quả */}
+        {showTimer && !showQuestionResult && (
+          <motion.div
+            // initial={{ opacity: 0, y: -20 }}
+            // animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-xl shadow-lg p-4"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-600">
+                Câu {questionNumber}/{totalQuestions}
+              </span>
+              <span className="text-sm font-medium text-gray-600">
+                Thời gian còn lại
+              </span>
+            </div>
+            <CountdownTimer timeLeft={timeLeft} totalTime={10} />
+          </motion.div>
+        )}
+
+        {/* Waiting message */}
+        {waitingForOpponent && !showQuestionResult && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4"
+          >
+            <div className="flex items-center justify-center gap-3">
+              <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              <span className="text-blue-700 font-medium">
+                {isTimeUp || selectedAnswer === "timeout"
+                  ? "Hết thời gian! Đang chờ đối thủ hoặc kết quả..."
+                  : "Đang chờ đối thủ trả lời..."}
+              </span>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Question - CHỈ hiển thị khi KHÔNG có result */}
+        {currentQuestion && !showQuestionResult && (
+          <VocabularyQuestion
+            question={currentQuestion}
+            playerAnswer={selectedAnswer}
+            onSelectAnswer={handleSelectAnswer}
+            currentQuestion={questionNumber}
+            questionCount={totalQuestions}
+            questionResults={questionResults}
+            waitingForOpponent={waitingForOpponent}
+            currentUser={user}
+            isTimeUp={isTimeUp}
+          />
+        )}
+
+        {/* Result Notification - AnimatePresence với key để tránh flash */}
+        <AnimatePresence mode="wait">
+          {shouldShowResultNotification && getAnswerResults && (
+            <ResultNotification
+              key={`result-${questionNumber}`}
+              playerCorrect={getAnswerResults.playerCorrect}
+              opponentCorrect={getAnswerResults.opponentCorrect}
+              playerTime={getAnswerResults.playerTime}
+              opponentTime={getAnswerResults.opponentTime}
+              playerPoints={getAnswerResults.playerPoints}
+              opponentPoints={getAnswerResults.opponentPoints}
+              playerTimeout={getAnswerResults.playerTimeout}
+              opponentTimeout={getAnswerResults.opponentTimeout}
+              questionResults={questionResults}
+              currentUser={user}
+            />
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  };
+
+  // Main render
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-4">
+      <div className="max-w-full mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <IoGameController className="text-3xl text-indigo-600" />
+            <h1 className="text-2xl font-bold text-gray-800">
+              Đối kháng từ vựng
+            </h1>
+          </div>
 
           <button
-            onClick={handleFindOpponent}
-            disabled={isSearching}
-            className="w-full py-3 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-colors flex items-center justify-center"
+            onClick={handleExitBattle}
+            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            {isSearching ? (
-              <>
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                  className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-2"
-                />
-                Đang tìm đối thủ...
-              </>
-            ) : (
-              <>
-                <FaUserFriends className="mr-2" />
-                Tìm đối thủ
-              </>
-            )}
+            <IoClose className="text-xl" />
           </button>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <h3 className="font-semibold text-gray-700 mb-3">Luật chơi:</h3>
-          <ul className="space-y-2 text-sm text-gray-600">
-            <li className="flex items-start">
-              <IoTimeOutline className="mt-0.5 mr-2 text-indigo-500" />
-              <span>Mỗi câu hỏi có thời gian làm bài là 10 giây.</span>
-            </li>
-            <li className="flex items-start">
-              <IoFlashOutline className="mt-0.5 mr-2 text-indigo-500" />
-              <span>
-                Trả lời đúng: +20 điểm. Trả lời đúng dưới 5 giây: +25 điểm.
-              </span>
-            </li>
-            <li className="flex items-start">
-              <IoPersonOutline className="mt-0.5 mr-2 text-indigo-500" />
-              <span>
-                Người chơi có nhiều điểm hơn sẽ giành chiến thắng và nhận phần
-                thưởng.
-              </span>
-            </li>
-          </ul>
-        </div>
+        {/* Connection Status - Chỉ hiển thị khi có lỗi */}
+        {(!connected || connectionError) && <ConnectionStatus />}
+
+        {/* Game States - Bỏ QueueState */}
+        <AnimatePresence mode="wait">
+          {gameState === "waiting" && <WaitingState key="waiting" />}
+          {gameState === "gameFound" && <GameFoundState key="found" />}
+          {gameState === "playing" && <PlayingState key="playing" />}
+        </AnimatePresence>
       </div>
-    );
-  };
 
-  // Render giao diện sẵn sàng chơi
-  const renderReady = () => {
-    return (
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
-        <div className="text-center">
-          <motion.div
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{
-              repeat: Infinity,
-              repeatType: "reverse",
-              duration: 1,
-            }}
-            className="w-20 h-20 rounded-full mx-auto mb-6 bg-indigo-100 flex items-center justify-center"
-          >
-            <IoRocketOutline className="text-3xl text-indigo-600" />
-          </motion.div>
+      {(gameState === "waiting" || gameState === "gameFound") && (
+          <div className="mt-16 bg-indigo-900 text-white rounded-xl shadow-lg overflow-hidden">
+            <div className="p-6 md:p-8">
+              <h2 className="text-2xl font-bold mb-4">
+                Tại sao chơi chế độ đối kháng?
+              </h2>
+              <p className="text-indigo-200 mb-8">
+                Chế độ đối kháng giúp bạn ôn tập từ vựng tiếng Nhật một cách thú
+                vị và hiệu quả, đồng thời xây dựng kỹ năng phản xạ nhanh - điều
+                cần thiết khi giao tiếp thực tế.
+              </p>
 
-          <h2 className="text-2xl font-bold mb-4 text-indigo-800">
-            Sẵn sàng đấu!
-          </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-indigo-800 rounded-lg p-5">
+                  <IoRocketOutline className="w-8 h-8 text-indigo-300 mb-3" />
+                  <h3 className="font-bold text-lg mb-2">Học tập cạnh tranh</h3>
+                  <p className="text-indigo-200 text-sm">
+                    Thi đấu trực tiếp với người khác tạo động lực học tập và ghi
+                    nhớ từ vựng tốt hơn.
+                  </p>
+                </div>
 
-          <div className="flex justify-between items-center p-4 bg-indigo-50 rounded-lg mb-6">
-            <div className="flex flex-col items-center">
-              <img
-                src={player.avatar}
-                alt={player.name}
-                className="w-14 h-14 rounded-full mb-2 border-2 border-indigo-300"
-              />
-              <p className="font-semibold text-sm">{player.name}</p>
-            </div>
+                <div className="bg-indigo-800 rounded-lg p-5">
+                  <IoTime className="w-8 h-8 text-indigo-300 mb-3" />
+                  <h3 className="font-bold text-lg mb-2">Phản xạ nhanh</h3>
+                  <p className="text-indigo-200 text-sm">
+                    Luyện tập phản ứng nhanh với thời gian giới hạn, giúp bạn
+                    nhớ và truy xuất từ vựng tức thì.
+                  </p>
+                </div>
 
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-600 text-white font-bold">
-              VS
-            </div>
-
-            <div className="flex flex-col items-center">
-              <img
-                src={opponent.avatar}
-                alt={opponent.name}
-                className="w-14 h-14 rounded-full mb-2 border-2 border-indigo-300"
-              />
-              <p className="font-semibold text-sm">{opponent.name}</p>
+                <div className="bg-indigo-800 rounded-lg p-5">
+                  <IoTrophy className="w-8 h-8 text-indigo-300 mb-3" />
+                  <h3 className="font-bold text-lg mb-2">
+                    Phần thưởng hấp dẫn
+                  </h3>
+                  <p className="text-indigo-200 text-sm">
+                    Giành huy hiệu và điểm kinh nghiệm để mở khóa nội dung độc
+                    quyền và theo dõi tiến độ.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-
-          <p className="text-gray-600 mb-6">
-            Bạn sẽ thi đấu với{" "}
-            <span className="font-semibold">{opponent.name}</span> trong{" "}
-            {questions.length} câu hỏi về từ vựng.
-          </p>
-
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={handleStartGame}
-            className="w-full py-3 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-colors"
-          >
-            Bắt đầu ngay!
-          </motion.button>
-        </div>
-      </div>
-    );
-  };
-
-  // Render giao diện chơi
-  const renderPlaying = () => {
-    return (
-      <div className="w-full max-w-3xl">
-        <ScoreDisplay player={player} opponent={opponent} />
-
-        <div className="mb-4">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-sm font-medium text-gray-700">
-              Thời gian còn lại
-            </span>
-          </div>
-          <CountdownTimer timeLeft={timeLeft} totalTime={10} />
-        </div>
-
-        {/* Câu hỏi và lựa chọn */}
-        <VocabularyQuestion
-          question={questions[currentQuestion]}
-          playerAnswer={playerAnswer}
-          onSelectAnswer={handleAnswerSelect}
-          currentQuestion={currentQuestion}
-          questionCount={questions.length}
-          playerAnswerTime={playerAnswerTime}
-        />
-
-        {/* Hiển thị trạng thái đối thủ */}
-        <OpponentStatus
-          playerAnswer={playerAnswer}
-          opponentAnswer={opponentAnswer}
-        />
-      </div>
-    );
-  };
-
-  // Render giao diện dựa vào trạng thái trò chơi
-  const renderGameContent = () => {
-    switch (gameState) {
-      case "waiting":
-        return renderWaiting();
-      case "ready":
-        return renderReady();
-      case "playing":
-        return renderPlaying();
-      case "finished":
-        return null; // Final result modal will be shown
-      default:
-        return <div>Đã xảy ra lỗi</div>;
-    }
-  };
-
-  return (
-    <>
-      <div className="min-h-screen bg-indigo-50 pt-8 pb-20">
-        <div className="container mx-auto px-4 max-w-6xl">
-          <div className="flex flex-col items-center justify-center">
-            {renderGameContent()}
-
-            {/* Kết quả sau mỗi câu hỏi */}
-            <AnimatePresence>
-              {showResult && (
-                <ResultNotification
-                  playerCorrect={playerAnswer}
-                  opponentCorrect={opponentAnswer}
-                  playerTime={playerAnswerTime}
-                  opponentTime={opponentAnswerTime}
-                  onContinue={handleContinue}
-                />
-              )}
-            </AnimatePresence>
-
-            {/* Kết quả cuối cùng */}
-            <AnimatePresence>
-              {showFinalResult && (
-                <FinalResult
-                  player={player}
-                  opponent={opponent}
-                  onRetry={handleRetry}
-                  onExit={handleExit}
-                />
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-      </div>
-    </>
+        )}
+    </div>
   );
 };
 

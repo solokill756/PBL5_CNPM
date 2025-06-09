@@ -41,7 +41,7 @@ const ModeHeader = ({
   ];
 
   return (
-    <div className="relative flex w-full mr-8 mb-4 items-center justify-between">
+    <div className="relative flex w-full mr-8 items-center justify-between">
       <DropdownDefault
         icon={
           mode === "detail" ? (

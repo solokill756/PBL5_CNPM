@@ -14,6 +14,7 @@ interface VocabularyAttributes {
   language: string;
   level: string;
   type: string;
+  is_show: boolean;
 }
 
 interface VocabularyCreationAttributes
@@ -49,6 +50,7 @@ class Vocabulary
   declare language: string;
   declare level: string;
   declare type: string;
+  declare is_show: boolean;
 }
 
 export default (sequelize: Sequelize) => {
@@ -110,6 +112,11 @@ export default (sequelize: Sequelize) => {
         type: DataTypes.STRING(100),
         allowNull: false,
       },
+      is_show: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+      },
     },
     {
       sequelize,
@@ -118,13 +125,13 @@ export default (sequelize: Sequelize) => {
       indexes: [
         {
           unique: true,
-          fields: ["vocab_id"]
+          fields: ["vocab_id"],
         },
         {
           unique: true,
-          fields: ["word"]
-        }
-      ]
+          fields: ["word"],
+        },
+      ],
     }
   );
 

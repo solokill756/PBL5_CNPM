@@ -1,15 +1,16 @@
 interface UserClientData {
-  full_name: string,
-  email: string,
-  profile_picture: string,
-  username: string,
-  datatime_joined: string,
+  full_name: string;
+  email: string;
+  profile_picture: string;
+  username: string;
+  datatime_joined: string;
+  is_blocked?: boolean;
   // user_id : string,
 }
 interface listFlashcardClientData {
-  tile: string,
-  description?: string,
-  created_at: string,
+  tile: string;
+  description?: string;
+  created_at: string;
 }
 const filterUserData = (user: any): UserClientData => ({
   full_name: user.full_name,
@@ -17,6 +18,7 @@ const filterUserData = (user: any): UserClientData => ({
   profile_picture: user.profile_picture,
   username: user.username,
   datatime_joined: user.datatime_joined,
+  is_blocked: user.is_blocked,
   // user_id : user.user_id,
 });
 
@@ -26,4 +28,9 @@ const filterListFlashcardData = (flashcard: any): listFlashcardClientData => ({
   created_at: flashcard.created_at,
 });
 
-export { filterUserData, UserClientData, filterListFlashcardData, listFlashcardClientData };
+export {
+  filterUserData,
+  UserClientData,
+  filterListFlashcardData,
+  listFlashcardClientData,
+};
