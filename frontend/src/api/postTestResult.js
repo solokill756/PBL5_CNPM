@@ -5,7 +5,7 @@ export const postTestResult = async (axiosPrivate,correctCount, total, topic_id)
             {
                 score: correctCount,
                 number_of_questions: total,
-                topic_id: topic_id // Assuming topic_id is available in the context where this function is called
+                topic_id: topic_id 
             }
         );
         
