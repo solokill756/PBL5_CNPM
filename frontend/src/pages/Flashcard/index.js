@@ -72,7 +72,7 @@ export default function FlashCard({ mode = "" }) {
   return (
     <main className="flex flex-col items-center flex-grow scrollbar-hide">
       {/* Dropdown chuyển mode */}
-      <div className="flex w-full mb-8 justify-start">
+      <div className="flex w-full justify-start">
         {mode === "detail" && (
           <ModeHeader
             mode={mode}
