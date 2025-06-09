@@ -29,6 +29,9 @@ const TopicDetail = () => {
     checkLevel,
     refreshUserLevel,
     updateCategoryProgress,
+    userLevel,
+    canTakeTest,
+    markTestCompleted,
   } = useTopicStore();
 
   const [selectedVocabulary, setSelectedVocabulary] = useState(null);
@@ -118,8 +121,8 @@ const TopicDetail = () => {
 
       addToast(
         newBookmarkStatus
-          ? `Đã thêm "${vocab.word}" vào bookmark`
-          : `Đã xóa "${vocab.word}" khỏi bookmark`,
+          ? `Đã lưu "${vocab.word}" vào từ vựng đã lưu`
+          : `Đã xóa "${vocab.word}" khỏi từ vựng đã lưu`,
         TOAST_TYPES.SUCCESS
       );
     } catch (error) {
@@ -128,13 +131,18 @@ const TopicDetail = () => {
   };
 
   const handleWordLearned = async (vocabId) => {
-    const isThisLearningUpdating = loadingStates.learningUpdating.has(vocabId);
-    if (isThisLearningUpdating) return; // Prevent double-click với loading state chính xác
+    // Prevent double-click bằng cách check loading state
+    const isCurrentlyUpdating = loadingStates.learningUpdating.has(vocabId);
+    if (isCurrentlyUpdating) {
+      console.log('Already processing, skipping...');
+      return;
+    }
 
     try {
       const vocab = topicVocabularies.find((v) => v.vocab_id === vocabId);
-      const wasLearned =
-        vocab.VocabularyUsers?.[0]?.had_learned || vocab.isKnown;
+      if (!vocab) return;
+
+      const wasLearned = vocab.VocabularyUsers?.[0]?.had_learned || vocab.isKnown;
 
       const newLearningStatus = await updateLearningStatus(
         axios,
@@ -142,46 +150,44 @@ const TopicDetail = () => {
         topicId
       );
 
-      addToast(
-        newLearningStatus
-          ? `Đã đánh dấu "${vocab.word}" là đã học`
-          : `Đã đánh dấu "${vocab.word}" là chưa học`,
-        TOAST_TYPES.SUCCESS
-      );
+      // Chỉ show toast nếu thực sự có thay đổi
+      if (newLearningStatus !== undefined && newLearningStatus !== wasLearned) {
+        addToast(
+          newLearningStatus
+            ? `Đã đánh dấu "${vocab.word}" là đã học`
+            : `Đã đánh dấu "${vocab.word}" là chưa học`,
+          TOAST_TYPES.SUCCESS
+        );
 
-      // Cập nhật user stats với debounce để tránh multiple calls
-      if (newLearningStatus !== wasLearned) {
-        // Đã được cập nhật trong updateLearningStatus, không cần setTimeout
-        const { calculateUserStats } = useTopicStore.getState();
-        calculateUserStats();
-      }
+        // Stats đã được tự động cập nhật trong updateLearningStatus
+        // Không cần gọi calculateUserStats ở đây nữa
 
-      // Kiểm tra level up chỉ khi học từ mới (không phải unlearn)
-      if (!wasLearned && newLearningStatus) {
-        try {
-          const levelResult = await refreshUserLevel(axios);
-          if (levelResult.leveledUp) {
-            setLevelUpResults({
-              oldLevel: levelResult.oldLevel,
-              newLevel: levelResult.newLevel,
-              totalPoints: levelResult.totalPoints,
-              wordsLearned: vocab.word,
-            });
-            setShowLevelUpModal(true);
-          } else if (levelResult.error) {
-            // Nếu có lỗi level check, chỉ log không hiển thị lỗi cho user
-            console.warn(
-              "Level check encountered an error but word learning was successful"
-            );
+        // Kiểm tra level up chỉ khi học từ mới
+        if (!wasLearned && newLearningStatus) {
+          try {
+            const levelResult = await refreshUserLevel(axios);
+            if (levelResult.leveledUp) {
+              setLevelUpResults({
+                oldLevel: levelResult.oldLevel,
+                newLevel: levelResult.newLevel,
+                totalPoints: levelResult.totalPoints,
+                wordsLearned: vocab.word,
+              });
+              setShowLevelUpModal(true);
+            }
+          } catch (levelError) {
+            console.error("Error checking level:", levelError);
           }
-        } catch (levelError) {
-          console.error("Error checking level:", levelError);
-          // Không hiển thị lỗi level check cho user vì learning đã thành công
         }
       }
     } catch (error) {
       addToast("Không thể cập nhật trạng thái học", TOAST_TYPES.ERROR);
     }
+  };
+
+  const handleTakeTest = () => {
+    markTestCompleted(userLevel.current_level);
+    navigate(`/vocabulary/topic/${topicId}/Test`);
   };
 
   const handleCreateFlashcards = () => {
@@ -229,12 +235,14 @@ const TopicDetail = () => {
               },
             })
           }
-          onTakeTest={() => navigate(`/vocabulary/topic/${topicId}/Test`)}
+          onTakeTest={handleTakeTest}
           onCreateFlashcard={handleCreateFlashcards}
           topicProgress={calculateProgress()}
           learnedCount={getLearnedCount()}
           totalCount={topicVocabularies.length}
           isTopicCompleted={getLearnedCount() === topicVocabularies.length}
+          userLevel={userLevel}
+          hasTestTaken={userLevel.completed_level_tests?.includes(userLevel.current_level)}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
