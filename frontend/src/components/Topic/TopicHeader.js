@@ -1,20 +1,20 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { IoArrowBack, IoSchool } from 'react-icons/io5';
-import { TbCards } from 'react-icons/tb';
+import React from "react";
+import { motion } from "framer-motion";
+import { IoArrowBack, IoSchool } from "react-icons/io5";
+import { TbCards } from "react-icons/tb";
 
 // ... existing code ...
 
-const TopicHeader = ({ 
-  topic, 
-  onBack, 
+const TopicHeader = ({
+  topic,
+  onBack,
   onCreateFlashcard,
   onTakeTest,
   topicProgress,
   learnedCount,
   totalCount,
   isTopicCompleted = false,
-  hasTestTaken = false // Prop để check test đã làm chưa cho topic này
+  hasTestTaken = false, // Prop để check test đã làm chưa cho topic này
 }) => {
   // Logic: phải học hết từ vựng và chưa làm test
   const canTakeTest = isTopicCompleted && !hasTestTaken;
@@ -36,14 +36,13 @@ const TopicHeader = ({
               alt={topic?.name}
               className="w-full h-full object-cover"
               onError={(e) => {
-                e.target.src = "https://placehold.co/64x64/indigo/white/png?text=IT";
+                e.target.src =
+                  "https://placehold.co/64x64/indigo/white/png?text=IT";
               }}
             />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {topic?.name}
-            </h1>
+            <h1 className="text-2xl font-bold text-gray-900">{topic?.name}</h1>
             <p className="text-gray-600">{topic?.description}</p>
           </div>
         </div>
@@ -63,7 +62,7 @@ const TopicHeader = ({
           <div className="w-40 h-2 bg-gray-200 rounded-full">
             <div
               className={`h-2 rounded-full transition-all duration-300 ${
-                isTopicCompleted ? 'bg-green-500' : 'bg-blue-500'
+                isTopicCompleted ? "bg-green-500" : "bg-blue-500"
               }`}
               style={{ width: `${topicProgress}%` }}
             ></div>
@@ -97,15 +96,14 @@ const TopicHeader = ({
 
           {/* Test button disabled - hiển thị khi đã làm test */}
           {hasTestTaken && (
-            <motion.button
+            <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              disabled
-              className="flex items-center gap-2 px-4 py-2 bg-gray-400 text-white rounded-full cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-full border border-green-200"
             >
               <IoSchool className="w-5 h-5" />
               {testButtonText}
-            </motion.button>
+            </motion.div>
           )}
 
           {/* Hiển thị thông báo nếu chưa học hết */}

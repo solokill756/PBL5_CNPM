@@ -71,14 +71,44 @@ const TopicDetail = () => {
       markNeedsRefresh();
     };
 
+    // Thêm listener cho navigation từ test page
+    const handleStorageChange = (e) => {
+      if (e.key === 'test_completed') {
+        // Khi test hoàn thành, reload completed tests
+        const { loadCompletedTopicTests, userLevel } = useTopicStore.getState();
+        loadCompletedTopicTests(userLevel.user_id);
+        
+        // Force re-render component
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+      }
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
+    window.addEventListener('storage', handleStorageChange);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, [axios, refreshUserLevel]);
+
+  // Thêm useEffect để check test status khi component mount
+  useEffect(() => {
+    const checkTestStatus = () => {
+      const { loadCompletedTopicTests, userLevel } = useTopicStore.getState();
+      if (userLevel.user_id) {
+        loadCompletedTopicTests(userLevel.user_id);
+      }
+    };
+
+    if (topicId && userLevel.user_id) {
+      checkTestStatus();
+    }
+  }, [topicId, userLevel.user_id]);
 
   useEffect(() => {
     const fetchTopicData = async () => {
@@ -110,11 +140,15 @@ const TopicDetail = () => {
     if (topicVocabularies.length > 0) {
       const learnedCount = getLearnedCount();
       const isTopicCompleted = learnedCount === topicVocabularies.length;
-
+  
       if (isTopicCompleted) {
-        const wasCompleted = localStorage.getItem(`topic_completed_${topicId}`);
+        // Sửa key localStorage để specific cho từng topic và user
+        const { userLevel } = useTopicStore.getState();
+        const completionKey = `topic_completed_${topicId}_${userLevel.user_id}`;
+        const wasCompleted = localStorage.getItem(completionKey);
+        
         if (!wasCompleted) {
-          localStorage.setItem(`topic_completed_${topicId}`, "true");
+          localStorage.setItem(completionKey, "true");
           setTopicCompletedResults({
             topicName: currentTopic.name,
             totalWords: topicVocabularies.length,
@@ -220,7 +254,7 @@ const TopicDetail = () => {
 
   const handleTakeTest = () => {
     // Mark test completed cho topic này thay vì level
-    markTopicTestCompleted(parseInt(topicId));
+    // markTopicTestCompleted(parseInt(topicId));
     navigate(`/vocabulary/topic/${topicId}/Test`);
   };
 
