@@ -133,6 +133,10 @@ export default (sequelize: Sequelize) => {
           unique: true,
           fields: ["user_id"],
         },
+        {
+          unique: false,
+          fields: ["username"],
+        },
       ],
     }
   );

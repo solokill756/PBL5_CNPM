@@ -12,7 +12,6 @@ const addListFlashCard = async (
       title: tile,
       description,
     });
-
     for (const flashcard of flashcards) {
       await db.flashcard.create({
         list_id: listFlashcard.list_id,
@@ -21,7 +20,9 @@ const addListFlashCard = async (
       });
     }
     return listFlashcard;
-  } catch (error) {}
+  } catch (error) {
+    throw new Error("Error adding list flashcard");
+  }
 };
 
 const deleteListFlashCard = async (list_id: string) => {

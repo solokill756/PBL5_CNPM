@@ -8,17 +8,20 @@ interface ListFlashcardAttributes {
   created_at: Date;
   rate: number;
   number_rate: number;
-  
 }
 
 interface ListFlashcardCreationAttributes
   extends Partial<
-    Pick<ListFlashcardAttributes, "list_id" | "description" | "created_at" | "rate" | "number_rate">
-  > { }
+    Pick<
+      ListFlashcardAttributes,
+      "list_id" | "description" | "created_at" | "rate" | "number_rate"
+    >
+  > {}
 
 class ListFlashcard
   extends Model<ListFlashcardAttributes, ListFlashcardCreationAttributes>
-  implements ListFlashcardAttributes {
+  implements ListFlashcardAttributes
+{
   declare list_id: string;
   declare user_id: string;
   declare title: string;
@@ -71,9 +74,13 @@ export default (sequelize: Sequelize) => {
       indexes: [
         {
           unique: true,
-          fields: ["list_id"]
-        }
-      ]
+          fields: ["list_id"],
+        },
+        {
+          unique: false,
+          fields: ["title"],
+        },
+      ],
     }
   );
 

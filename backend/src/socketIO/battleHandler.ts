@@ -394,7 +394,6 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
         for (const player of players) {
           const isWinner = winner && winner === player.user_id;
           const points = finalScores[player.user_id];
-
           await gameService.updatePlayScore(
             player.user_id,
             points,
