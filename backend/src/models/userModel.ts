@@ -16,6 +16,7 @@ interface UserAttributes {
   is_active?: boolean;
   levelThreshold?: number;
   is_blocked?: boolean;
+  role: string;
 }
 
 interface UserCreationAttributes
@@ -43,6 +44,7 @@ class User
   declare is_active?: boolean;
   declare levelThreshold?: number;
   declare is_blocked?: boolean;
+  declare role: string;
 }
 
 export default (sequelize: Sequelize) => {
@@ -118,6 +120,11 @@ export default (sequelize: Sequelize) => {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false,
+      },
+      role: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: "user",
       },
     },
     {

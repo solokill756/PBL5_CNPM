@@ -116,6 +116,7 @@ const loginService = async (user: {
         full_name: userData.full_name,
         datetime_joined: userData.datetime_joined,
         profile_picture: userData.profile_picture,
+        role: userData.role,
       },
     };
   } catch (error) {
