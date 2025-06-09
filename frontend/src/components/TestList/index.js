@@ -99,6 +99,14 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
     setWrongQuestions,
     setQuestions,
   } = useTestStore();
+  const {
+    questions,
+    wrongQuestions,
+    setAnswers,
+    setResult,
+    setWrongQuestions,
+    setQuestions,
+  } = useTestStore();
   const { currentTopic } = useTopicStore();
   const [currentAnswer, setCurrentAnswer] = useState({});
   const [isOpen, setOpen] = useState(false);
@@ -134,6 +142,8 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
     }
   }, [isTimeUp, submitted]);
 
+  const isAllAnswered =
+    shuffledQuestions.length === Object.keys(currentAnswer).length;
   const isAllAnswered =
     shuffledQuestions.length === Object.keys(currentAnswer).length;
 
@@ -304,6 +314,7 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
                 Câu {index + 1}/{shuffledQuestions.length}
               </div>
 
+
               {/* Câu hỏi */}
               <div className="">
                 <p className="text-base text-gray-500 font-medium mb-1">
@@ -357,6 +368,9 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
               {isTimeUp
                 ? "Đã hết thời gian!"
                 : "Tất cả đã xong! Bạn đã sẵn sàng gửi bài kiểm tra?"}
+              {isTimeUp
+                ? "Đã hết thời gian!"
+                : "Tất cả đã xong! Bạn đã sẵn sàng gửi bài kiểm tra?"}
             </h2>
             <button
               onClick={handleCheckBeforeSubmit}
@@ -394,6 +408,8 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
               <p className="text-gray-600 mb-6">
                 Bạn có chưa trả lời một số câu hỏi. Bạn có muốn tiếp tục nộp bài
                 không?
+                Bạn có chưa trả lời một số câu hỏi. Bạn có muốn tiếp tục nộp bài
+                không?
               </p>
               <div className="flex gap-3 justify-center">
                 <button
@@ -418,3 +434,4 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
 };
 
 export default TestPage;
+
