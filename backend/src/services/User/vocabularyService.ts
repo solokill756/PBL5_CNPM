@@ -80,6 +80,16 @@ const getVocabularyByTopic = async (topic_id: string, user_id: string) => {
         },
       ],
     });
+    const checkTopicLearn = await db.vocabularyTopicUser.findOne({
+      where: { topic_id, user_id },
+    });
+    if (!checkTopicLearn) {
+      await db.vocabularyTopicUser.create({
+        topic_id,
+        user_id,
+        mastered_words: 0,
+      });
+    }
     return vocabularies;
   } catch (error) {
     throw error;

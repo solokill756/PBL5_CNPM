@@ -185,110 +185,162 @@ const getTopTopicsByUserService = async (
   }
 };
 
-const searchData = async (value: string) => {
+const searchDataService = async (value: string) => {
   try {
-    const searchTerm = `%${value.toLowerCase()}%`;
+    // Escape special characters và làm sạch input
+    const cleanValue = value.replace(/[%_\\'"]/g, "\\$&");
+    const searchTerm = `%${cleanValue.toLowerCase()}%`;
 
     const [listFlashCards, Classes, users] = await Promise.all([
-      db.listFlashcard.findAll({
+      await db.listFlashcard.findAll({
         where: {
-          title: {
-            [Op.iLike]: searchTerm,
-          },
+          [Op.or]: [
+            db.sequelize.where(
+              db.sequelize.fn("LOWER", db.sequelize.col("ListFlashcard.title")),
+              "LIKE",
+              searchTerm
+            ),
+            db.sequelize.where(
+              db.sequelize.fn(
+                "LOWER",
+                db.sequelize.col("ListFlashcard.description")
+              ),
+              "LIKE",
+              searchTerm
+            ),
+          ],
         },
         include: [
           {
             model: db.user,
-            attributes: ["user_id", "username", "profile_picture"],
+            attributes: ["username", "profile_picture"],
           },
           {
             model: db.flashcard,
             as: "Flashcard",
             attributes: [],
+            required: true,
           },
         ],
-        attributes: [
-          "list_id",
-          "title",
-          "description",
-          "created_at",
-          "user_id",
-          [
-            db.sequelize.fn("COUNT", db.sequelize.col("Flashcard.list_id")),
-            "flashcardCount",
+        attributes: {
+          include: [
+            [
+              db.sequelize.fn(
+                "COUNT",
+                db.sequelize.col("Flashcard.flashcard_id")
+              ),
+              "FlashcardCount",
+            ],
           ],
-        ],
-        group: ["listFlashcard.list_id", "user.user_id"],
+        },
+        group: ["ListFlashcard.list_id"],
         subQuery: false,
         limit: 20,
         order: [["created_at", "DESC"]],
       }),
 
+      // Tìm kiếm Classes
       db.class.findAll({
         where: {
-          name: {
-            [Op.iLike]: searchTerm,
-          },
+          [Op.or]: [
+            db.sequelize.where(
+              db.sequelize.fn("LOWER", db.sequelize.col("Class.class_name")),
+              "LIKE",
+              searchTerm
+            ),
+            db.sequelize.where(
+              db.sequelize.fn("LOWER", db.sequelize.col("Class.description")),
+              "LIKE",
+              searchTerm
+            ),
+          ],
         },
         include: [
           {
             model: db.user,
             attributes: ["user_id", "username", "profile_picture"],
+            required: false,
           },
           {
             model: db.classMember,
             attributes: [],
+            required: false,
           },
         ],
         attributes: [
           "class_id",
-          "name",
+          "class_name",
           "description",
           "created_at",
-          "user_id",
+
           [
-            db.sequelize.fn("COUNT", db.sequelize.col("classMember.user_id")),
+            db.sequelize.fn("COUNT", db.sequelize.col("ClassMembers.user_id")),
             "memberCount",
           ],
         ],
-        group: ["class.class_id", "user.user_id"],
+        group: [
+          "Class.class_id",
+          "Class.class_name",
+          "Class.description",
+          "Class.created_at",
+          "User.user_id",
+          "User.username",
+          "User.profile_picture",
+        ],
         subQuery: false,
         limit: 20,
         order: [["created_at", "DESC"]],
       }),
 
-      // Tìm kiếm users theo username và email
-      db.user.findAll({
+      await db.user.findAll({
         where: {
-          username: {
-            [Op.iLike]: searchTerm,
-          },
+          [Op.or]: [
+            db.sequelize.where(
+              db.sequelize.fn("LOWER", db.sequelize.col("User.username")),
+              "LIKE",
+              searchTerm
+            ),
+            db.sequelize.where(
+              db.sequelize.fn("LOWER", db.sequelize.col("User.full_name")),
+              "LIKE",
+              searchTerm
+            ),
+          ],
         },
         include: [
           {
             model: db.listFlashcard,
-            as: "listFlashcards",
             attributes: [],
+            required: true,
+          },
+          {
+            model: db.class,
+            attributes: [],
+            required: true,
           },
         ],
         attributes: [
-          "user_id",
           "username",
-          "email",
-          "full_name",
           "profile_picture",
-          "created_at",
           [
             db.sequelize.fn(
               "COUNT",
-              db.sequelize.col("listFlashcards.list_id")
+              db.sequelize.literal("DISTINCT ListFlashcards.list_id")
             ),
-            "flashcardListCount",
+            "ListFlashCardCount",
+          ],
+          [
+            db.sequelize.fn(
+              "COUNT",
+              db.sequelize.literal("DISTINCT Classes.class_id")
+            ),
+            "ClassCount",
           ],
         ],
-        group: ["user.user_id"],
-        limit: 20,
+        group: ["User.user_id"],
+        subQuery: false,
         order: [["username", "ASC"]],
+        limit: 10,
       }),
     ]);
 
@@ -307,6 +359,14 @@ const searchData = async (value: string) => {
   } catch (error) {
     console.error("Search error:", error);
     return {
+      listFlashCards: [],
+      Classes: [],
+      users: [],
+      totalResults: {
+        listFlashCards: 0,
+        Classes: 0,
+        users: 0,
+      },
       message: "Search failed",
       error: error instanceof Error ? error.message : "Unknown error",
     };
@@ -318,5 +378,5 @@ export {
   getTopAuthorService,
   getRecentFlashcardsService,
   getTopTopicsByUserService,
-  searchData,
+  searchDataService,
 };
