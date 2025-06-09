@@ -286,14 +286,14 @@ const checkLevelUser = async (user_id: string, new_points: number) => {
       throw new Error("User not found");
     }
     if (user.total_points + new_points >= user.levelThreshold) {
-      let level = user.level;
+      let level = user.current_level;
       let userTotalPoints = user.total_points + new_points;
       let userLevelThreshold = user.levelThreshold;
       while (userTotalPoints >= userLevelThreshold) {
         level += 1;
         userTotalPoints -= userLevelThreshold;
         await achivermentService.unlockAchievement(user_id, level);
-        userLevelThreshold = userLevelThreshold * 100 + 500;
+        userLevelThreshold = level * 500;
       }
       await db.user.update(
         {

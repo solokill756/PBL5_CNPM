@@ -12,6 +12,7 @@ interface UserPayload {
   email: string;
   user_id: string;
   tokenVersion?: number;
+  level: Number;
 }
 
 const checkEmailService = async (email: string): Promise<any> => {
@@ -102,6 +103,7 @@ const loginService = async (user: {
       email: userData.email,
       user_id: userData.user_id,
       tokenVersion: userData.tokenVersion,
+      level: userData.current_level,
     };
 
     return {
@@ -182,6 +184,7 @@ const verifyOtpService = async (otp: string, email: string): Promise<any> => {
     email: userData.email,
     user_id: userData.user_id,
     tokenVersion: userData.tokenVersion,
+    level: userData.current_level,
   };
   return {
     accessToken: generateAccessToken(payLoad),

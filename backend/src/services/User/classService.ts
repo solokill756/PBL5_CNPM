@@ -27,6 +27,7 @@ const getClassById = async (class_id: string) => {
           "flashcardCount",
         ],
         [Sequelize.col("listFlashcard.created_at"), "created_at"],
+        [Sequelize.col("listFlashcard.user_id"), "created_by"],
       ],
       include: [
         {

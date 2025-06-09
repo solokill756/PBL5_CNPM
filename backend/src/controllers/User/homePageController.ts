@@ -49,7 +49,8 @@ const getTopTopicsByUser = async (
 ): Promise<any> => {
   try {
     const userID = (req as any).user.user_id;
-    const data = await getTopTopicsByUserService(userID);
+    const level = (req as any).user.level;
+    const data = await getTopTopicsByUserService(userID, level);
     sendSuccess(res, data);
   } catch (error) {
     console.log("lỗi lấy topic :", error);
