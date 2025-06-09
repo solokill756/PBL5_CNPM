@@ -112,14 +112,6 @@ const router = createBrowserRouter([
         path: "/add-flashcard",
         element: <AddFlashcard />
       },
-      {
-        path: "/vocabulary/topic/:topicId/Test",
-        element: <Test/>
-      },
-       {
-        path: "/vocabulary/topic/:topicId/TestResult",
-        element: <TestResult/>
-      },
     ],
   },
   {

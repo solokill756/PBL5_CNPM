@@ -2,10 +2,19 @@ import React from "react";
 import { HiMiniUserGroup } from "react-icons/hi2";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import { useNavigate } from "react-router-dom";
 
-const ClassItem = ({ name, author, member, loading = false }) => {
+const ClassItem = ({ classId, name, author, member, loading = false }) => {
+  const navigate = useNavigate();
+  
+  const handleClick = () => {
+    if (classId) {
+      navigate(`/classes/${classId}`);
+    }
+  };
+
   return (
-    <div className="flex w-full rounded-lg p-3 space-x-2 cursor-pointer hover:bg-slate-100">
+    <div className="flex w-full rounded-lg p-3 space-x-2 cursor-pointer hover:bg-slate-100" onClick={handleClick}>
       <div className="p-3 border rounded-lg bg-red-100">
         <HiMiniUserGroup className="size-6 text-red-500" />
       </div>
