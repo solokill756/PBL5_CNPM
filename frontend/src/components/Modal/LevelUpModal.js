@@ -1,12 +1,12 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IoClose, IoTrophy, IoSchool, IoArrowForward } from 'react-icons/io5';
-import { TbBrain } from 'react-icons/tb';
+import { IoClose, IoTrophy, IoSchool, IoArrowForward, IoGift } from 'react-icons/io5';
+import { TbBrain, TbAward } from 'react-icons/tb';
 
 const LevelUpModal = ({ levelUpResults, onClose, onAction }) => {
   if (!levelUpResults) return null;
 
-  const { oldLevel, newLevel, totalPoints, wordsLearned } = levelUpResults;
+  const { oldLevel, newLevel, totalPoints, wordsLearned, achievements = [] } = levelUpResults;
 
   return (
     <AnimatePresence>
@@ -22,13 +22,13 @@ const LevelUpModal = ({ levelUpResults, onClose, onAction }) => {
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.7, opacity: 0, y: 50 }}
           transition={{ type: "spring", duration: 0.5 }}
-          className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl"
+          className="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl relative max-h-[90vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 z-10"
           >
             <IoClose className="w-5 h-5" />
           </button>
@@ -100,6 +100,59 @@ const LevelUpModal = ({ levelUpResults, onClose, onAction }) => {
             </div>
           </div>
 
+          {/* Achievements section */}
+          {achievements && achievements.length > 0 && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <TbAward className="w-5 h-5 text-yellow-600" />
+                <h3 className="font-semibold text-yellow-800">Thành tựu mở khóa</h3>
+              </div>
+              <div className="space-y-3">
+                {achievements.map((achievement, index) => (
+                  <motion.div
+                    key={achievement.achievement_id || index}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 * index }}
+                    className="flex items-center gap-3 p-3 bg-white rounded-lg border border-yellow-200 shadow-sm"
+                  >
+                    {/* Achievement icon */}
+                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-yellow-300 flex-shrink-0">
+                      <img
+                        src={achievement.icon}
+                        alt={achievement.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.src = "https://cdn-icons-png.flaticon.com/512/3064/3064197.png";
+                        }}
+                      />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-gray-900 truncate">{achievement.title}</div>
+                      <div className="text-sm text-gray-600 line-clamp-2">{achievement.description}</div>
+                      {achievement.required_level && (
+                        <div className="text-xs text-yellow-700 mt-1">
+                          Yêu cầu Level {achievement.required_level}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex-shrink-0">
+                      <motion.div
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center"
+                      >
+                        <IoTrophy className="w-4 h-4 text-yellow-600" />
+                      </motion.div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Achievement message */}
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
             <div className="flex items-start gap-3">
@@ -107,8 +160,8 @@ const LevelUpModal = ({ levelUpResults, onClose, onAction }) => {
               <div className="text-sm text-green-800">
                 <p className="font-medium mb-1">Bạn đã tiến bộ rất nhiều!</p>
                 <p>
-                  Để tiếp tục phát triển và mở khóa thêm nhiều tính năng mới, 
-                  hãy thử sức với bài kiểm tra để nâng cao trình độ nhé!
+                  Với cấp độ mới, bạn đã mở khóa {achievements.length} thành tựu mới. 
+                  Hãy tiếp tục thử sức với bài kiểm tra để phát triển thêm nhé!
                 </p>
               </div>
             </div>

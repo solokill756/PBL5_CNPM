@@ -31,10 +31,6 @@ const BattleResult = () => {
     if (resultData) {
       try {
         const result = JSON.parse(resultData);
-        console.log('====================================');
-        console.log(result);
-        console.log('====================================');
-        
         // Kiểm tra timestamp để tránh dữ liệu cũ (>1 giờ)
         const now = Date.now();
         const resultAge = now - result.timestamp;

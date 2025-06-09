@@ -12,15 +12,15 @@ const VocabularyItem = ({
   index,
   total,
 }) => {
-  const { isBookmarkUpdating, isLearningUpdating } = useTopicStore();
+  const { loadingStates } = useTopicStore();
   const { vocab_id, word, pronunciation, meaning, level } = vocabulary;
   
   const isBookmarked = vocabulary.VocabularyUsers?.[0]?.is_saved || vocabulary.isBookmarked || false;
   const isKnown = vocabulary.VocabularyUsers?.[0]?.had_learned || vocabulary.isKnown || false;
   
   // Check loading state cho vocabulary cụ thể này
-  const isThisBookmarkUpdating = isBookmarkUpdating(vocab_id);
-  const isThisLearningUpdating = isLearningUpdating(vocab_id);
+  const isThisBookmarkUpdating = loadingStates.bookmarkUpdating.has(vocab_id);
+  const isThisLearningUpdating = loadingStates.learningUpdating.has(vocab_id);
 
   return (
     <motion.div
