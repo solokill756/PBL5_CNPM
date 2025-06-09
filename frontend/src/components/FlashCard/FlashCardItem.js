@@ -14,7 +14,7 @@ const FlashCardItem = ({
 }) => {
   return (
     <Link
-      to={id ? `flashcard/${id}` : "#"}
+      to={id ? `/flashcard/${id}` : "#"}
       onClick={onClick}
       className="scrollable-item flex-shrink-0 overflow-hidden snap-start basis-1/2 px-2"
     >

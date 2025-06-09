@@ -32,6 +32,7 @@ import BattleResult from "@/components/Battle/BattleResult";
 import ListClass from "@/pages/Class/ListClass";
 import ClassDetail from "@/pages/Class/ClassDetail";
 import Members from "@/pages/Class/Members";
+import SearchResults from "@/pages/SearchResults";
 // Component bảo vệ route yêu cầu xác thực
 function PrivateRoute({ children }) {
   // const { auth } = useAuth();
@@ -112,6 +113,10 @@ const router = createBrowserRouter([
         path: "/add-flashcard",
         element: <AddFlashcard />
       },
+      {
+        path:"/search-results",
+        element: <SearchResults />
+      }
     ],
   },
   {

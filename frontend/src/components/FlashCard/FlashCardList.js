@@ -48,7 +48,7 @@ const FlashCardList = ({ flashCards = [], loading }) => {
             number={loading ? 0 : card.FlashcardCount}
             avatar={loading ? fallbackAvatar : (card.User.profile_picture || fallbackAvatar)}
             loading={loading}
-            // onClick={loading ? () => {} : () => handleClick(card, card.list_id)}
+            //onClick={loading ? () => {} : () => handleClick(card, card.list_id)}
           />
         ))}
       </div>
