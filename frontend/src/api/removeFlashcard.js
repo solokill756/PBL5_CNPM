@@ -1,11 +1,11 @@
-export const deleteMember = async (axiosPrivate, classId, memberId) => {
+export const removeFlashcard = async (axiosPrivate, classId, listId) => {
   try {
     const response = await axiosPrivate.delete(
-      '/api/class/remove-member-from-class',
+      '/api/class/remove-list-flashcard-from-class',
       { 
         data: {  
           class_id: classId, 
-          user_id: memberId 
+          list_id: listId
         }
       }
     );

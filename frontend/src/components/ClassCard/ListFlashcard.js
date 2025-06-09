@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import Course from '../Course/Course';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useParams } from 'react-router-dom';
+import CourseInClass from './CourseInClass';
 
 const CourseSkeleton = () => {
     return (
@@ -65,11 +67,10 @@ const groupCoursesByMonthYear = (courses) => {
     return sortedGroups;
 };
 
-const CourseGroup = ({ header, courses }) => {
+const CourseGroup = ({ header, courses, currentUserId, classCreatorId, onDeleteFlashcard }) => {
     if (!courses || courses.length === 0) {
         return null;
     }
-
     return (
         <div className="mb-16">
             <div className="mb-3">
@@ -81,23 +82,27 @@ const CourseGroup = ({ header, courses }) => {
                 </div>
             </div>
             
-            {courses.map((course) => (
-                <Course
+            {courses.map((course) => (           
+                <CourseInClass
                     key={course.list_id} 
                     vocabulary={course.vocabulary}
                     author={course.author}
                     avatar={course.avatar}
                     lesson={course.lesson}
-                    listId={course.list_id} 
+                    listId={course.list_id}
+                    currentUserId={currentUserId}
+                    classCreatorId={classCreatorId}
+                    onDelete={onDeleteFlashcard}
                 />
             ))}
         </div>
     );
 };
 
-const ListFlashcard = ({ lists, createdBy }) => {
+const ListFlashcard = ({ lists, createdBy,currentUserId, classCreatorId, onDeleteFlashcard }) => {
     const [groupedCourses, setGroupedCourses] = useState({});
     const [isLoading, setIsLoading] = useState(true);
+    const { classId } = useParams();
 
     useEffect(() => {
         console.log("Props received:", { lists, createdBy });
@@ -114,10 +119,10 @@ const ListFlashcard = ({ lists, createdBy }) => {
                 console.log("Processing list item:", item);
                 return {
                     list_id: item.list_id,
-                    vocabulary: item.flashcardCount || 0, // Fixed: use item.flashcardCount, not listsData.flashcardCount
+                    vocabulary: item.flashcardCount || 0, 
                     author: createdBy?.username || 'Unknown',
                     avatar: createdBy?.profile_picture || null,
-                    lesson: item.title || 'Untitled', // Fixed: use item.title, not listsData.title
+                    lesson: item.title || 'Untitled', 
                     created_at: item.created_at || new Date().toISOString()
                 };
             });
@@ -170,6 +175,9 @@ const ListFlashcard = ({ lists, createdBy }) => {
                     key={header}
                     header={header}
                     courses={courses}
+                    currentUserId={currentUserId}
+                    classCreatorId={classCreatorId}
+                    onDeleteFlashcard={onDeleteFlashcard}
                 />
             ))}
         </div>
