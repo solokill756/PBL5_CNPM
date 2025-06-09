@@ -34,14 +34,7 @@ const updateTopic = async (
 
 const getAllTopic = async (): Promise<any> => {
   try {
-    const allTopic = await db.vocabularyTopic.findAll({
-      include: [
-        {
-          model: db.vocabulary,
-          required: false,
-        },
-      ],
-    });
+    const allTopic = await db.vocabularyTopic.findAll();
     return allTopic;
   } catch (error) {
     throw new Error("Error fetching all topics");
@@ -52,12 +45,6 @@ const getTopicById = async (topic_id: string): Promise<any> => {
   try {
     const topic = await db.vocabularyTopic.findOne({
       where: { topic_id },
-      include: [
-        {
-          model: db.vocabulary,
-          required: false,
-        },
-      ],
     });
     if (!topic) {
       throw new Error("Topic not found");

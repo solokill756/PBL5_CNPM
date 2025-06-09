@@ -207,13 +207,13 @@ const getAlToFindVocabulary = async (
     );
     const data = await response.json();
     if (language == "Japanese") {
-      const findTopic = await db.vocabularyTopic.findOne({
+      let findTopic = await db.vocabularyTopic.findOne({
         where: {
           name: data.data.topic.trim(),
         },
       });
       if (!findTopic) {
-        await db.vocabularyTopic.create({
+        findTopic = await db.vocabularyTopic.create({
           name: data.data.topic.trim(),
           description: data.data.description.trim(),
         });
@@ -237,15 +237,22 @@ const getAlToFindVocabulary = async (
           ai_suggested: "1",
           language: "Japanese",
         });
+        await db.vocabularyTopic.update({
+          where: {
+            topic_id: findTopic.topic_id,
+            user_id: user_id,
+          },
+          mastered_words: db.Sequelize.literal(`mastered_words + 1`),
+        });
       }
       await addHistorySearch(user_id, result.vocab_id);
     }
     if (language == "Vietnamese") {
-      const findTopic = await db.vocabularyTopic.findOne({
+      let findTopic = await db.vocabularyTopic.findOne({
         where: { name: data.data.topic.trim() },
       });
       if (!findTopic) {
-        await db.vocabularyTopic.create({
+        findTopic = await db.vocabularyTopic.create({
           name: data.data.topic.trim(),
           description: data.data.description.trim(),
         });
@@ -268,6 +275,13 @@ const getAlToFindVocabulary = async (
           level: data.data.level,
           ai_suggested: "1",
           language: "Vietnamese",
+        });
+        await db.vocabularyTopic.update({
+          where: {
+            topic_id: findTopic.topic_id,
+            user_id: user_id,
+          },
+          mastered_words: db.Sequelize.literal(`mastered_words + 1`),
         });
       }
       await addHistorySearch(user_id, result.vocab_id);
