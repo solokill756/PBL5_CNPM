@@ -6,7 +6,10 @@ import ListFlashcard from '@/components/ClassCard/ListFlashcard';
 import { useParams } from 'react-router-dom';
 import useAxiosPrivate from '@/hooks/useAxiosPrivate';
 import { getClass } from '@/api/getClass';
-
+import AddFlashcardToClass from '@/components/Modal/AddFlashcardToClass';
+import { IoIosAddCircleOutline } from "react-icons/io";
+import { useAuthStore } from '@/store/useAuthStore';
+import { removeFlashcard } from '@/api/removeFlashcard';
 const FlashcardSkeleton = () => (
   <div className="animate-pulse">
     {[...Array(3)].map((_, index) => (
@@ -35,6 +38,56 @@ const ClassDetail = () => {
   const [classData, setClassData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isAddFlashcardOpen, setIsAddFlashcardOpen] = useState(false); 
+  const [subjects, setSubjects] = useState([]);
+  const user = useAuthStore(state => state.user);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationType, setNotificationType] = useState('success');
+  const [notificationMessage, setNotificationMessage] = useState('');
+
+  const openModal = () => {
+    setIsOpen(true);
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeModal = () => {
+    setIsOpen(false);
+    document.body.style.overflow = 'auto';
+  };
+
+  const openAddFlashcardModal = () => {
+    setIsAddFlashcardOpen(true);
+  };
+
+  const closeAddFlashcardModal = () => {
+    setIsAddFlashcardOpen(false);
+  };
+
+  const handleAddSubject = (subjectId) => {
+    setSubjects(prev => 
+      prev.map(subject => 
+        subject.id === subjectId 
+          ? { ...subject, isAdded: !subject.isAdded }
+          : subject
+      )
+    );
+     closeAddFlashcardModal();
+  };
+
+  const handleCreateNew = () => {
+    console.log('Tạo mới học phần');
+  };
+
+  const handleNotification = (type, message) => {
+    setNotificationType(type);
+    setNotificationMessage(message);
+    setShowNotification(true);
+    
+    setTimeout(() => {
+      setShowNotification(false);
+    }, 5000);
+  };
 
   const fetchClassData = async () => {
       try {
@@ -58,6 +111,23 @@ const ClassDetail = () => {
       if (classId) {
         fetchClassData();
       }
+    }, [axiosPrivate, classId]);
+    const handleDeleteFlashcard = async (listId) => {
+
+        try {
+            await removeFlashcard(axiosPrivate, classId, listId);
+            await fetchClassData(); 
+            handleNotification('success', 'Đã xóa học phần khỏi lớp học');
+        } catch (error) {
+            console.error('Error deleting flashcard:', error);
+            handleNotification('error', 'Có lỗi xảy ra khi xóa học phần');
+        }
+    };
+
+    useEffect(() => {
+        if (classId) {
+            fetchClassData();
+        }
     }, [axiosPrivate, classId]);
 
   if (error) {
@@ -84,6 +154,33 @@ const ClassDetail = () => {
   return (
     <main className='min-h-screen flex flex-col'>
       <DefaultHeader />
+
+      {/* Notification */}
+      {showNotification && (
+        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ${
+          notificationType === 'success' 
+            ? 'bg-green-500 text-white' 
+            : 'bg-red-500 text-white'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <span className="mr-2">
+                {notificationType === 'success' ? '✓' : '✕'}
+              </span>
+              <span className="font-medium">
+                {notificationType === 'success' ? 'Thành công' : 'Lỗi'}
+              </span>
+            </div>
+            <button 
+              onClick={() => setShowNotification(false)}
+              className="ml-4 text-white hover:text-gray-200"
+            >
+              ×
+            </button>
+          </div>
+          <p className="text-sm mt-1">{notificationMessage}</p>
+        </div>
+      )}
 
       <div className="bg-white shadow-sm border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-6 py-12 text-center mb-8">
@@ -123,17 +220,25 @@ const ClassDetail = () => {
           
           <div className="flex justify-center">
             <div className="w-full max-w-2xl">
-              <div className='flex items-center justify-center mb-4'>
+              <div className='flex items-center justify-center gap-4 mb-4'>
                 {loading ? (
-                  <div className="animate-pulse">
+                  <div className="animate-pulse flex gap-4">
+                    <div className="h-10 bg-gray-200 rounded w-32"></div>
                     <div className="h-10 bg-gray-200 rounded w-32"></div>
                   </div>
                 ) : (
-                  <InviteActions onMemberAdded={() => fetchClassData()} />
+                  <>
+                    <InviteActions onMemberAdded={() => fetchClassData()} />
+                   <IoIosAddCircleOutline 
+                      size={60} 
+                      onClick={openAddFlashcardModal}
+                      className='cursor-pointer text-red-700 hover:text-red-800 transition-colors duration-300'
+                      />
+                  </>
                 )}
-              </div>
+              </div>             
             </div>
-          </div>
+            </div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
@@ -157,14 +262,27 @@ const ClassDetail = () => {
             {loading ? (
               <FlashcardSkeleton />
             ) : (
-              <ListFlashcard 
-                lists={classData?.lists} 
-                createdBy={classData?.createdBy} 
-              />
+               <ListFlashcard 
+                  lists={classData?.lists} 
+                  createdBy={classData?.createdBy}
+                  currentUserId={user?.id} 
+                  classCreatorId={classData?.createdBy?.user_id}
+                  onDeleteFlashcard={handleDeleteFlashcard}
+                />
             )}
           </div>
         </div>
       </div>
+
+      <AddFlashcardToClass
+        isOpen={isAddFlashcardOpen}
+        onClose={closeAddFlashcardModal}
+        onAddFlashcard={handleAddSubject}
+        onCreateNew={handleCreateNew}
+        onSuccess={fetchClassData} 
+        onNotification={handleNotification} 
+        classId={classId}
+      />
     </main>
   );
 };
