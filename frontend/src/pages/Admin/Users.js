@@ -125,7 +125,7 @@ const UserDetailModal = ({ user, isOpen, onClose }) => {
                   <span className="text-sm font-medium">Trạng thái</span>
                 </div>
                 <p className="text-gray-800">
-                  {user.verified === 1 ? 'Đã kích hoạt' : 'Chưa kích hoạt'}
+                  {user.verified ? 'Đã kích hoạt' : 'Chưa kích hoạt'}
                 </p>
               </div>
             </div>
