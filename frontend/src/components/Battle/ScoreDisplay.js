@@ -17,8 +17,8 @@ const ScoreDisplay = memo(({ player, opponent }) => {
           <div className="flex items-center">
             <motion.span 
               key={`player-${player.score}`}
-              initial={{ scale: 1.2 }}
-              animate={{ scale: 1 }}
+              // initial={{ scale: 1.2 }}
+              // animate={{ scale: 1 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
               className="font-bold text-lg text-gray-900"
             >
@@ -40,8 +40,8 @@ const ScoreDisplay = memo(({ player, opponent }) => {
           <div className="flex items-center justify-end">
             <motion.span 
               key={`opponent-${opponent.score}`}
-              initial={{ scale: 1.2 }}
-              animate={{ scale: 1 }}
+              // initial={{ scale: 1.2 }}
+              // animate={{ scale: 1 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
               className="font-bold text-lg text-gray-900"
             >

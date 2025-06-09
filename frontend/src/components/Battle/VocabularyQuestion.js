@@ -46,8 +46,8 @@ const VocabularyQuestion = ({
   return (
     <motion.div
       key={`question-${currentQuestion}`}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      // initial={{ opacity: 0, y: 20 }}
+      // animate={{ opacity: 1, y: 0 }}
       className="bg-white rounded-2xl shadow-xl overflow-hidden"
     >
       <div className="p-6 border-b border-gray-100">
@@ -71,8 +71,8 @@ const VocabularyQuestion = ({
         </div>
         
         <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          // initial={{ opacity: 0 }}
+          // animate={{ opacity: 1 }}
           className="bg-indigo-50 rounded-lg p-4"
         >
           <p className="font-medium text-gray-700 mb-1">Chọn nghĩa đúng:</p>
