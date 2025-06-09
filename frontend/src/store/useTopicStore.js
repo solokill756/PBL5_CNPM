@@ -5,6 +5,11 @@ const useTopicStore = create((set, get) => ({
   categories: [],
   currentTopic: null,
   topicVocabularies: [],
+  // Thêm lastRefreshTime để track lần refresh gần nhất
+  lastRefreshTime: 0,
+  
+  // Thêm flag để detect khi cần refresh
+  needsRefresh: false,
 
   // User level data
   userLevel: {
@@ -40,6 +45,10 @@ const useTopicStore = create((set, get) => ({
 
   // Flashcard sets
   flashcardSets: [],
+
+  markNeedsRefresh: () => {
+    set({ needsRefresh: true });
+  },
 
   setLoadingState: (key, value) =>
     set((state) => ({
@@ -393,6 +402,14 @@ const useTopicStore = create((set, get) => ({
 
       await apiCall();
 
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user_data_updated', Date.now().toString());
+        // Remove sau 1 giây để cleanup
+        setTimeout(() => {
+          localStorage.removeItem('user_data_updated');
+        }, 1000);
+      }
+
       return !isCurrentlyLearned;
     } catch (error) {
       console.error("Error updating learning status:", error);
@@ -598,18 +615,23 @@ const useTopicStore = create((set, get) => ({
 
   initializeUserData: async (axios, forceRefresh = false) => {
     try {
-      // Kiểm tra cache và điều kiện refresh
       const state = get();
-      const hasValidCache = state.categories.length > 0 && 
-                           state.userLevel.user_id && 
-                           !forceRefresh;
+      const now = Date.now();
+      const timeSinceLastRefresh = now - state.lastRefreshTime;
+      const shouldRefresh = forceRefresh || 
+                           state.needsRefresh || 
+                           timeSinceLastRefresh > 60000 || // Refresh mỗi 1 phút
+                           !state.categories.length || 
+                           !state.userLevel.user_id;
 
-      if (hasValidCache) {
+      if (!shouldRefresh) {
         return;
       }
 
-      // Clear error trước khi bắt đầu
-      set({ error: null });
+      console.log("🔄 Refreshing user data...");
+      
+      // Clear error và needsRefresh flag
+      set({ error: null, needsRefresh: false });
 
       // Thực hiện fetch song song với timeout
       const fetchWithTimeout = (promise, timeout = 10000) => {
@@ -628,7 +650,7 @@ const useTopicStore = create((set, get) => ({
 
       const results = await Promise.allSettled(promises);
 
-      // Xử lý kết quả thông minh hơn
+      // Xử lý kết quả
       let hasError = false;
       let errorMessage = '';
 
@@ -651,6 +673,9 @@ const useTopicStore = create((set, get) => ({
       // Nếu có ít nhất 1 request thành công, tính toán stats
       if (!hasError || (results[0].status === 'fulfilled' || results[1].status === 'fulfilled')) {
         get().calculateUserStats();
+        
+        // Update lastRefreshTime
+        set({ lastRefreshTime: now });
       }
 
       // Chỉ set error nếu cả 2 requests đều fail
@@ -733,5 +758,18 @@ const useTopicStore = create((set, get) => ({
   // Clear error
   clearError: () => set({ error: null }),
 }));
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('focus', () => {
+    const { markNeedsRefresh } = useTopicStore.getState();
+    markNeedsRefresh();
+  });
+
+  // Listen for browser back/forward navigation
+  window.addEventListener('popstate', () => {
+    const { markNeedsRefresh } = useTopicStore.getState();
+    markNeedsRefresh();
+  });
+}
 
 export default useTopicStore;

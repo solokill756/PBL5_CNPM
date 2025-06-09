@@ -54,7 +54,7 @@ const Home = () => {
                       type="lớp học" 
                       customMessage="Bạn chưa có lớp học gần đây nào"
                       actionText="Tham gia lớp học"
-                      actionPath="/class"
+                      actionPath="/classes"
                     />
                   </div>
                 )}
@@ -71,7 +71,7 @@ const Home = () => {
                       type="flashcard" 
                       customMessage="Bạn chưa có flashcard gần đây nào"
                       actionText="Tạo flashcard"
-                      actionPath="/flashcard/create"
+                      actionPath="/add-flashcard"
                     />
                   ) : null}
                 </div>

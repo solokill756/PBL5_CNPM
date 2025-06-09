@@ -48,6 +48,39 @@ const TopicDetail = () => {
   const isLearningUpdating = loadingStates.learningUpdate;
 
   useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Khi user quay lại tab, mark cần refresh
+        const { markNeedsRefresh } = useTopicStore.getState();
+        markNeedsRefresh();
+        
+        // Refresh user level để lấy điểm mới nhất
+        setTimeout(async () => {
+          try {
+            await refreshUserLevel(axios);
+          } catch (error) {
+            console.error("Error refreshing user level:", error);
+          }
+        }, 100);
+      }
+    };
+
+    const handleFocus = () => {
+      // Khi window được focus, cũng mark cần refresh
+      const { markNeedsRefresh } = useTopicStore.getState();
+      markNeedsRefresh();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [axios, refreshUserLevel]);
+
+  useEffect(() => {
     const fetchTopicData = async () => {
       try {
         await fetchVocabularyByTopic(axios, topicId);
