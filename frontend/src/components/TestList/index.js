@@ -14,49 +14,6 @@ const shuffleArray = (array) => {
   }
   return shuffled;
 };
-const LoadingSkeleton = () => {
-  return (
-    <div className="fixed inset-0 bg-white z-50 flex items-center justify-center">
-      <div className="max-w-4xl w-full mx-4">
-        {/* Header skeleton */}
-        <div className="text-center mb-8">
-          <div className="h-8 bg-gray-200 rounded-lg w-64 mx-auto mb-4 animate-pulse"></div>
-          <div className="h-4 bg-gray-200 rounded w-48 mx-auto animate-pulse"></div>
-        </div>
-
-        {/* Score circle skeleton */}
-        <div className="flex justify-center mb-8">
-          <div className="w-48 h-48 bg-gray-200 rounded-full animate-pulse flex items-center justify-center">
-            <div className="w-32 h-32 bg-gray-300 rounded-full animate-pulse"></div>
-          </div>
-        </div>
-
-        {/* Stats skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-gray-50 p-6 rounded-xl">
-              <div className="h-6 bg-gray-200 rounded w-24 mx-auto mb-2 animate-pulse"></div>
-              <div className="h-8 bg-gray-200 rounded w-16 mx-auto animate-pulse"></div>
-            </div>
-          ))}
-        </div>
-
-        {/* Buttons skeleton */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <div className="h-12 bg-gray-200 rounded-full w-48 animate-pulse"></div>
-          <div className="h-12 bg-gray-200 rounded-full w-48 animate-pulse"></div>
-        </div>
-
-        {/* Loading text */}
-        <div className="text-center mt-8">
-          <div className="flex items-center justify-center space-x-2">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const LoadingSkeleton = () => {
   return (
