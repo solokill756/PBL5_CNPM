@@ -5,6 +5,7 @@ import {
   getRecentFlashcards,
   getTopAuthor,
   getTopTopicsByUser,
+  searchData,
 } from "../../controllers/User/homePageController";
 import { authenticateToken } from "../../middleware/authMiddleware";
 
@@ -26,6 +27,10 @@ homePageRoutes.get("/topAuthor", (req: Request, res: Response) => {
 
 homePageRoutes.get("/getTopTopicsByUser", (req: Request, res: Response) => {
   getTopTopicsByUser(req, res);
+});
+
+homePageRoutes.get("/search", (req: Request, res: Response) => {
+  searchData(req, res);
 });
 
 export default homePageRoutes;

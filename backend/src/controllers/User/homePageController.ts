@@ -4,6 +4,7 @@ import {
   getRecentFlashcardsService,
   getTopAuthorService,
   getTopTopicsByUserService,
+  searchDataService,
 } from "../../services/User/homePageService";
 import { sendError, sendSuccess } from "../../middleware/responseFormatter";
 const getRecentClasses = async (req: Request, res: Response): Promise<any> => {
@@ -58,9 +59,25 @@ const getTopTopicsByUser = async (
   }
 };
 
+const searchData = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const value = req.query.value;
+    if (typeof value !== "string") {
+      sendError(res, "Invalid search value", 400);
+      return;
+    }
+    const data = await searchDataService(value.trim());
+    sendSuccess(res, data);
+  } catch (error: any) {
+    console.log(error);
+    sendError(res, error.message, 500);
+  }
+};
+
 export {
   getRecentClasses,
   getRecentFlashcards,
   getTopAuthor,
   getTopTopicsByUser,
+  searchData,
 };
