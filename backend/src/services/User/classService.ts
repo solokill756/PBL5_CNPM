@@ -27,7 +27,11 @@ const getClassById = async (class_id: string) => {
           "flashcardCount",
         ],
         [Sequelize.col("listFlashcard.created_at"), "created_at"],
-        [Sequelize.col("listFlashcard.user_id"), "created_by"],
+        [Sequelize.col("listFlashcard.user.username"), "created_by_username"],
+        [
+          Sequelize.col("listFlashcard.user.profile_picture"),
+          "profile_picture",
+        ],
       ],
       include: [
         {
@@ -39,6 +43,10 @@ const getClassById = async (class_id: string) => {
               as: "Flashcard",
               attributes: [],
             },
+            {
+              model: db.user,
+              attributes: [],
+            },
           ],
         },
       ],
@@ -46,6 +54,8 @@ const getClassById = async (class_id: string) => {
         "listFlashCardClass.list_id",
         "listFlashcard.title",
         "listFlashcard.description",
+        "listFlashcard.user.username",
+        "listFlashcard.user.profile_picture",
       ],
       subSquery: false,
     });
@@ -72,7 +82,7 @@ const addClass = async (
       description: decription,
       create_at: new Date(),
     });
-    await db.classMenber.create({
+    await db.classMember.create({
       class_id: newClass.class_id,
       user_id,
       create_at: new Date(),

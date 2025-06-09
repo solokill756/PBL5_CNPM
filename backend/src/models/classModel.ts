@@ -57,9 +57,13 @@ export default (sequelize: Sequelize) => {
       indexes: [
         {
           unique: true,
-          fields: ["class_id"]
-        }
-      ]
+          fields: ["class_id"],
+        },
+        {
+          unique: false,
+          fields: ["class_name"],
+        },
+      ],
     }
   );
 

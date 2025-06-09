@@ -41,6 +41,7 @@ passport.use(
             email: newUser.email,
             user_id: newUser.user_id,
             tokenVersion: 0,
+            level: newUser.current_level,
           };
           return done(null, {
             accessToken: generateAccessToken(userPayload),
@@ -54,6 +55,7 @@ passport.use(
             email: userData.email,
             user_id: userData.user_id,
             tokenVersion: userData.tokenVersion,
+            level: userData.current_level,
           };
           return done(null, {
             accessToken: generateAccessToken(payLoad),

@@ -208,20 +208,27 @@ const getAlToFindVocabulary = async (
           description: data.data.description.trim(),
         });
       }
-      const result = await db.vocabulary.create({
-        word: data.data.word,
-        pronunciation: data.data.pronunciation,
-        meaning: data.data.meaning,
-        example: data.data.example,
-        usage: data.data.usage,
-        example_meaning: data.data.example_meaning,
-        level: data.data.level,
-        type: data.data.type,
-        topic_id: findTopic.topic_id,
-        ai_suggested: "1",
-        language: "Japanese",
+      let result = await db.vocabulary.findOne({
+        where: {
+          word: data.data.word.trim(),
+        },
       });
-      await addHistorySearch(user_id, result.vocabulary_id);
+      if (!result) {
+        result = await db.vocabulary.create({
+          word: data.data.word,
+          pronunciation: data.data.pronunciation,
+          meaning: data.data.meaning,
+          example: data.data.example,
+          usage: data.data.usage,
+          example_meaning: data.data.example_meaning,
+          level: data.data.level,
+          type: data.data.type,
+          topic_id: findTopic.topic_id,
+          ai_suggested: "1",
+          language: "Japanese",
+        });
+      }
+      await addHistorySearch(user_id, result.vocab_id);
     }
     if (language == "Vietnamese") {
       const findTopic = await db.vocabularyTopic.findOne({
@@ -233,20 +240,27 @@ const getAlToFindVocabulary = async (
           description: data.data.description.trim(),
         });
       }
-      const result = await db.vocabulary.create({
-        word: data.data.meaning,
-        meaning: data.data.word,
-        type: data.data.type,
-        topic_id: findTopic.topic_id,
-        pronunciation: data.data.pronunciation,
-        example: data.data.example,
-        usage: data.data.usage,
-        example_meaning: data.data.example_meaning,
-        level: data.data.level,
-        ai_suggested: "1",
-        language: "Vietnamese",
+      let result = await db.vocabulary.findOne({
+        where: {
+          word: data.data.word.trim(),
+        },
       });
-      await addHistorySearch(user_id, result.vocabulary_id);
+      if (!result) {
+        result = await db.vocabulary.create({
+          word: data.data.meaning,
+          meaning: data.data.word,
+          type: data.data.type,
+          topic_id: findTopic.topic_id,
+          pronunciation: data.data.pronunciation,
+          example: data.data.example,
+          usage: data.data.usage,
+          example_meaning: data.data.example_meaning,
+          level: data.data.level,
+          ai_suggested: "1",
+          language: "Vietnamese",
+        });
+      }
+      await addHistorySearch(user_id, result.vocab_id);
     }
     return data.data;
   } catch (error) {
@@ -297,7 +311,7 @@ const checkLevelUser = async (user_id: string, new_points: number) => {
       }
       await db.user.update(
         {
-          level,
+          current_level: level,
           total_points: userTotalPoints > 0 ? userTotalPoints : 0,
           levelThreshold: userLevelThreshold,
         },
