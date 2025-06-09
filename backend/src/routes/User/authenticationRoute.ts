@@ -54,9 +54,21 @@ authRoutes.post("/resetPassword", (req: Request, res: Response) =>
 );
 
 authRoutes.get("/user", (req: Request, res: Response) => {
+  console.log("Session ID:", req.sessionID);
+  console.log("Session data:", req.session);
+  console.log("User in request:", req.user);
+  console.log("Headers:", req.headers);
+
   const user = req.user;
   if (!user) {
-    res.status(401).json({ message: "Unauthorized" });
+    res.status(401).json({
+      message: "Unauthorized",
+      debug: {
+        sessionID: req.sessionID,
+        hasSession: !!req.session,
+        cookies: req.cookies,
+      },
+    });
   } else {
     res.status(200).json({ user });
   }

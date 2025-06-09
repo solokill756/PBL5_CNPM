@@ -147,7 +147,10 @@ const getTopAuthorService = async (): Promise<any> => {
   }
 };
 
-const getTopTopicsByUserService = async (userId: string): Promise<any> => {
+const getTopTopicsByUserService = async (
+  userId: string,
+  level: Number
+): Promise<any> => {
   try {
     const result = await db.vocabularyTopic.findAll({
       include: [
@@ -170,6 +173,7 @@ const getTopTopicsByUserService = async (userId: string): Promise<any> => {
       limit: 5,
       where: {
         is_show: true,
+        require_level: level,
       },
     });
 

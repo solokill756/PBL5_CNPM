@@ -45,28 +45,85 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
       next(new Error("No token provided"));
     }
   });
+
   // Xử lý kết nối mới
   io.on("connection", (socket: any) => {
     console.log(`🔌 User ${socket.username} connected (ID: ${socket.id})`);
 
-    //)
     // Tham gia hàng đợi tìm trận
     socket.on("join_queue", async (_data: any) => {
+      // Kiểm tra user đã ở trong hàng đợi chưa
+      const alreadyInQueue = wattingPlayers.some(
+        (p: any) => p.user_id === socket.user_id
+      );
+      if (alreadyInQueue) {
+        socket.emit("queue_joined", {
+          position:
+            wattingPlayers.findIndex((p: any) => p.user_id === socket.user_id) +
+            1,
+        });
+        console.log(`⏳ ${socket.username} already in queue.`);
+        return;
+      }
+
+      // Kiểm tra user đã ở trong phòng chưa
+      for (let [roomId, gameRoom] of gameRooms) {
+        const playerInRoom = gameRoom.players.find(
+          (p: any) => p.user_id === socket.user_id
+        );
+        if (playerInRoom) {
+          console.log(`🎮 ${socket.username} already in game room ${roomId}`);
+          // Cập nhật socket ID mới cho player
+          playerInRoom.id = socket.id;
+          socket.join(roomId);
+
+          // Gửi lại thông tin phòng
+          const opponent = gameRoom.players.find(
+            (p: any) => p.user_id !== socket.user_id
+          );
+          socket.emit("game_found", {
+            roomId,
+            player: {
+              username: playerInRoom.username,
+              user_id: playerInRoom.user_id,
+              profile_picture: playerInRoom.profile_picture,
+            },
+            opponent: opponent
+              ? {
+                  username: opponent.username,
+                  user_id: opponent.user_id,
+                  profile_picture: opponent.profile_picture,
+                }
+              : null,
+            totalQuestions: gameRoom.questions.length,
+          });
+          return;
+        }
+      }
+
       const player = {
         id: socket.id,
         user_id: socket.user_id,
         username: socket.username,
         profile_picture: socket.profile_picture,
       };
-      // Tìm đối thủ ngẫu nhiên
+
+      // Tìm đối thủ ngẫu nhiên (loại trừ chính mình)
+      const availableOpponents = wattingPlayers.filter(
+        (p: any) => p.user_id !== socket.user_id
+      );
       const opponentIndex =
-        wattingPlayers.length > 0
-          ? Math.floor(Math.random() * wattingPlayers.length)
+        availableOpponents.length > 0
+          ? Math.floor(Math.random() * availableOpponents.length)
           : -1;
 
       if (opponentIndex !== -1) {
-        const opponent = wattingPlayers[opponentIndex];
-        wattingPlayers.splice(opponentIndex, 1); // Xóa đối thủ khỏi hàng đợi
+        const opponent = availableOpponents[opponentIndex];
+        // Xóa đối thủ khỏi hàng đợi
+        const realOpponentIndex = wattingPlayers.findIndex(
+          (p: any) => p.user_id === opponent.user_id
+        );
+        wattingPlayers.splice(realOpponentIndex, 1);
 
         // Tạo phòng đấu
         const roomId = `room_${Date.now()}_${Math.random()
@@ -82,6 +139,7 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
             });
             return;
           }
+
           const gameRoom = {
             id: roomId,
             players: [opponent, player],
@@ -155,6 +213,7 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
         );
       }
     });
+
     // Sẵn sàng bắt đầu game
     socket.on("ready_to_start", (data: any) => {
       const gameRoom = gameRooms.get(data.roomId);
@@ -163,27 +222,41 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
         return;
       }
 
+      // Kiểm tra player có trong phòng không
+      const playerInRoom = gameRoom.players.find(
+        (p: any) => p.user_id === socket.user_id
+      );
+      if (!playerInRoom) {
+        socket.emit("error", { message: "Bạn không ở trong phòng này" });
+        return;
+      }
+
       console.log(`🚀 Starting game in room ${data.roomId}`);
       gameRoom.status = "playing";
       gameRoom.questionStartTime = Date.now();
+
       // Gửi câu hỏi đầu tiên
       io.to(data.roomId).emit("game_started", {
         question: gameRoom.questions[0],
         questionNumber: 1,
         totalQuestions: gameRoom.questions.length,
       });
-
-      // Đặt timer cho câu hỏi (10 giây)
-      // setTimeout(() => {
-      //   handleQuestionTimeout(data.roomId);
-      // }, 10000);
     });
+
     socket.on("submit_answer", (data: any) => {
       const gameRoom = gameRooms.get(data.roomId);
       if (!gameRoom || gameRoom.status !== "playing") return;
+
+      // Kiểm tra player có trong phòng không
+      const playerInRoom = gameRoom.players.find(
+        (p: any) => p.user_id === socket.user_id
+      );
+      if (!playerInRoom) return;
+
       const currentQ = gameRoom.questions[gameRoom.currentQuestion];
       const isCorrect = data.answer === currentQ.correct_answer;
       const responseTime = Date.now() - gameRoom.questionStartTime;
+
       console.log(
         `💡 ${socket.username} answered ${data.answer} (${
           isCorrect ? "correct" : "wrong"
@@ -214,23 +287,25 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
         handleQuestionComplete(data.roomId);
       }
     });
+
     // Rời khỏi hàng đợi
     socket.on("leave_queue", () => {
       const playerIndex = wattingPlayers.findIndex(
-        (p: any) => p.id === socket.id
+        (p: any) => p.user_id === socket.user_id
       );
       if (playerIndex !== -1) {
         wattingPlayers.splice(playerIndex, 1);
         console.log(`🚪 ${socket.username} left queue`);
       }
     });
+
     // Xử lý disconnect
     socket.on("disconnect", () => {
       console.log(`🔌 ${socket.username} disconnected`);
 
       // Xóa khỏi hàng đợi
       const playerIndex = wattingPlayers.findIndex(
-        (p: any) => p.id === socket.id
+        (p: any) => p.user_id === socket.user_id
       );
       if (playerIndex !== -1) {
         wattingPlayers.splice(playerIndex, 1);
@@ -239,6 +314,7 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
       // Xử lý disconnect trong game
       handlePlayerDisconnect(socket);
     });
+
     const handleQuestionComplete = (roomId: string) => {
       const gameRoom = gameRooms.get(roomId);
       if (!gameRoom) return;
@@ -272,43 +348,13 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
             question: gameRoom.questions[gameRoom.currentQuestion],
             questionNumber: gameRoom.currentQuestion + 1,
           });
-
-          // Timer cho câu hỏi mới
-          // setTimeout(() => {
-          //   handleQuestionTimeout(roomId);
-          // }, 10000);
         }, 3000);
       } else {
         // Kết thúc game
         endGame(roomId);
       }
     };
-    // const handleQuestionTimeout = (roomId: string) => {
-    //   const gameRoom = gameRooms.get(roomId);
-    //   if (!gameRoom) return;
 
-    //   const answeredCount = Object.keys(gameRoom.answers).length;
-
-    //   if (answeredCount < 2) {
-    //     console.log(
-    //       `⏰ Question timeout in room ${roomId}. Answered: ${answeredCount}/2`
-    //     );
-
-    //     // Tự động submit cho những người chưa trả lời
-    //     gameRoom.players.forEach((player: any) => {
-    //       if (!gameRoom.answers[player.user_id]) {
-    //         gameRoom.answers[player.user_id] = {
-    //           answer: null,
-    //           isCorrect: false,
-    //           points: 0,
-    //           responseTime: 10000,
-    //         };
-    //       }
-    //     });
-
-    //     handleQuestionComplete(roomId);
-    //   }
-    // };
     const endGame = async (roomId: string) => {
       const gameRoom = gameRooms.get(roomId);
       if (!gameRoom) return;
@@ -316,16 +362,16 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
       const players = gameRoom.players;
       const finalScores = gameRoom.scores;
 
-      // Xác định người thắng
+      // Xác định người thắng (trả về user_id)
       const [player1, player2] = players;
       const score1 = finalScores[player1.user_id];
       const score2 = finalScores[player2.user_id];
 
-      let winner = null;
+      let winner: string | null = null;
       if (score1 > score2) {
-        winner = player1;
+        winner = player1.user_id;
       } else if (score2 > score1) {
-        winner = player2;
+        winner = player2.user_id;
       }
       // Nếu hòa thì winner = null
 
@@ -333,40 +379,38 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
       console.log(
         `📊 Final scores: ${player1.username}: ${score1}, ${player2.username}: ${score2}`
       );
-      console.log(`🏆 Winner: ${winner ? winner.username : "Draw"}`);
+      console.log(
+        `🏆 Winner: ${
+          winner
+            ? winner === player1.user_id
+              ? player1.username
+              : player2.username
+            : "Draw"
+        }`
+      );
 
       // Cập nhật điểm vào database
       try {
         for (const player of players) {
-          const isWinner = winner && winner.user_id === player.user_id;
+          const isWinner = winner && winner === player.user_id;
           const points = finalScores[player.user_id];
-          // const opponentId = players.find(
-          //   (p: any) => p.user_id !== player.user_id
-          // )?.user_id;
 
           await gameService.updatePlayScore(
             player.user_id,
             points,
-            isWinner
-            // opponentId
+            isWinner as boolean
           );
         }
       } catch (error) {
         console.error("❌ Error updating scores:", error);
       }
 
-      // Gửi kết quả cuối game
-      // io.to(roomId).emit("game_ended", {
-      //   winner,
-      //   finalScores,
-      //   totalQuestions: gameRoom.questions.length,
-      //   isDraw: !winner,
-      // });
+      // Gửi kết quả cuối game cho từng player
       for (const player of gameRoom.players) {
         const opponent = gameRoom.players.find(
           (p: any) => p.user_id !== player.user_id
         );
-        io.to(player.socket_id).emit("game_ended", {
+        io.to(player.id).emit("game_ended", {
           winner,
           finalScores,
           totalQuestions: gameRoom.questions.length,
@@ -394,11 +438,12 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
         console.log(`🧹 Cleaned up room ${roomId}`);
       }, 30000); // Xóa phòng sau 30 giây
     };
+
     function handlePlayerDisconnect(socket: any) {
       // Tìm game room của player
       for (let [roomId, gameRoom] of gameRooms) {
         const playerInRoom = gameRoom.players.find(
-          (p: any) => p.id === socket.id
+          (p: any) => p.user_id === socket.user_id
         );
         if (playerInRoom) {
           console.log(
@@ -406,24 +451,29 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
           );
 
           const remainingPlayer = gameRoom.players.find(
-            (p: any) => p.id !== socket.id
+            (p: any) => p.user_id !== socket.user_id
           );
           const disconnectedPlayer = gameRoom.players.find(
-            (p: any) => p.id === socket.id
+            (p: any) => p.user_id === socket.user_id
           );
 
           // Chuẩn hóa finalScores giống endGame
           const finalScores: Record<string, number> = {};
           if (remainingPlayer) {
             finalScores[remainingPlayer.user_id] =
-              gameRoom.scores[remainingPlayer.user_id];
+              gameRoom.scores[remainingPlayer.user_id] ?? 0;
           }
           if (disconnectedPlayer) {
             finalScores[disconnectedPlayer.user_id] = 0;
           }
 
+          // Winner phải là user_id, không phải object
+          const winner: string | null = remainingPlayer
+            ? remainingPlayer.user_id
+            : null;
+
           socket.to(roomId).emit("opponent_disconnected", {
-            winner: remainingPlayer ?? null,
+            winner,
             finalScores,
             totalQuestions: gameRoom.questions?.length ?? 0,
             isDraw: false,
@@ -432,7 +482,7 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
                   user_id: remainingPlayer.user_id,
                   username: remainingPlayer.username,
                   profile_picture: remainingPlayer.profile_picture,
-                  score: remainingPlayer.score ?? 0,
+                  score: finalScores[remainingPlayer.user_id] ?? 0,
                 }
               : null,
             opponent: disconnectedPlayer
@@ -446,16 +496,12 @@ export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
           });
 
           // Trao chiến thắng cho đối thủ
-          const opponent = gameRoom.players.find(
-            (p: any) => p.id !== socket.id
-          );
-          if (opponent && gameRoom.status === "playing") {
+          if (remainingPlayer && gameRoom.status === "playing") {
             gameService
               .updatePlayScore(
-                opponent.user_id,
-                gameRoom.scores[opponent.user_id],
+                remainingPlayer.user_id,
+                gameRoom.scores[remainingPlayer.user_id] ?? 0,
                 true
-                // playerInRoom.user_id
               )
               .catch(console.error);
           }

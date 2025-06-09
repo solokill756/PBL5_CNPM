@@ -40,7 +40,7 @@ app.use(
     secret: process.env.SESSION_SECRET || "mysecret", // Đặt một chuỗi bí mật để mã hóa session
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false }, // Đặt thành `true` nếu dùng HTTPS
+    cookie: { secure: true, sameSite: "none", maxAge: 24 * 60 * 60 * 1000 }, // Đặt thành `true` nếu dùng HTTPS
   })
 );
 
@@ -61,6 +61,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Middleware
+app.set("trust proxy", 1);
 app.use(cors(corOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
