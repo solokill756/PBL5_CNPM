@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
@@ -26,12 +26,11 @@ const TopicDetail = () => {
     currentTopic,
     topicVocabularies,
     loadingStates,
-    checkLevel,
     refreshUserLevel,
-    updateCategoryProgress,
     userLevel,
-    markTopicTestCompleted, // Sửa tên function
-    hasTopicTestCompleted, // Thêm function này
+    hasTopicTestCompleted,
+    initializeUserData,
+    getNextLevelRewards,
   } = useTopicStore();
 
   const [selectedVocabulary, setSelectedVocabulary] = useState(null);
@@ -41,87 +40,61 @@ const TopicDetail = () => {
   const [showFlashcardModal, setShowFlashcardModal] = useState(false);
   const [showTopicCompletedModal, setShowTopicCompletedModal] = useState(false);
   const [topicCompletedResults, setTopicCompletedResults] = useState(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Loading states
-  const isLoading = loadingStates.topicVocabularies;
-  const isBookmarkUpdating = loadingStates.bookmarkUpdate;
-  const isLearningUpdating = loadingStates.learningUpdate;
+  // Tracking refs
+  const previousLearnedCount = useRef(null);
+  const topicInitialized = useRef(false);
+  const currentTopicIdRef = useRef(null);
+  const initializationRef = useRef(false);
 
+  const isLoading = loadingStates.topicVocabularies || 
+                   loadingStates.initializing ||
+                   (!userLevel.user_id && loadingStates.userLevel);
+
+  // Reset tracking khi topic thay đổi
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        // Khi user quay lại tab, mark cần refresh
-        const { markNeedsRefresh } = useTopicStore.getState();
-        markNeedsRefresh();
-        
-        // Refresh user level để lấy điểm mới nhất
-        setTimeout(async () => {
-          try {
-            await refreshUserLevel(axios);
-          } catch (error) {
-            console.error("Error refreshing user level:", error);
-          }
-        }, 100);
-      }
-    };
-
-    const handleFocus = () => {
-      // Khi window được focus, cũng mark cần refresh
-      const { markNeedsRefresh } = useTopicStore.getState();
-      markNeedsRefresh();
-    };
-
-    // Thêm listener cho navigation từ test page
-    const handleStorageChange = (e) => {
-      if (e.key === 'test_completed') {
-        // Khi test hoàn thành, reload completed tests
-        const { loadCompletedTopicTests, userLevel } = useTopicStore.getState();
-        loadCompletedTopicTests(userLevel.user_id);
-        
-        // Force re-render component
-        setTimeout(() => {
-          window.location.reload();
-        }, 100);
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, [axios, refreshUserLevel]);
-
-  // Thêm useEffect để check test status khi component mount
-  useEffect(() => {
-    const checkTestStatus = () => {
-      const { loadCompletedTopicTests, userLevel } = useTopicStore.getState();
-      if (userLevel.user_id) {
-        loadCompletedTopicTests(userLevel.user_id);
-      }
-    };
-
-    if (topicId && userLevel.user_id) {
-      checkTestStatus();
+    if (currentTopicIdRef.current !== topicId) {
+      previousLearnedCount.current = null;
+      topicInitialized.current = false;
+      currentTopicIdRef.current = topicId;
+      setIsInitialized(false);
+      initializationRef.current = false;
     }
-  }, [topicId, userLevel.user_id]);
+  }, [topicId]);
 
+  // Parallel initialization
   useEffect(() => {
-    const fetchTopicData = async () => {
+    if (initializationRef.current) return;
+
+    const initialize = async () => {
       try {
-        await fetchVocabularyByTopic(axios, topicId);
+        initializationRef.current = true;
+        
+        // Parallel tasks
+        const tasks = [];
+        
+        // Initialize user data if needed
+        if (!userLevel.user_id) {
+          tasks.push(initializeUserData(axios));
+        }
+        
+        // Always fetch topic data
+        tasks.push(fetchVocabularyByTopic(axios, topicId));
+
+        await Promise.allSettled(tasks);
+        setIsInitialized(true);
       } catch (error) {
+        console.error("Error initializing topic detail:", error);
         addToast("Không thể tải dữ liệu chủ đề", TOAST_TYPES.ERROR);
+        initializationRef.current = false;
       }
     };
 
-    fetchTopicData();
-  }, [topicId, fetchVocabularyByTopic, axios]);
+    initialize();
+  }, [topicId, userLevel.user_id, initializeUserData, fetchVocabularyByTopic, axios, addToast]);
 
+  // Handle vocabulary selection
   useEffect(() => {
     if (topicVocabularies.length > 0 && !selectedVocabulary) {
       setSelectedVocabulary(topicVocabularies[0]);
@@ -136,29 +109,44 @@ const TopicDetail = () => {
     }
   }, [topicVocabularies, selectedVocabulary]);
 
+  // Initialize learned count tracking
   useEffect(() => {
-    if (topicVocabularies.length > 0) {
+    if (topicVocabularies.length > 0 && !topicInitialized.current) {
       const learnedCount = getLearnedCount();
-      const isTopicCompleted = learnedCount === topicVocabularies.length;
-  
-      if (isTopicCompleted) {
-        // Sửa key localStorage để specific cho từng topic và user
-        const { userLevel } = useTopicStore.getState();
-        const completionKey = `topic_completed_${topicId}_${userLevel.user_id}`;
-        const wasCompleted = localStorage.getItem(completionKey);
-        
-        if (!wasCompleted) {
-          localStorage.setItem(completionKey, "true");
-          setTopicCompletedResults({
-            topicName: currentTopic.name,
-            totalWords: topicVocabularies.length,
-            topicId: topicId,
-          });
-          setShowTopicCompletedModal(true);
-        }
-      }
+      previousLearnedCount.current = learnedCount;
+      topicInitialized.current = true;
     }
-  }, [topicVocabularies, currentTopic, topicId]);
+  }, [topicVocabularies, topicId]);
+
+  // Check completion when learned count increases
+  useEffect(() => {
+    if (
+      topicVocabularies.length > 0 && 
+      currentTopic && 
+      userLevel.user_id && 
+      topicInitialized.current
+    ) {
+      const currentLearnedCount = getLearnedCount();
+      const totalWords = topicVocabularies.length;
+      const hasAlreadyTakenTest = hasTopicTestCompleted(parseInt(topicId));
+      
+      if (
+        previousLearnedCount.current !== null &&
+        currentLearnedCount > previousLearnedCount.current &&
+        currentLearnedCount === totalWords &&
+        !hasAlreadyTakenTest
+      ) {
+        setTopicCompletedResults({
+          topicName: currentTopic.name,
+          totalWords: totalWords,
+          topicId: topicId,
+        });
+        setShowTopicCompletedModal(true);
+      }
+      
+      previousLearnedCount.current = currentLearnedCount;
+    }
+  }, [topicVocabularies, currentTopic, topicId, userLevel.user_id, hasTopicTestCompleted]);
 
   const calculateProgress = () => {
     if (!topicVocabularies || topicVocabularies.length === 0) return 0;
@@ -180,8 +168,6 @@ const TopicDetail = () => {
   };
 
   const handleToggleBookmark = async (vocabId) => {
-    if (isBookmarkUpdating) return;
-
     try {
       const vocab = topicVocabularies.find((v) => v.vocab_id === vocabId);
       const newBookmarkStatus = await toggleBookmark(axios, vocabId, topicId);
@@ -198,10 +184,8 @@ const TopicDetail = () => {
   };
 
   const handleWordLearned = async (vocabId) => {
-    // Prevent double-click bằng cách check loading state
     const isCurrentlyUpdating = loadingStates.learningUpdating.has(vocabId);
     if (isCurrentlyUpdating) {
-      console.log('Already processing, skipping...');
       return;
     }
 
@@ -217,7 +201,6 @@ const TopicDetail = () => {
         topicId
       );
 
-      // Chỉ show toast nếu thực sự có thay đổi
       if (newLearningStatus !== undefined && newLearningStatus !== wasLearned) {
         addToast(
           newLearningStatus
@@ -226,19 +209,20 @@ const TopicDetail = () => {
           TOAST_TYPES.SUCCESS
         );
 
-        // Stats đã được tự động cập nhật trong updateLearningStatus
-        // Không cần gọi calculateUserStats ở đây nữa
-
-        // Kiểm tra level up chỉ khi học từ mới
+        // Check level up khi word được học
         if (!wasLearned && newLearningStatus) {
           try {
+            // Parallel level check và achievement fetch nếu level up
             const levelResult = await refreshUserLevel(axios);
             if (levelResult.leveledUp) {
+              const achievements = await getNextLevelRewards(axios, levelResult.newLevel);
+
               setLevelUpResults({
                 oldLevel: levelResult.oldLevel,
                 newLevel: levelResult.newLevel,
                 totalPoints: levelResult.totalPoints,
                 wordsLearned: vocab.word,
+                achievements: achievements,
               });
               setShowLevelUpModal(true);
             }
@@ -253,8 +237,6 @@ const TopicDetail = () => {
   };
 
   const handleTakeTest = () => {
-    // Mark test completed cho topic này thay vì level
-    // markTopicTestCompleted(parseInt(topicId));
     navigate(`/vocabulary/topic/${topicId}/Test`);
   };
 
@@ -267,23 +249,24 @@ const TopicDetail = () => {
     if (action === "test") {
       navigate(`/vocabulary/topic/${topicId}/Test`);
     }
-    // Nếu action === 'continue' thì chỉ đóng modal
   };
 
   const handleTopicCompletedAction = (action) => {
     setShowTopicCompletedModal(false);
     if (action === "test") {
-      navigate(`/vocabulary/topic/${topicId}/Test`); // Chuyển đến trang test
+      navigate(`/vocabulary/topic/${topicId}/Test`);
     }
-    // Nếu action === 'continue' thì chỉ đóng modal
   };
 
-  if (isLoading) {
+  if (isLoading || !isInitialized) {
     return (
       <main className="flex flex-col justify-center items-center flex-grow">
         <div className="w-full max-w-6xl px-4 py-8">
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent"></div>
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mx-auto mb-4"></div>
+              <p className="text-gray-500">Đang tải chủ đề...</p>
+            </div>
           </div>
         </div>
       </main>
@@ -295,14 +278,7 @@ const TopicDetail = () => {
       <div className="w-full max-w-full px-12 py-4">
         <TopicHeader
           topic={currentTopic}
-          onBack={() =>
-            navigate("/vocabulary", {
-              state: {
-                fromTopicDetail: true,
-                topicId: topicId,
-              },
-            })
-          }
+          onBack={() => navigate("/vocabulary")}
           onTakeTest={handleTakeTest}
           onCreateFlashcard={handleCreateFlashcards}
           topicProgress={calculateProgress()}

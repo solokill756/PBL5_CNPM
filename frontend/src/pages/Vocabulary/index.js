@@ -7,116 +7,142 @@ import VocabularyDetail from "@/components/Vocabulary/VocabularyDetail";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import VocabularyLevel from "@/components/Vocabulary/VocabularyLevel";
 import useTopicStore from "@/store/useTopicStore";
-import { useLocation } from "react-router-dom";
 
 const Vocabulary = () => {
   const axios = useAxiosPrivate();
-  const location = useLocation();
+  const initializationRef = useRef(false);
+  const lastFocusTime = useRef(Date.now());
+  
   const {
     selectedWord,
     error: vocabError,
     clearResults,
   } = useVocabularyStore();
+  
   const {
     categories,
     userLevel,
     loadingStates,
     error,
     initializeUserData,
+    forceRefreshUserData,
+    markNeedsRefresh,
     clearError,
+    clearUserData,
+    needsRefresh,
   } = useTopicStore();
 
-  const [isInitializing, setIsInitializing] = useState(true);
-  const [hasInitialized, setHasInitialized] = useState(false);
-  const lastLocationKey = useRef(location.key);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  const isLoadingCategories = loadingStates.categories;
-  const isLoadingUserLevel = loadingStates.userLevel;
-  const isLoading = isLoadingCategories || isLoadingUserLevel;
+  const isLoading = loadingStates.initializing || 
+                   loadingStates.categories || 
+                   loadingStates.userLevel ||
+                   loadingStates.refreshing;
 
+  // Window focus listener để detect khi user quay lại từ trang khác
   useEffect(() => {
-    const shouldRefresh = () => {
-      const state = useTopicStore.getState();
-      return (
-        !hasInitialized ||
-        state.needsRefresh ||
-        lastLocationKey.current !== location.key ||
-        categories.length === 0 ||
-        !userLevel.user_id
-      );
+    const handleWindowFocus = async () => {
+      const currentTime = Date.now();
+      const timeSinceLastFocus = currentTime - lastFocusTime.current;
+      
+      // Chỉ refresh nếu user đi xa hơn 10 giây (có thể từ trang test/battle)
+      if (timeSinceLastFocus > 10000 && userLevel.user_id && isInitialized) {
+        console.log("🔄 User returned after", Math.round(timeSinceLastFocus / 1000), "seconds - refreshing data");
+        markNeedsRefresh();
+        
+        try {
+          await forceRefreshUserData(axios);
+        } catch (error) {
+          console.error("Error refreshing on focus:", error);
+        }
+      }
+      
+      lastFocusTime.current = currentTime;
     };
 
-    const initializeData = async () => {
-      if (shouldRefresh()) {
-        setIsInitializing(true);
+    const handleWindowBlur = () => {
+      lastFocusTime.current = Date.now();
+    };
 
-        try {
-          const forceRefresh = 
-            lastLocationKey.current !== location.key ||
-            categories.length === 0 ||
-            !userLevel.user_id ||
-            useTopicStore.getState().needsRefresh;
-
-          await initializeUserData(axios, forceRefresh);
-          setHasInitialized(true);
-          lastLocationKey.current = location.key;
-        } catch (error) {
-          console.error("Error initializing vocabulary page:", error);
-        } finally {
-          setIsInitializing(false);
-        }
+    // Add focus/blur listeners
+    window.addEventListener('focus', handleWindowFocus);
+    window.addEventListener('blur', handleWindowBlur);
+    
+    // Visibility change fallback
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        handleWindowFocus();
       } else {
-        setIsInitializing(false);
+        handleWindowBlur();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('focus', handleWindowFocus);
+      window.removeEventListener('blur', handleWindowBlur);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [userLevel.user_id, isInitialized, forceRefreshUserData, markNeedsRefresh, axios]);
+
+  // Single initialization with deduplication
+  useEffect(() => {
+    if (initializationRef.current) return;
+    
+    const initialize = async () => {
+      try {
+        initializationRef.current = true;
+        await initializeUserData(axios);
+        setIsInitialized(true);
+      } catch (error) {
+        console.error("Error initializing vocabulary page:", error);
+        initializationRef.current = false;
       }
     };
 
-    initializeData();
+    initialize();
 
     return () => {
       clearError();
     };
-  }, [
-    location.key,
-    location.state,
-    axios,
-    categories.length,
-    userLevel.user_id,
-    hasInitialized,
-    initializeUserData,
-    clearError,
-  ]);
+  }, [initializeUserData, axios, clearError]);
 
-  // Thêm effect để listen navigation từ các trang khác
+  // Handle user change với debouncing
   useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === 'user_data_updated') {
-        // Khi có signal từ localStorage, refresh data
-        const { markNeedsRefresh } = useTopicStore.getState();
-        markNeedsRefresh();
-        
-        setTimeout(async () => {
-          await initializeUserData(axios, true);
-        }, 100);
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
+    const currentUserId = userLevel.user_id;
     
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, [axios, initializeUserData]);
-
-  useEffect(() => {
-    if (
-      location.pathname === "/vocabulary" &&
-      !location.pathname.includes("/vocabulary/")
-    ) {
-      clearResults();
+    // Chỉ dùng sessionStorage để detect user change, không store toàn bộ data
+    const storedUserId = sessionStorage.getItem('currentUserId');
+    
+    if (currentUserId && storedUserId && currentUserId !== storedUserId) {
+      // User changed, clear old data
+      console.log("👤 User changed from", storedUserId, "to", currentUserId);
+      clearUserData();
+      setIsInitialized(false);
+      initializationRef.current = false;
     }
-  }, [location.pathname, clearResults]);
+    
+    if (currentUserId) {
+      sessionStorage.setItem('currentUserId', currentUserId);
+    }
+  }, [userLevel.user_id, clearUserData]);
 
-  if (isInitializing || (isLoading && categories.length === 0)) {
+  // Auto refresh when marked as needing refresh
+  useEffect(() => {
+    if (needsRefresh && userLevel.user_id && isInitialized) {
+      console.log("🔄 Auto refreshing due to needsRefresh flag");
+      forceRefreshUserData(axios);
+    }
+  }, [needsRefresh, userLevel.user_id, isInitialized, forceRefreshUserData, axios]);
+
+  // Clear search results only once
+  useEffect(() => {
+    clearResults();
+  }, [clearResults]);
+
+  // Show loading while initializing or when no data yet
+  if (!isInitialized || (isLoading && categories.length === 0 && !userLevel.user_id)) {
     return (
       <main className="flex flex-col items-center flex-grow scrollbar-hide">
         <DefaultHeader />
@@ -126,18 +152,19 @@ const Vocabulary = () => {
         <p className="text-center text-gray-600 mb-8">
           Học từ vựng tiếng Nhật cùng ITKotoba
         </p>
-
         <VocabularySearch />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-indigo-600 mx-auto mb-4"></div>
+            <p className="text-gray-500">
+              {loadingStates.refreshing ? "Đang cập nhật dữ liệu..." : "Đang tải dữ liệu..."}
+            </p>
           </div>
         </div>
       </main>
     );
   }
 
-  // Error state
   if (error) {
     return (
       <main className="flex flex-col items-center flex-grow scrollbar-hide">
@@ -150,9 +177,9 @@ const Vocabulary = () => {
             <p className="text-red-700 mb-4">{error}</p>
             <button
               onClick={() => {
-                setHasInitialized(false);
-                setIsInitializing(true);
-                initializeUserData(axios, true);
+                setIsInitialized(false);
+                initializationRef.current = false;
+                clearError();
               }}
               className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors"
             >
@@ -183,18 +210,8 @@ const Vocabulary = () => {
         </div>
       ) : (
         <div className="mt-8 max-w-full w-full px-10">
-          {/* Loading indicator cho user level */}
-          {isLoadingUserLevel ? (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-              <div className="animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/2 mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              </div>
-            </div>
-          ) : (
-            userLevel &&
-            userLevel.current_level && <VocabularyLevel userLevel={userLevel} />
+          {userLevel && userLevel.current_level && (
+            <VocabularyLevel userLevel={userLevel} />
           )}
 
           {vocabError && (
@@ -205,17 +222,17 @@ const Vocabulary = () => {
 
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold">Duyệt theo chủ đề</h2>
-            {isLoadingCategories && (
+            {isLoading && (
               <div className="flex items-center text-sm text-gray-500">
                 <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-indigo-600 mr-2"></div>
-                Đang cập nhật...
+                {loadingStates.refreshing ? "Đang cập nhật..." : "Đang tải..."}
               </div>
             )}
           </div>
 
           <CategoryGrid
             categories={categories}
-            loading={isLoadingCategories}
+            loading={isLoading}
             error={error}
             userLevel={userLevel}
           />

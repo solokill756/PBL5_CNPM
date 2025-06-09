@@ -119,7 +119,7 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
       setShuffledQuestions(shuffled);
       setCurrentAnswer({});
     }
-  }, [questions.length]); 
+  }, [questions.length]);
 
   useEffect(() => {
     if (location.state?.retryWrongOnly && wrongQuestions.length > 0) {
@@ -138,7 +138,7 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
     shuffledQuestions.length === Object.keys(currentAnswer).length;
 
   const handleAnswer = (qIndex, selectedOption) => {
-    if (isTimeUp || isSubmitting) return; 
+    if (isTimeUp || isSubmitting) return;
 
     setCurrentAnswer((prev) => {
       const updated = { ...prev, [qIndex]: selectedOption };
@@ -158,7 +158,7 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
 
   const navigateToQuestion = (index) => {
     if (isSubmitting) return;
-    
+
     questionRefs.current[index]?.scrollIntoView({
       behavior: "smooth",
       block: "center",
@@ -167,11 +167,19 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
   };
 
   const handleSubmit = async () => {
-    if (submitted || isSubmitting) return; 
-    
+    if (submitted || isSubmitting) return;
+
+    const currentTopicId =
+      currentTopic?.topic_id || currentTopic?.topic_Id || topicId;
+
+    if (!currentTopicId) {
+      console.error("Không tìm thấy topicId");
+      return;
+    }
+
     setSubmitted(true);
-    setIsSubmitting(true); 
-    
+    setIsSubmitting(true);
+
     try {
       const { answers } = useTestStore.getState();
 
@@ -207,24 +215,36 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
 
       setResult(result);
 
-      const res = await postTestResult(axiosPrivate, correctCount, total, topicId);
-      console.log("Kết quả bài test:", res.result); 
+      const res = await postTestResult(
+        axiosPrivate,
+        correctCount,
+        total,
+        topicId
+      );
+      console.log("Kết quả bài test:", res.result);
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { markTopicTestCompleted } = useTopicStore.getState();
+      markTopicTestCompleted(parseInt(currentTopicId));
 
-      const topicIdToUse = topicId || currentTopic?.topic_id || currentTopic?.topic_Id;
-      
-      if (topicIdToUse) {
-        navigate(`/vocabulary/topic/${topicIdToUse}/TestResult`);
+      // Signal completion via localStorage
+      localStorage.setItem("test_completed", Date.now().toString());
+      setTimeout(() => {
+        localStorage.removeItem("test_completed");
+      }, 1000);
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      if (currentTopicId) {
+        navigate(`/vocabulary/topic/${currentTopicId}/TestResult`);
       } else {
         console.error("Không tìm thấy topicId");
         console.error("Available data:", { topicId, currentTopic });
-        navigate('/vocabulary');
+        navigate("/vocabulary");
       }
     } catch (err) {
       console.error("Gửi kết quả thất bại", err);
-      setIsSubmitting(false); 
-      setSubmitted(false); 
+      setIsSubmitting(false);
+      setSubmitted(false);
 
       alert("Có lỗi xảy ra khi gửi kết quả. Vui lòng thử lại!");
     }
@@ -297,7 +317,7 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
               key={`${q.id}-${index}`}
               ref={(el) => (questionRefs.current[index] = el)}
               className={`bg-white p-10 rounded-2xl shadow-xl shadow-neutral-300 w-full max-w-4xl mx-auto space-y-6 relative ${
-                isTimeUp || isSubmitting ? 'opacity-75 pointer-events-none' : ''
+                isTimeUp || isSubmitting ? "opacity-75 pointer-events-none" : ""
               }`}
             >
               <div className="absolute top-4 right-6 text-sm text-gray-400 font-semibold">
@@ -320,22 +340,25 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
                   Chọn thuật ngữ đúng:
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                  {q.options && q.options.map((opt) => (
-                    <button
-                      key={opt}
-                      onClick={() => handleAnswer(index, opt)}
-                      disabled={isTimeUp || isSubmitting}
-                      className={`border px-6 py-5 text-lg rounded-xl text-left transition-all duration-200 ${
-                        isTimeUp || isSubmitting ? 'cursor-not-allowed opacity-50' : ''
-                      } ${
-                        currentAnswer[index] === opt
-                          ? "bg-blue-100 border-blue-500 text-blue-800 font-semibold"
-                          : "hover:bg-gray-50 border-gray-200"
-                      }`}
-                    >
-                      {opt}
-                    </button>
-                  ))}
+                  {q.options &&
+                    q.options.map((opt) => (
+                      <button
+                        key={opt}
+                        onClick={() => handleAnswer(index, opt)}
+                        disabled={isTimeUp || isSubmitting}
+                        className={`border px-6 py-5 text-lg rounded-xl text-left transition-all duration-200 ${
+                          isTimeUp || isSubmitting
+                            ? "cursor-not-allowed opacity-50"
+                            : ""
+                        } ${
+                          currentAnswer[index] === opt
+                            ? "bg-blue-100 border-blue-500 text-blue-800 font-semibold"
+                            : "hover:bg-gray-50 border-gray-200"
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
                 </div>
               </div>
 
@@ -393,7 +416,8 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
               </h2>
               <p className="text-gray-600 mb-6">
                 Bạn có chưa trả lời một số câu hỏi. Bạn có muốn tiếp tục nộp bài
-                không?
+                không? Bạn có chưa trả lời một số câu hỏi. Bạn có muốn tiếp tục
+                nộp bài không?
               </p>
               <div className="flex gap-3 justify-center">
                 <button
