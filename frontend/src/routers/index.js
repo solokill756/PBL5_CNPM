@@ -34,14 +34,37 @@ import ClassDetail from "@/pages/Class/ClassDetail";
 import Members from "@/pages/Class/Members";
 import SearchResults from "@/pages/SearchResults";
 // Component bảo vệ route yêu cầu xác thực
-function PrivateRoute({ children }) {
-  // const { auth } = useAuth();
-  const accessToken = useAuthStore((state) => state.accessToken);
 
+// Admin imports
+import AdminLayout from "@/components/Admin/AdminLayout";
+import AdminGuard from "@/pages/Admin/AdminGuard";
+import AdminDashboard from "@/pages/Admin/Dashboard";
+import AdminUsers from "@/pages/Admin/Users";
+import AdminTopics from "@/pages/Admin/Topics";
+import AdminVocabularies from "@/pages/Admin/Vocabularies";
+import AdminAnalytics from "@/pages/Admin/Analytics";
+
+function PrivateRoute({ children }) {
+  const accessToken = useAuthStore((state) => state.accessToken);
   return accessToken ? children : <Navigate to="/accounts/login" replace />;
 }
 
-// Component bảo vệ route dành cho khách
+// Component bảo vệ route dành cho admin
+function AdminRoute({ children }) {
+  const { user, accessToken } = useAuthStore();
+  
+  if (!accessToken) {
+    return <Navigate to="/accounts/login" replace />;
+  }
+  
+  if (user?.role !== 'admin') {
+    return <Navigate to="/" replace />;
+  }
+  
+  return children;
+}
+
+// Component bảo vệ route dành cho khách (chưa đăng nhập)
 function GuestRoute({ children }) {
   const accessToken = useAuthStore((state) => state.accessToken);
   return !accessToken ? children : <Navigate to="/" replace />;
@@ -84,8 +107,7 @@ const router = createBrowserRouter([
         path: "/classes/:classId/members",
         element: <Members/>,
       },
-        
-         {
+      {
         path: "/savedVocabulary",
         element: <Library />,
       },
@@ -119,6 +141,44 @@ const router = createBrowserRouter([
       }
     ],
   },
+
+  // Admin Routes - Separate section with AdminGuard protection
+  {
+    path: "/admin",
+    element: (
+      <AdminRoute>
+        <AdminLayout />
+      </AdminRoute>
+    ),
+    children: [
+      {
+        index: true,
+        element: <Navigate to="/admin/dashboard" replace />,
+      },
+      {
+        path: "dashboard",
+        element: <AdminDashboard />,
+      },
+      {
+        path: "users",
+        element: <AdminUsers />,
+      },
+      {
+        path: "topics",
+        element: <AdminTopics />,
+      },
+      {
+        path: "vocabularies",
+        element: <AdminVocabularies />,
+      },
+      {
+        path: "analytics",
+        element: <AdminAnalytics />,
+      },
+    ],
+  },
+
+  // Battle result routes (outside of main layout)
   {
     path: "/battle/:roomId/result",
     element: (
@@ -127,14 +187,8 @@ const router = createBrowserRouter([
       </PrivateRoute>
     ),
   },
-  {
-    path: "/battle/:roomId/result",
-    element: (
-      <PrivateRoute>
-        <BattleResult />
-      </PrivateRoute>
-    ),
-  },
+
+  // Guest routes (authentication pages)
   {
     path: "/accounts",
     element: (
@@ -166,6 +220,7 @@ const router = createBrowserRouter([
     ],
   },
 
+  // Standalone routes
   {
     path: "/auth-success",
     element: <AuthSuccess />,
@@ -189,6 +244,14 @@ const router = createBrowserRouter([
   {
     path: "/flashcard/:flashcardId/testAgain",
     element: <TestAgain/>
+  },
+  {
+    path: "/vocabulary/topic/:topicId/Test",
+    element: <Test/>
+  },
+  {
+    path: "/vocabulary/topic/:topicId/TestResult",
+    element: <TestResult/>
   },
   {
     path: "/vocabulary/topic/:topicId/Test",
