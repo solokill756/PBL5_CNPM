@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { io } from "socket.io-client";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -33,8 +33,8 @@ const VocabularyBattle = () => {
   const [connectionError, setConnectionError] = useState("");
   const roomIdRef = useRef(null);
 
-  // Game states - Bỏ "inQueue" state
-  const [gameState, setGameState] = useState("waiting"); // waiting, gameFound, playing, ended
+  // Game states
+  const [gameState, setGameState] = useState("waiting");
   const [gameData, setGameData] = useState(null);
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [questionNumber, setQuestionNumber] = useState(1);
@@ -44,7 +44,8 @@ const VocabularyBattle = () => {
   const [gameResults, setGameResults] = useState(null);
   const [questionResults, setQuestionResults] = useState(null);
 
-  // Timer states - Đồng bộ với backend
+  // Timer states - OPTIMIZE: Sử dụng ref để tránh re-render
+  const timeLeftRef = useRef(10);
   const [timeLeft, setTimeLeft] = useState(10);
   const [showTimer, setShowTimer] = useState(false);
   const [isTimeUp, setIsTimeUp] = useState(false);
@@ -52,20 +53,33 @@ const VocabularyBattle = () => {
 
   // UI states
   const [showQuestionResult, setShowQuestionResult] = useState(false);
-  const [loading, setLoading] = useState(false); // Dùng cho queue loading
+  const [loading, setLoading] = useState(false);
   const [waitingForOpponent, setWaitingForOpponent] = useState(false);
-  const [showNextQuestionDelay, setShowNextQuestionDelay] = useState(false);
 
   const timerRef = useRef(null);
   const questionStartTime = useRef(null);
   const socketRef = useRef(null);
+  const initializingRef = useRef(false);
+  const questionIdRef = useRef(0); // Track current question to prevent race conditions
+
+  // Stable references
+  const stableUser = useMemo(() => user, [user?.id, user?.username]);
+
+  // OPTIMIZE: Debounced timer update để giảm re-render
+  const updateTimer = useCallback((newTime) => {
+    timeLeftRef.current = newTime;
+    
+    // Chỉ update UI mỗi giây, không phải mỗi render
+    requestAnimationFrame(() => {
+      setTimeLeft(newTime);
+    });
+  }, []);
 
   // Token refresh handler
-  const handleTokenRefresh = async () => {
+  const handleTokenRefresh = useCallback(async () => {
     try {
       const newToken = await refresh();
       if (newToken && socketRef.current) {
-        // Reconnect socket với token mới
         socketRef.current.disconnect();
         initializeSocket(newToken);
       }
@@ -76,13 +90,125 @@ const VocabularyBattle = () => {
       setConnectionError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
       return null;
     }
-  };
+  }, [refresh, logout]);
 
-  // Initialize socket connection
-  const initializeSocket = (token) => {
-    if (!token) {
-      setConnectionError("Vui lòng đăng nhập để chơi battle!");
+  // OPTIMIZE: Complete timer cleanup function
+  const stopTimer = useCallback(() => {
+    console.log("🛑 Stopping timer");
+    
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    
+    setTimerActive(false);
+    setShowTimer(false);
+    timeLeftRef.current = 10;
+  }, []);
+
+  // OPTIMIZE: Reset all question-related states
+  const resetQuestionStates = useCallback(() => {
+    console.log("🔄 Resetting question states");
+    
+    // Stop any existing timer first
+    stopTimer();
+    
+    // Reset all states
+    setShowQuestionResult(false);
+    setQuestionResults(null);
+    setSelectedAnswer(null);
+    setWaitingForOpponent(false);
+    setIsTimeUp(false);
+    setShowTimer(false);
+    setTimerActive(false);
+    
+    // Reset timer refs
+    timeLeftRef.current = 10;
+    setTimeLeft(10);
+    
+    // Increment question ID to prevent race conditions
+    questionIdRef.current += 1;
+  }, [stopTimer]);
+
+  // OPTIMIZE: Improved timer with race condition prevention
+  const startTimer = useCallback(() => {
+    console.log("⏰ Starting new timer");
+    
+    // Store current question ID
+    const currentQuestionId = questionIdRef.current;
+    
+    // Reset timer state
+    timeLeftRef.current = 10;
+    updateTimer(10);
+    setShowTimer(true);
+    setIsTimeUp(false);
+    setTimerActive(true);
+    questionStartTime.current = Date.now();
+
+    // Clear any existing timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
+    timerRef.current = setInterval(() => {
+      // Prevent race condition - check if this timer is still valid
+      if (currentQuestionId !== questionIdRef.current) {
+        console.log("⚠️ Timer obsolete, stopping");
+        clearInterval(timerRef.current);
+        return;
+      }
+
+      const newTime = timeLeftRef.current - 1;
+      
+      if (newTime <= 0) {
+        console.log("⏰ Time's up!");
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+        
+        updateTimer(0);
+        setTimerActive(false);
+        setIsTimeUp(true);
+        setShowTimer(false);
+        
+        // Auto submit if no answer
+        if (selectedAnswer === null) {
+          handleTimeUp();
+        }
+      } else {
+        updateTimer(newTime);
+      }
+    }, 1000);
+  }, [updateTimer, selectedAnswer]);
+
+  const handleTimeUp = useCallback(() => {
+    console.log("🔴 Auto-submitting null answer due to timeout");
+    setSelectedAnswer("timeout");
+    setWaitingForOpponent(true);
+
+    if (socketRef.current && roomIdRef.current) {
+      socketRef.current.emit("submit_answer", {
+        roomId: roomIdRef.current,
+        answer: null,
+        responseTime: 10000,
+      });
+    }
+  }, []);
+
+  // Initialize socket - OPTIMIZE với proper cleanup
+  const initializeSocket = useCallback((token) => {
+    if (!token || initializingRef.current) {
+      if (!token) {
+        setConnectionError("Vui lòng đăng nhập để chơi battle!");
+      }
       return;
+    }
+
+    initializingRef.current = true;
+
+    // Cleanup existing socket
+    if (socketRef.current) {
+      socketRef.current.removeAllListeners();
+      socketRef.current.disconnect();
     }
 
     const newSocket = io("https://backendserver-app.azurewebsites.net", {
@@ -98,24 +224,25 @@ const VocabularyBattle = () => {
       console.log("✅ Connected to battle server");
       setConnected(true);
       setConnectionError("");
+      initializingRef.current = false;
     });
 
     newSocket.on("disconnect", (reason) => {
       console.log("❌ Disconnected from server:", reason);
       setConnected(false);
+      initializingRef.current = false;
 
-      // Chỉ reset game state nếu không phải manual disconnect
       if (reason !== "io client disconnect") {
         setGameState("waiting");
-        setLoading(false); // Reset loading state
+        setLoading(false);
         stopTimer();
       }
     });
 
     newSocket.on("connect_error", async (error) => {
       console.error("❌ Connection error:", error);
+      initializingRef.current = false;
 
-      // Nếu lỗi authentication, thử refresh token
       if (
         error.message.includes("Authentication") ||
         error.message.includes("token")
@@ -130,10 +257,9 @@ const VocabularyBattle = () => {
       }
     });
 
-    // Queue events - Không thay đổi gameState, chỉ log
+    // OPTIMIZE: Throttle socket event handlers
     newSocket.on("queue_joined", (data) => {
       console.log("🎯 Queue joined:", data);
-      // Giữ nguyên loading state, không thay đổi gameState
     });
 
     newSocket.on("game_found", (data) => {
@@ -141,59 +267,54 @@ const VocabularyBattle = () => {
       setGameData(data);
       roomIdRef.current = data.roomId;
       setGameState("gameFound");
-      setLoading(false); // Tắt loading khi tìm thấy game
+      setLoading(false);
       setTotalQuestions(data.totalQuestions);
       setScores({
         [data.player.user_id]: 0,
         [data.opponent.user_id]: 0,
       });
 
-      // Auto ready after 2 seconds
       setTimeout(() => {
-        newSocket.emit("ready_to_start", { roomId: data.roomId });
+        if (newSocket.connected) {
+          newSocket.emit("ready_to_start", { roomId: data.roomId });
+        }
       }, 2000);
     });
 
     newSocket.on("game_started", (data) => {
       console.log("🚀 Game started:", data);
       setGameState("playing");
-
-      // Trực tiếp start question đầu tiên
       startNewQuestion(data);
     });
 
+    // OPTIMIZE: Improved next_question handler
     newSocket.on("next_question", (data) => {
       console.log("➡️ Next question:", data);
-
-      // Reset states trước khi start câu mới
-      setShowQuestionResult(false);
-      setQuestionResults(null);
-      setSelectedAnswer(null);
-      setWaitingForOpponent(false);
-      setIsTimeUp(false);
-
-      startNewQuestion({
-        question: data.question,
-        questionNumber: data.questionNumber,
-        totalQuestions: totalQuestions,
-      });
+      
+      // Complete reset before starting new question
+      resetQuestionStates();
+      
+        startNewQuestion({
+          question: data.question,
+          questionNumber: data.questionNumber,
+          totalQuestions: totalQuestions,
+        });
     });
 
     newSocket.on("question_result", (data) => {
       console.log("📊 Question result:", data);
-
-      // Stop timer and show results
+      
       stopTimer();
       setQuestionResults(data);
       setScores(data.scores);
       setShowQuestionResult(true);
       setWaitingForOpponent(false);
 
-      // Sync selectedAnswer if user timed out (backend returned null)
+      // Sync timeout state
       if (selectedAnswer === null) {
         const answersArray = Object.values(data.answers);
         const playerAnswer = answersArray.find(
-          (answer) => answer.username === user.username
+          (answer) => answer.username === stableUser?.username
         );
 
         if (playerAnswer && playerAnswer.answer === null) {
@@ -205,46 +326,40 @@ const VocabularyBattle = () => {
     });
 
     newSocket.on("game_ended", handleGameEnd);
-
-    // Error events
     newSocket.on("error", (error) => {
       console.error("❌ Game error:", error);
       setConnectionError("Lỗi game: " + error.message);
-      setLoading(false); // Tắt loading khi có lỗi
+      setLoading(false);
     });
-
     newSocket.on("opponent_disconnected", handleOpponentDisconnected);
 
     setSocket(newSocket);
     socketRef.current = newSocket;
 
     return newSocket;
-  };
+  }, [handleTokenRefresh, totalQuestions, selectedAnswer, stableUser?.username, 
+      stopTimer, resetQuestionStates, startTimer]);
 
-  useEffect(() => {
-    const newSocket = initializeSocket(accessToken);
-
-    return () => {
-      stopTimer();
-      if (newSocket) {
-        newSocket.close();
-      }
-    };
-  }, []);
-
-  const startNewQuestion = (data) => {
+  // Start new question with proper state management
+  const startNewQuestion = useCallback((data) => {
+    console.log("🎯 Starting new question:", data.questionNumber);
+    
     const transformedQuestion = transformQuestionFormat(data.question);
     setCurrentQuestion(transformedQuestion);
     setQuestionNumber(data.questionNumber);
+    
+    // Ensure clean state
     setSelectedAnswer(null);
     setQuestionResults(null);
     setShowQuestionResult(false);
     setWaitingForOpponent(false);
     setIsTimeUp(false);
-
-    // Start timer
-    startTimer();
-  };
+    
+    // Start timer after a brief delay to ensure UI is ready
+    setTimeout(() => {
+      startTimer();
+    }, 150);
+  }, [startTimer]);
 
   // Transform backend question format
   const transformQuestionFormat = (backendQuestion) => {
@@ -264,144 +379,77 @@ const VocabularyBattle = () => {
     };
   };
 
-  // Sửa lại hàm startTimer
-  const startTimer = () => {
-    // Prevent multiple timers
-    if (timerActive) {
-      console.log("⚠️ Timer already active, skipping start");
-      return;
-    }
-
-    // Clear any existing timer
-    stopTimer();
-
-    setTimeLeft(10);
-    setShowTimer(true);
-    setIsTimeUp(false);
-    setTimerActive(true);
-    questionStartTime.current = Date.now();
-
-    console.log("⏰ Starting new timer");
-    timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        const newTime = prev - 1;
-
-        if (newTime <= 0) {
-          console.log("⏰ Time's up!");
-          handleTimeUp();
-          return 0;
-        }
-        return newTime;
-      });
-    }, 1000);
-  };
-
-  const handleGameEnd = (data) => {
+  // Game event handlers
+  const handleGameEnd = useCallback((data) => {
     console.log("🏁 Game ended:", data);
-
-    // Backend đã cung cấp đầy đủ thông tin
+    stopTimer();
+    
     const resultData = {
-      ...data, // winner, finalScores, totalQuestions, isDraw, player, opponent từ BE
+      ...data,
       roomId: roomIdRef.current,
       timestamp: Date.now(),
       reason: "normal_game_end",
     };
 
-    console.log("====================================");
-    console.log(roomIdRef.current);
-    console.log("====================================");
-    console.log("💾 Saving game result:", resultData);
     localStorage.setItem(
       `battle_result_${roomIdRef.current}`,
       JSON.stringify(resultData)
     );
     navigate(`/battle/${roomIdRef.current}/result`);
-  };
+  }, [navigate, stopTimer]);
 
-  const handleOpponentDisconnected = (data) => {
+  const handleOpponentDisconnected = useCallback((data) => {
     console.log("🚪 Opponent disconnected:", data);
-
-    // Sử dụng trực tiếp data từ BE, không tự thêm bonus
+    stopTimer();
+    
     const resultData = {
-      ...data, // Giữ nguyên data từ BE
+      ...data,
       roomId: roomIdRef.current,
       timestamp: Date.now(),
       reason: "opponent_disconnected",
     };
 
-    console.log("💾 Saving disconnect result:", resultData);
     localStorage.setItem(
       `battle_result_${roomIdRef.current}`,
       JSON.stringify(resultData)
     );
     navigate(`/battle/${roomIdRef.current}/result`);
-  };
+  }, [navigate, stopTimer]);
 
-  const handleTimeUp = () => {
-    setTimerActive(false);
-    setIsTimeUp(true);
-    setShowTimer(false);
-
-    // Clear timer
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-
-    // Only submit if user hasn't answered yet
-    if (selectedAnswer === null) {
-      console.log("🔴 Auto-submitting null answer due to timeout");
-      setSelectedAnswer("timeout");
-      setWaitingForOpponent(true);
-
-      if (socketRef.current && roomIdRef.current) {
-        socketRef.current.emit("submit_answer", {
-          roomId: roomIdRef.current,
-          answer: null,
-          responseTime: 10000,
-        });
-      }
-    }
-  };
-
-  const stopTimer = () => {
-    console.log("🛑 Stopping timer");
-    setTimerActive(false);
-
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    setShowTimer(false);
-  };
-
+  // Socket initialization effect - CHỈ chạy 1 lần
   useEffect(() => {
+    if (accessToken && !socketRef.current && !initializingRef.current) {
+      initializeSocket(accessToken);
+    }
+
     return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
+      stopTimer();
+      initializingRef.current = false;
+      if (socketRef.current) {
+        socketRef.current.removeAllListeners();
+        socketRef.current.disconnect();
+        socketRef.current = null;
       }
     };
-  }, []);
+  }, []); // Empty dependency array
 
   // Game actions
-  const handleJoinQueue = () => {
+  const handleJoinQueue = useCallback(() => {
     if (socket && connected) {
       setLoading(true);
       socket.emit("join_queue");
     }
-  };
+  }, [socket, connected]);
 
-  const handleLeaveQueue = () => {
+  const handleLeaveQueue = useCallback(() => {
     if (socket) {
       socket.emit("leave_queue");
       setGameState("waiting");
       setLoading(false);
     }
-  };
+  }, [socket]);
 
-  const handleSelectAnswer = (answer) => {
-    // Prevent multiple answers or answering after timeout
+  const handleSelectAnswer = useCallback((answer) => {
     if (selectedAnswer !== null || isTimeUp || !timerActive) {
       console.log("❌ Cannot select answer", {
         selectedAnswer,
@@ -416,7 +464,7 @@ const VocabularyBattle = () => {
     console.log(`💡 User selecting answer: ${answer}`);
     setSelectedAnswer(answer);
     setWaitingForOpponent(true);
-    stopTimer(); // Stop timer immediately when user answers
+    stopTimer();
 
     if (socketRef.current && roomIdRef.current) {
       console.log(`📤 Submitting answer: ${answer} (${responseTime}ms)`);
@@ -426,37 +474,32 @@ const VocabularyBattle = () => {
         responseTime: responseTime,
       });
     }
-  };
+  }, [selectedAnswer, isTimeUp, timerActive, stopTimer]);
 
-  const handleExitBattle = () => {
-    // Cleanup trước khi disconnect
+  const handleExitBattle = useCallback(() => {
     stopTimer();
     setGameState("waiting");
     setLoading(false);
 
     if (socket) {
-      // Rời khỏi queue nếu đang loading (tức là đang trong queue)
       if (loading) {
         socket.emit("leave_queue");
       }
-
-      // Disconnect socket
       socket.disconnect();
     }
 
-    // Navigate back
     window.history.back();
-  };
+  }, [socket, loading, stopTimer]);
 
-  // Get player and opponent data for components
-  const getPlayersData = () => {
+  // OPTIMIZE: Memoized player data
+  const { player, opponent } = useMemo(() => {
     if (!gameData) {
       return {
         player: {
           name: "Bạn",
           profile_picture: DefaultAvatar,
           score: 0,
-          user_id: user?.id,
+          user_id: stableUser?.id,
         },
         opponent: {
           name: "Đối thủ",
@@ -467,22 +510,21 @@ const VocabularyBattle = () => {
       };
     }
 
-    const player = {
-      name: gameData.player?.username || "Bạn",
-      profile_picture: gameData.player?.profile_picture || DefaultAvatar,
-      score: scores[gameData.player?.user_id] || 0,
-      user_id: gameData.player?.user_id,
+    return {
+      player: {
+        name: gameData.player?.username || "Bạn",
+        profile_picture: gameData.player?.profile_picture || DefaultAvatar,
+        score: scores[gameData.player?.user_id] || 0,
+        user_id: gameData.player?.user_id,
+      },
+      opponent: {
+        name: gameData.opponent?.username || "Đối thủ",
+        profile_picture: gameData.opponent?.profile_picture || DefaultAvatar,
+        score: scores[gameData.opponent?.user_id] || 0,
+        user_id: gameData.opponent?.user_id,
+      },
     };
-
-    const opponent = {
-      name: gameData.opponent?.username || "Đối thủ",
-      profile_picture: gameData.opponent?.profile_picture || DefaultAvatar,
-      score: scores[gameData.opponent?.user_id] || 0,
-      user_id: gameData.opponent?.user_id,
-    };
-
-    return { player, opponent };
-  };
+  }, [gameData, scores, stableUser?.id]);
 
   // Connection Status Component
   const ConnectionStatus = () => (
@@ -614,7 +656,7 @@ const VocabularyBattle = () => {
     </motion.div>
   );
 
-  const { player, opponent } = getPlayersData();
+  // const { player, opponent } = getPlayersData();
 
   // Game Found State Component
   const GameFoundState = () => (
@@ -670,7 +712,7 @@ const VocabularyBattle = () => {
   );
 
   const PlayingState = () => {
-    const { player, opponent } = getPlayersData();
+    // const { player, opponent } = getPlayersData();
 
     const shouldShowResultNotification = showQuestionResult && questionResults;
 
@@ -718,8 +760,8 @@ const VocabularyBattle = () => {
         {/* Timer - Chỉ hiển thị khi đang trong câu hỏi và chưa có kết quả */}
         {showTimer && !showQuestionResult && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
+            // initial={{ opacity: 0, y: -20 }}
+            // animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-xl shadow-lg p-4"
           >
             <div className="flex items-center justify-between mb-2">

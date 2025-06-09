@@ -93,7 +93,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/battle-test",
-        element: <ModernBattle />,
+        element: <BattleTest />,
       }
     ],
   },
