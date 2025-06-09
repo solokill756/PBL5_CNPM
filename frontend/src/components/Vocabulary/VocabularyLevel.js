@@ -11,15 +11,32 @@ const VocabularyLevel = ({ userLevel }) => {
     current_level,
     total_points,
     levelThreshold,
-    total_words_mastered,
-    total_topics_completed,
     progress_percent,
   } = userLevel;
 
+  // Lấy categories từ store để tính toán real-time stats
+  const { categories, getNextLevelRewards } = useTopicStore();
+  const axios = useAxiosPrivate();
+
   const [nextLevelRewards, setNextLevelRewards] = useState([]);
   const [loadingRewards, setLoadingRewards] = useState(false);
-  const { getNextLevelRewards } = useTopicStore();
-  const axios = useAxiosPrivate();
+
+  // Tính toán stats real-time từ categories thay vì dùng userLevel cũ
+  const realTimeStats = React.useMemo(() => {
+    const totalWordsMastered = categories.reduce(
+      (sum, category) => sum + (category.mastered_words || 0),
+      0
+    );
+
+    const totalTopicsCompleted = categories.filter(
+      (category) => category.mastered_words >= category.total_words
+    ).length;
+
+    return {
+      total_words_mastered: totalWordsMastered,
+      total_topics_completed: totalTopicsCompleted,
+    };
+  }, [categories]);
 
   const pointsNeeded = levelThreshold - total_points;
 
@@ -61,14 +78,26 @@ const VocabularyLevel = ({ userLevel }) => {
           <div>
             <h2 className="text-xl font-bold text-gray-800">Cấp độ {current_level}</h2>
             <div className="flex flex-wrap items-center gap-x-4 text-gray-600">
-              <div className="flex items-center gap-1 text-sm font-medium">
+              <motion.div 
+                key={realTimeStats.total_words_mastered} // Key để trigger animation khi thay đổi
+                initial={{ scale: 1.2, color: "#10b981" }}
+                animate={{ scale: 1, color: "#6b7280" }}
+                transition={{ duration: 0.3 }}
+                className="flex items-center gap-1 text-sm font-medium"
+              >
                 <FaRegStar className="text-yellow-500 size-4" />
-                <span>{total_words_mastered} từ vựng</span>
-              </div>
-              <div className="flex items-center gap-1 text-sm font-medium">
+                <span>{realTimeStats.total_words_mastered} từ vựng</span>
+              </motion.div>
+              <motion.div 
+                key={realTimeStats.total_topics_completed} // Key để trigger animation khi thay đổi
+                initial={{ scale: 1.2, color: "#10b981" }}
+                animate={{ scale: 1, color: "#6b7280" }}
+                transition={{ duration: 0.3 }}
+                className="flex items-center gap-1 text-sm font-medium"
+              >
                 <GrAchievement className="text-green-500 size-4" />
-                <span>{total_topics_completed} chủ đề</span>
-              </div>
+                <span>{realTimeStats.total_topics_completed} chủ đề</span>
+              </motion.div>
             </div>
           </div>
         </div>
@@ -82,6 +111,7 @@ const VocabularyLevel = ({ userLevel }) => {
           </div>
           <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
             <motion.div
+              key={progress_percent} // Key để re-animate khi progress thay đổi
               initial={{ width: 0 }}
               animate={{ width: `${progress_percent}%` }}
               transition={{ duration: 1, ease: "easeOut" }}
@@ -114,7 +144,6 @@ const VocabularyLevel = ({ userLevel }) => {
           {loadingRewards ? (
             <div className="flex items-center justify-center py-4">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500"></div>
-              {/* <span className="ml-2 text-gray-500">Đang tải phần thưởng...</span> */}
             </div>
           ) : nextLevelRewards.length > 0 ? (
             <div className="flex flex-wrap gap-3">
@@ -135,9 +164,6 @@ const VocabularyLevel = ({ userLevel }) => {
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-indigo-700">
                       {reward.title}
-                    </span>
-                    <span className="text-xs text-gray-600">
-                      {/* {reward.description} */}
                     </span>
                   </div>
                 </motion.div>

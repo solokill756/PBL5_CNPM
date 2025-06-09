@@ -22,6 +22,8 @@ const useTopicStore = create((set, get) => ({
     is_active: false,
   },
 
+  completedTopicTests: new Set(),
+
   loadingStates: {
     categories: false,
     userLevel: false,
@@ -46,6 +48,46 @@ const useTopicStore = create((set, get) => ({
         [key]: value,
       },
     })),
+
+    hasTopicTestCompleted: (topicId) => {
+      return get().completedTopicTests.has(topicId);
+    },
+  
+    // Method để mark test completed cho topic
+    markTopicTestCompleted: (topicId) => {
+      const currentCompleted = get().completedTopicTests;
+      const newCompleted = new Set([...currentCompleted, topicId]);
+      
+      set({
+        completedTopicTests: newCompleted,
+      });
+  
+      // Lưu vào localStorage để persist
+      const { userLevel } = get();
+      if (userLevel.user_id) {
+        localStorage.setItem(
+          `topic_tests_completed_${userLevel.user_id}`, 
+          JSON.stringify([...newCompleted])
+        );
+      }
+    },
+  
+    // Load completed tests từ localStorage
+    loadCompletedTopicTests: (userId) => {
+      try {
+        const completed = JSON.parse(
+          localStorage.getItem(`topic_tests_completed_${userId}`) || '[]'
+        );
+        set({
+          completedTopicTests: new Set(completed),
+        });
+      } catch (error) {
+        console.error('Error loading completed topic tests:', error);
+        set({
+          completedTopicTests: new Set(),
+        });
+      }
+    },
 
   // Thêm methods để quản lý loading theo vocabulary ID
   setVocabLoadingState: (type, vocabId, isLoading) =>
@@ -125,7 +167,6 @@ const useTopicStore = create((set, get) => ({
         username: data.username,
         user_id: data.user_id,
         is_active: data.is_active,
-        // These will be calculated from other endpoints or derived
         total_words_mastered: 0,
         total_topics_completed: 0,
       };
@@ -133,6 +174,9 @@ const useTopicStore = create((set, get) => ({
       set({
         userLevel: updatedUserLevel,
       });
+
+      // Load completed topic tests
+      get().loadCompletedTopicTests(data.user_id);
 
       get().updateCategoriesUnlockStatus(updatedUserLevel.current_level);
 
@@ -177,6 +221,9 @@ const useTopicStore = create((set, get) => ({
     );
     
     set({ categories: updatedCategories });
+    
+    // Tự động tính lại user stats sau khi update category
+    get().calculateUserStats();
   },
 
   updateCategoriesUnlockStatus: (userLevel) => {
@@ -202,6 +249,7 @@ const useTopicStore = create((set, get) => ({
       (category) => category.mastered_words >= category.total_words
     ).length;
 
+    // Cập nhật userLevel với stats mới
     set({
       userLevel: {
         ...userLevel,
@@ -209,6 +257,11 @@ const useTopicStore = create((set, get) => ({
         total_topics_completed: totalTopicsCompleted,
       },
     });
+
+    return {
+      totalWordsMastered,
+      totalTopicsCompleted
+    };
   },
 
   refreshUserStats: async (axios) => {
@@ -270,12 +323,23 @@ const useTopicStore = create((set, get) => ({
   },
 
   updateLearningStatus: async (axios, vocabulary_id, topic_id) => {
+    // Check nếu đang process vocabulary này rồi thì skip
+    if (get().loadingStates.learningUpdating.has(vocabulary_id)) {
+      console.log(`Already processing vocabulary ${vocabulary_id}, skipping...`);
+      return;
+    }
+
     try {
       // Set loading cho vocabulary cụ thể
       get().setVocabLoadingState('learningUpdating', vocabulary_id, true);
       
       const currentVocabs = get().topicVocabularies;
       const vocab = currentVocabs.find((v) => v.vocab_id === vocabulary_id);
+      
+      if (!vocab) {
+        throw new Error('Vocabulary not found');
+      }
+
       const isCurrentlyLearned =
         vocab?.VocabularyUsers?.[0]?.had_learned || vocab?.isKnown || false;
 
@@ -299,7 +363,7 @@ const useTopicStore = create((set, get) => ({
 
       set({ topicVocabularies: updatedVocabs });
 
-      // Cập nhật category progress ngay lập tức
+      // Cập nhật category progress ngay lập tức (sẽ trigger calculateUserStats)
       const newMasteredCount = updatedVocabs.filter(v => 
         v.VocabularyUsers?.[0]?.had_learned || v.isKnown
       ).length;
@@ -307,46 +371,68 @@ const useTopicStore = create((set, get) => ({
       get().updateCategoryProgress(topic_id, newMasteredCount);
 
       // Gọi API để sync với server
-      await axios.post("/api/vocabulary/updateVocabularyUser", {
-        vocabulary_id,
-        had_learned: param,
-        topic_id,
-      });
+      const apiCall = async () => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+        try {
+          const response = await axios.post("/api/vocabulary/updateVocabularyUser", {
+            vocabulary_id,
+            had_learned: param,
+            topic_id,
+          }, {
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+          return response;
+        } catch (error) {
+          clearTimeout(timeoutId);
+          throw error;
+        }
+      };
+
+      await apiCall();
 
       return !isCurrentlyLearned;
     } catch (error) {
       console.error("Error updating learning status:", error);
       
       // Rollback optimistic update nếu API fail
-      // const currentVocabs = get().topicVocabularies;
-      // const revertedVocabs = currentVocabs.map((v) =>
-      //   v.vocab_id === vocabulary_id
-      //     ? {
-      //         ...v,
-      //         VocabularyUsers: [
-      //           {
-      //             ...(v.VocabularyUsers?.[0] || {}),
-      //             had_learned: !(!isCurrentlyLearned), // Revert lại
-      //           },
-      //         ],
-      //         isKnown: !(!isCurrentlyLearned), // Revert lại
-      //       }
-      //     : v
-      // );
+      const currentVocabs = get().topicVocabularies;
+      const originalVocab = currentVocabs.find((v) => v.vocab_id === vocabulary_id);
       
-      // set({ topicVocabularies: revertedVocabs });
-      
-      // // Revert category progress
-      // const revertedMasteredCount = revertedVocabs.filter(v => 
-      //   v.VocabularyUsers?.[0]?.had_learned || v.isKnown
-      // ).length;
-      
-      // get().updateCategoryProgress(topic_id, revertedMasteredCount);
+      if (originalVocab) {
+        const revertedVocabs = currentVocabs.map((v) =>
+          v.vocab_id === vocabulary_id
+            ? {
+                ...v,
+                VocabularyUsers: [
+                  {
+                    ...(v.VocabularyUsers?.[0] || {}),
+                    had_learned: !v.isKnown, // Revert lại
+                  },
+                ],
+                isKnown: !v.isKnown, // Revert lại
+              }
+            : v
+        );
+        
+        set({ topicVocabularies: revertedVocabs });
+        
+        // Revert category progress (sẽ trigger calculateUserStats)
+        const revertedMasteredCount = revertedVocabs.filter(v => 
+          v.VocabularyUsers?.[0]?.had_learned || v.isKnown
+        ).length;
+        
+        get().updateCategoryProgress(topic_id, revertedMasteredCount);
+      }
       
       throw error;
     } finally {
-      // Clear loading cho vocabulary cụ thể
-      get().setVocabLoadingState('learningUpdating', vocabulary_id, false);
+      // Clear loading cho vocabulary cụ thể với delay để tránh rapid clicks
+      setTimeout(() => {
+        get().setVocabLoadingState('learningUpdating', vocabulary_id, false);
+      }, 300);
     }
   },
 
@@ -611,11 +697,11 @@ const useTopicStore = create((set, get) => ({
     }
   },
 
-  // Reset store
   reset: () => {
     set({
       categories: [],
       topicVocabularies: [],
+      completedTopicTests: new Set(),
       userLevel: {
         current_level: 1,
         total_points: 0,
