@@ -30,8 +30,8 @@ const TopicDetail = () => {
     refreshUserLevel,
     updateCategoryProgress,
     userLevel,
-    canTakeTest,
-    markTestCompleted,
+    markTopicTestCompleted, // Sửa tên function
+    hasTopicTestCompleted, // Thêm function này
   } = useTopicStore();
 
   const [selectedVocabulary, setSelectedVocabulary] = useState(null);
@@ -186,7 +186,8 @@ const TopicDetail = () => {
   };
 
   const handleTakeTest = () => {
-    markTestCompleted(userLevel.current_level);
+    // Mark test completed cho topic này thay vì level
+    markTopicTestCompleted(parseInt(topicId));
     navigate(`/vocabulary/topic/${topicId}/Test`);
   };
 
@@ -242,7 +243,7 @@ const TopicDetail = () => {
           totalCount={topicVocabularies.length}
           isTopicCompleted={getLearnedCount() === topicVocabularies.length}
           userLevel={userLevel}
-          hasTestTaken={userLevel.completed_level_tests?.includes(userLevel.current_level)}
+          hasTestTaken={hasTopicTestCompleted(parseInt(topicId))}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
