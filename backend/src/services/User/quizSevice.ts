@@ -178,6 +178,7 @@ const saveResultQuiz = async (
     const kq = await db.quizResult.create({
       score: score,
       user_id: user_id,
+      topic_id: topic_id,
       result: result,
       completed_at: new Date(),
     });
@@ -190,7 +191,7 @@ const saveResultQuiz = async (
       throw new Error("Topic not found");
     }
     // Update user score
-    vocabularyService.checkLevelUser(user_id, topic.points);
+    await vocabularyService.checkLevelUser(user_id, topic.points);
     return kq;
   } catch (error) {
     throw new Error("Error saving quiz result");

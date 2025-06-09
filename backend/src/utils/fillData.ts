@@ -5,7 +5,8 @@ interface UserClientData {
   username: string;
   datatime_joined: string;
   is_blocked?: boolean;
-  // user_id : string,
+  user_id: string;
+  datetime_joined: string;
 }
 interface listFlashcardClientData {
   tile: string;
@@ -19,9 +20,9 @@ const filterUserData = (user: any): UserClientData => ({
   username: user.username,
   datatime_joined: user.datatime_joined,
   is_blocked: user.is_blocked,
-  // user_id : user.user_id,
+  user_id: user.user_id,
+  datetime_joined: user.datetime_joined,
 });
-
 const filterListFlashcardData = (flashcard: any): listFlashcardClientData => ({
   tile: flashcard.tile,
   description: flashcard.description,

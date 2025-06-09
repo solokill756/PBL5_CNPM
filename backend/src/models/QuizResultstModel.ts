@@ -6,7 +6,8 @@ interface QuizResultAttributes {
 
   score: number;
   completed_at: Date;
-  result : string;
+  result: string;
+  topic_id: string;
 }
 
 interface QuizResultCreationAttributes
@@ -21,7 +22,8 @@ class QuizResult
   declare score: number;
   declare completed_at: Date;
   declare result: string;
-  }
+  declare topic_id: string;
+}
 
 export default (sequelize: Sequelize) => {
   QuizResult.init(
@@ -35,7 +37,7 @@ export default (sequelize: Sequelize) => {
         type: DataTypes.UUID,
         allowNull: false,
       },
-     
+
       score: {
         type: DataTypes.FLOAT,
         allowNull: false,
@@ -49,6 +51,10 @@ export default (sequelize: Sequelize) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
+      topic_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+      },
     },
     {
       sequelize,
@@ -57,12 +63,10 @@ export default (sequelize: Sequelize) => {
       indexes: [
         {
           unique: true,
-          fields: ["result_id"]
-        }
-      ]
+          fields: ["result_id"],
+        },
+      ],
     }
-
-      
   );
 
   return QuizResult;

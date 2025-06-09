@@ -115,7 +115,7 @@ export default (sequelize: Sequelize) => {
       is_show: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue: true,
+        defaultValue: false,
       },
     },
     {

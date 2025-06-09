@@ -3,12 +3,28 @@ import { filterUserData } from "../../utils/fillData";
 
 const getAllUsers = async (): Promise<any> => {
   try {
-    let users = await db.user.findAll();
+    let users = await db.user.findAll({
+      include: [
+        {
+          model: db.authentication,
+          attributes: ["verified"],
+          required: true,
+        },
+      ],
+      where: {
+        role: "user",
+      },
+    });
     users = users.map((user: any) => {
-      return filterUserData(user);
+      return {
+        verified: user.Authentications[0].verified, // Fixed object syntax
+        ...filterUserData(user),
+      };
     });
     return users;
-  } catch (error) {}
+  } catch (error) {
+    throw new Error("Error fetching all users");
+  }
 };
 
 const blockUser = async (userId: string): Promise<boolean> => {
@@ -33,8 +49,18 @@ const getUserById = async (userId: string): Promise<any> => {
   try {
     const user = await db.user.findOne({
       where: { user_id: userId },
+      include: [
+        {
+          model: db.authentication,
+          attributes: ["verified"],
+          required: true,
+        },
+      ],
     });
-    return filterUserData(user);
+    return {
+      verified: user.Authentications[0].verified,
+      ...filterUserData(user),
+    };
   } catch (error) {
     throw new Error("Error fetching user by ID");
   }
