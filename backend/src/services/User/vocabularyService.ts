@@ -438,6 +438,7 @@ const getFlashCardOftopic = async (topic_id: string, user_id: string) => {
       return {
         listFlashcard: check,
         flashcards: flashcards,
+        hasCreated: true,
       };
     } else {
       const listFlashcard = await db.listFlashcard.create({
@@ -483,6 +484,7 @@ const getFlashCardOftopic = async (topic_id: string, user_id: string) => {
         return {
           listFlashcard: listFlashcard,
           flashcards: flashcards,
+          hasCreated: false,
         };
       } catch (error: any) {
         console.error("Error in flashcard creation process:", error);
