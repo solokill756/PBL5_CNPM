@@ -49,7 +49,7 @@ const VocabularySearch = () => {
       if (!lastSearchWasAI) {
         const initializeFromParam = async () => {
           try {
-            const results = await searchVocabulary(axios, decodedWord);
+            const results = await searchVocabulary(axios, decodedWord, translationType);
             if (results && results.length > 0) {
               setSelectedWord(results[0]);
             }
@@ -82,7 +82,7 @@ const VocabularySearch = () => {
     
     try {
       // Pass true to add to history when user presses Enter
-      const results = await searchVocabulary(axios, value, true);
+      const results = await searchVocabulary(axios, value, translationType, true);
       
       if (results && results.length > 0) {
         setSelectedWord(results[0]);
@@ -110,7 +110,7 @@ const VocabularySearch = () => {
     }
 
     searchTimeout.current = setTimeout(() => {
-      searchVocabulary(axios, value);
+      searchVocabulary(axios, value, translationType);
     }, 100);
   };
 

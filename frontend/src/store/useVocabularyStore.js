@@ -254,7 +254,7 @@ const useVocabularyStore = create((set, get) => ({
     if (searchTerm.trim()) {
       // Use setTimeout to allow UI to update first
       setTimeout(() => {
-        get().searchVocabulary(axios, searchTerm);
+        get().searchVocabulary(axios, searchTerm, type);
       }, 100);
     }
   },
