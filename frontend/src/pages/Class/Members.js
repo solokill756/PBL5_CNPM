@@ -8,8 +8,6 @@ import { getClass } from '@/api/getClass'
 import { MdDeleteOutline } from "react-icons/md"
 import { deleteMember } from '@/api/deleteMember'
 import { useAuthStore } from '@/store/useAuthStore'
-import AddFlashcardToClass from '@/components/Modal/AddFlashcardToClass';
-import { IoIosAddCircleOutline } from "react-icons/io";
 
 const Members = () => {
   const [classData, setClassData] = useState(null);
@@ -20,47 +18,9 @@ const Members = () => {
   const [notificationType, setNotificationType] = useState('success');
   const axiosPrivate = useAxiosPrivate();
   const { classId } = useParams();
-
   
-  const navigate = useNavigate();
   const user = useAuthStore(state => state.user);
-  const [isOpen, setIsOpen] = useState(false);
-  const [isAddFlashcardOpen, setIsAddFlashcardOpen] = useState(false); 
-  const [subjects, setSubjects] = useState([]); 
    
-  const openModal = () => {
-    setIsOpen(true);
-    document.body.style.overflow = 'hidden';
-  };
-
-  const closeModal = () => {
-    setIsOpen(false);
-    document.body.style.overflow = 'auto';
-  };
-
-  const openAddFlashcardModal = () => {
-    setIsAddFlashcardOpen(true);
-  };
-
-  const closeAddFlashcardModal = () => {
-    setIsAddFlashcardOpen(false);
-  };
-
-  const handleAddSubject = (subjectId) => {
-    setSubjects(prev => 
-      prev.map(subject => 
-        subject.id === subjectId 
-          ? { ...subject, isAdded: !subject.isAdded }
-          : subject
-      )
-    );
-  };
-
-  const handleCreateNew = () => {
-    console.log('Tạo mới học phần');
-  };
-
-
   useEffect(() => {
     if (showNotification) {
       const timer = setTimeout(() => {

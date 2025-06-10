@@ -4,21 +4,18 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { Provider } from "@/components/ui/provider";
-import { AuthProvider } from "./context/AuthProvider";
 import ToastProvider from "./context/ToastContext";
 import ToastContainer from "./components/Toast";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <AuthProvider>
       <ToastProvider>
         <Provider>
           <App />
           <ToastContainer />
         </Provider>
       </ToastProvider>
-    </AuthProvider>
   </React.StrictMode>
 );
 

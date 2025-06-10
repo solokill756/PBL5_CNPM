@@ -8,7 +8,6 @@ import DefaultGuest from "@/layouts/DefaultGuest";
 import Home from "@/pages/Home";
 import EmailVerification from "@/pages/EmailVerification";
 import Library from "@/pages/Library";
-import Forum from "@/pages/Forum";
 import AuthSuccess from "@/components/AuthSuccess";
 import FlashCard from "@/pages/Flashcard";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -17,17 +16,12 @@ import Achievement from "@/pages/Achievement";
 import QuizResult from "@/pages/QuizResult";
 import TestAgain from "@/pages/Quiz/TestAgain";
 import Vocabulary from "@/pages/Vocabulary";
-import VocabularyDetail from "@/components/Vocabulary/VocabularyDetail";
 import Quiz from "@/pages/Quiz";
 import TopicDetail from "@/pages/TopicDetail";
 import VocabularyBattle from "@/pages/VocabularyBattle";
-import RoomListing from "@/components/RoomListing";
 import AddFlashcard from "@/pages/AddFlashcard";
 import Test from "@/pages/TestPage";
 import TestResult from "@/pages/TestPage/TestResult";
-import BattleTest from "@/components/BattleTest/battleTest";
-import ModernBattle from "@/components/Battle/ModernBattle";
-import BattleRoom from "@/components/Battle/BattleRoom";
 import BattleResult from "@/components/Battle/BattleResult";
 import ListClass from "@/pages/Class/ListClass";
 import ClassDetail from "@/pages/Class/ClassDetail";
@@ -37,7 +31,6 @@ import SearchResults from "@/pages/SearchResults";
 
 // Admin imports
 import AdminLayout from "@/components/Admin/AdminLayout";
-import AdminGuard from "@/pages/Admin/AdminGuard";
 import AdminDashboard from "@/pages/Admin/Dashboard";
 import AdminUsers from "@/pages/Admin/Users";
 import AdminTopics from "@/pages/Admin/Topics";
@@ -64,10 +57,18 @@ function AdminRoute({ children }) {
   return children;
 }
 
-// Component bảo vệ route dành cho khách (chưa đăng nhập)
 function GuestRoute({ children }) {
-  const accessToken = useAuthStore((state) => state.accessToken);
-  return !accessToken ? children : <Navigate to="/" replace />;
+  const { accessToken, user } = useAuthStore();
+  
+  if (!accessToken) {
+    return children;
+  }
+  
+  if (user?.role === 'admin') {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+  
+  return <Navigate to="/" replace />;
 }
 
 const router = createBrowserRouter([

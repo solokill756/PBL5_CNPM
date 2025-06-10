@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import DefaultHeader from '@/layouts/DefaultHeader'
 import OptionItem from '@/components/Option/OptionItem'
-import SearchInput from '@/components/SearchInput'
 import CourseInfoComponent from '@/components/ClassCard/ClassCard'
 import { fetchRecentClasses } from '@/api/recentClass'
 import useAxiosPrivate from '@/hooks/useAxiosPrivate'

@@ -32,11 +32,6 @@ export default function LearnFlashcard() {
   const [slideDirection, setSlideDirection] = useState(null);
   const [entranceDirection, setEntranceDirection] = useState(null);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [markedFlashcards, setMarkedFlashcards] = useState({
-    known: [],
-    unknown: [],
-  });
-  const [lastSendTime, setLastSendTime] = useState(Date.now());
 
   const { displayDeck, fetchFlashcardList, isDataLoaded, lastLoadedId } =
     useFlashcardStore();
@@ -57,7 +52,6 @@ export default function LearnFlashcard() {
     nextReviewThreshold,
     getRound,
     isAllKnown,
-    currentIndex,
     resetUnlearned,
     isEndOfRound,
     unlearnedCards,

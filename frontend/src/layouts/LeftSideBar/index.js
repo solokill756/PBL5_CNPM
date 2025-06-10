@@ -5,9 +5,9 @@ import LogoImg from "@/assets/images/ITKotoba.png";
 import MenuItem from "../../components/MenuItem";
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { MdOutlineForum, MdOutlineNotificationsActive } from "react-icons/md";
+import { MdOutlineNotificationsActive } from "react-icons/md";
 import { LuLibraryBig } from "react-icons/lu";
-import { TbLanguageHiragana, TbSwords } from "react-icons/tb";
+import { TbSwords } from "react-icons/tb";
 import { FaLanguage } from "react-icons/fa6";
 import CreateModal from "@/components/Modal/CreateModal";
 

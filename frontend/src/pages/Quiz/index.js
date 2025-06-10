@@ -19,17 +19,12 @@ function Quiz() {
   const axios = useAxiosPrivate();
 
   const {
-    openModal,
-    isFlashcardSaved,
     setAxios,
-    currentIndex,
     displayDeck,
     fetchFlashcardList,
     flashcardMetadata,
-    authorInfor,
     isDataLoaded,
     lastLoadedId,
-    resetFlashcardState
   } = useFlashcardStore();
 
   const { questions } = useQuizStore();

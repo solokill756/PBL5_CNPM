@@ -1,4 +1,3 @@
-// src/store/useLearnStore.js
 import { getForgetCard } from "@/api/getForgetCard";
 import { postForgetCard } from "@/api/postForgetCard";
 import { postRememberCard } from "@/api/postRememberCard";
@@ -6,8 +5,6 @@ import { resetForgetCard } from "@/api/resetForgetCard";
 import { shuffleArray } from "@/utils/array";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-
-const REVIEW_THRESHOLD = 0.2;
 
 export const useLearnStore = create(
   persist(
@@ -208,16 +205,7 @@ export const useLearnStore = create(
       
           // Count ALL known cards (not just current round)
           const totalKnownCount = newLearned.filter(item => item.isKnown).length;
-          
-          // Count cards that were learned for first time in current round
-          const currentRoundNewKnownCount = newLearned.filter(
-            (item) =>
-              item.isKnown &&
-              item.learnedInRound === round &&
-              item.isFirstTimeInRound === true
-          ).length;
-      
-          // Enter review mode based on total known count
+
           const shouldEnterReview = totalKnownCount > 0 &&
                                     totalKnownCount % flashcardsInGroup === 0 &&
                                     !reviewMode &&
@@ -340,12 +328,9 @@ export const useLearnStore = create(
       // Handle finishing a review session
       handleReviewNext: async (axios, list_id) => {
         const {
-          reviewList,
           learned,
-          fullDeck,
           flashcards,
           currentIndex,
-          round,
           cardOrder,
         } = get();
 
@@ -427,8 +412,6 @@ export const useLearnStore = create(
           isShuffled: false,
         }),
 
-      // SELECTORS
-
       // Count known cards
       knownCount: () => get().learned.filter((item) => item.isKnown).length,
 
@@ -459,16 +442,6 @@ export const useLearnStore = create(
             (item) => item.flashcard_id === card.flashcard_id && item.isKnown
           )
         );
-      },
-
-      // Get current card
-      currentCard: () => {
-        const { flashcards, currentIndex, cardOrder } = get();
-        if (!flashcards || flashcards.length === 0) return null;
-
-        // Sử dụng card order để lấy card
-        const actualIndex = cardOrder[currentIndex];
-        return actualIndex < flashcards.length ? flashcards[actualIndex] : null;
       },
 
       // Get list of cards not yet learned

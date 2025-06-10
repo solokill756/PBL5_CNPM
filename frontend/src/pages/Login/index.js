@@ -1,16 +1,14 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import InputBox from "@/components/InputBox";
 import LogoIcon from "@/assets/images/LogoIcon.png";
 import BlueButton from "@/components/BlueButton";
 import { Link, useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
-import AuthContext from "@/context/AuthProvider";
-import { fetchLogin } from "@/api/login";
 import { getOTP } from "@/api/getOTP";
 import { useAuthStore } from "@/store/useAuthStore";
+import { fetchLogin } from "@/api/login";
 
 function Login() {
-  // const { login } = useContext(AuthContext); 
   const navigate = useNavigate();
   const [email, setemail] = useState("");
   const [password, setPassword] = useState("");
@@ -48,7 +46,6 @@ function Login() {
 
       login({accessToken, refreshToken, user});
       setTokens({ accessToken, refreshToken });
-      navigate("/");
     } catch (err) {
       const status = err.response?.status;
 

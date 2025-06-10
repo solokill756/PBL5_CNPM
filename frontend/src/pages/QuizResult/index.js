@@ -8,24 +8,17 @@ import { useFlashcardStore } from "@/store/useflashcardStore";
 
 function QuizResult() {
   const { flashcardId } = useParams();
-  const [open, setOpen] = useState(true);
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const axios = useAxiosPrivate();
 
   const {
-    openModal,
-    isFlashcardSaved,
     setAxios,
-    currentIndex,
     displayDeck,
     fetchFlashcardList,
     flashcardMetadata,
-    authorInfor,
     isDataLoaded,
     lastLoadedId,
-    resetFlashcardState
   } = useFlashcardStore();
 
   useEffect(() => {

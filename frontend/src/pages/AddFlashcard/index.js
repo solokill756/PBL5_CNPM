@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAddFlashcardStore } from "@/store/useAddFlashcardStore";
 import { useFlashcardStore } from "@/store/useflashcardStore";
@@ -72,7 +72,6 @@ const DraftModal = ({ isOpen, onContinue, onNew }) => {
 
 const AddFlashcard = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const axios = useAxiosPrivate();
   const [showDraftModal, setShowDraftModal] = useState(false);
 
@@ -85,17 +84,13 @@ const AddFlashcard = () => {
     checkForDraft,
     clearDraft,
     title,
-    setLoading, // Add this action to the store
-    setCheckForDraft,
+    setLoading, 
   } = useAddFlashcardStore();
 
   const { 
-    originalDeck, 
-    flashcardMetadata,
-    fetchFlashcardList // Add this action
+    fetchFlashcardList 
   } = useFlashcardStore();
 
-  // Check for draft on component mount
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const mode = params.get("mode");

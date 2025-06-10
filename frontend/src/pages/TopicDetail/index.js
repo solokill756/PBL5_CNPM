@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import { useToast, TOAST_TYPES } from "@/context/ToastContext";
 
@@ -118,7 +118,6 @@ const TopicDetail = () => {
     }
   }, [topicVocabularies, topicId]);
 
-  // Check completion when learned count increases
   useEffect(() => {
     if (
       topicVocabularies.length > 0 && 

@@ -14,7 +14,6 @@ import "./index.css";
 import ModeHeader from "@/components/ModeHeader";
 import { getTimeAgo } from "@/utils/getTimeAgo";
 import defaultAvatar from "@/assets/images/avatar.jpg";
-import { addFlashcardToLearn } from "@/api/addFlashcardToLearn";
 
 export default function FlashCard({ mode = "" }) {
   const { flashcardId } = useParams();

@@ -1,9 +1,6 @@
 import React from 'react'
 import DefaultHeader from '@/layouts/DefaultHeader'
 import OptionItem from '@/components/Option/OptionItem'
-import Option from '@/components/CardItems/Option'
-import SearchInput from '@/components/SearchInput'
-import Course from '@/components/Course/Course'
 import ListCourse from '@/components/Course/ListCourse'
 
 const Library = () => {
