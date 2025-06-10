@@ -1,186 +1,287 @@
-// import dotenv from "dotenv";
-// import jwt from "jsonwebtoken";
-// import gameService from "../services/gameService";
-// import { NextFunction } from "express";
-// import { UserPayload } from "../services/authService";
-// dotenv.config();
-// export default (io: any, gameRooms: any, wattingPlayers: any) => {
-//   // Middleware xác thực
-//   io.use((socket: any, next: NextFunction) => {
-//     const token = socket.handshake.auth.token;
-//     if (token) {
-//       try {
-//         const decoded = jwt.verify(
-//           token,
-//           process.env.ACCESS_TOKEN_SECRET as string
-//         ) as UserPayload;
-//         socket.user_id = decoded.user_id;
-//         socket.username = decoded.username;
-//         console.log(`✅ User ${socket.username} authenticated`);
-//         next();
-//       } catch (err) {
-//         console.log("❌ Authentication failed:", err.message);
-//         next(new Error("Authentication error"));
-//       }
-//     } else {
-//       next(new Error("No token provided"));
-//     }
-//   });
-//   // Xử lý kết nối mới
-//   io.on("connection", (socket: any) => {
-//     console.log(`🔌 User ${socket.username} connected (ID: ${socket.id})`);
-//     // Tham gia hàng đợi tìm trận
-//     socket.on("join_queue", async (data: any) => {
-//       console.log(
-//         `🎯 ${socket.username} joined queue for topic: ${data.topic}`
-//       );
+import dotenv from "dotenv";
+import jwt from "jsonwebtoken";
+import gameService from "../services/User/gameService";
+import { NextFunction } from "express";
+import { UserPayload } from "../services/User/authService";
+import db from "../models";
 
-//       const player = {
-//         id: socket.id,
-//         user_id: socket.user_id,
-//         username: socket.username,
-//         topic: data.topic || "general",
-//       };
-//       // Tìm đối thủ cùng topic
-//       // const opponentIndex = waitingPlayers.findIndex(
-//       //   (p) => p.topic === player.topic
-//       // );
-//       const opponentIndex =
-//         Math.random() * wattingPlayers.length < 0.5 ? -1 : 0; // Giả lập tìm đối thủ
+dotenv.config();
 
-//       if (opponentIndex !== -1) {
-//         const opponent = wattingPlayers[opponentIndex];
-//         wattingPlayers.splice(opponentIndex, 1); // Xóa đối thủ khỏi hàng đợi
+export default (io: any, gameRooms: any, wattingPlayers: any[]) => {
+  // Middleware xác thực
+  io.use(async (socket: any, next: NextFunction) => {
+    const token = socket.handshake.auth.token;
+    if (token) {
+      try {
+        const decoded = jwt.verify(
+          token,
+          process.env.ACCESS_TOKEN_SECRET as string
+        ) as UserPayload;
+        socket.user_id = decoded.user_id;
+        socket.username = decoded.username;
 
-//         // Tạo phòng đấu
-//         const roomId = `room_${Date.now()}_${Math.random()
-//           .toString(36)
-//           .substr(2, 9)}`;
+        // Cache profile picture during authentication
+        try {
+          const user = await db.user.findOne({
+            where: { user_id: decoded.user_id },
+            attributes: ["profile_picture"],
+          });
+          socket.profile_picture = user?.profile_picture || null;
+        } catch (dbError) {
+          console.warn(
+            `⚠️ Could not fetch profile picture for ${socket.username}:`,
+            dbError
+          );
+          socket.profile_picture = null;
+        }
 
-//         try {
-//           // Lấy câu hỏi từ database
-//           const questions = await gameService.getRandomQuestion();
+        console.log(`✅ User ${socket.username} authenticated`);
+        next();
+      } catch (err) {
+        console.log("❌ Authentication failed:", (err as Error).message);
+        next(new Error("Authentication error"));
+      }
+    } else {
+      next(new Error("No token provided"));
+    }
+  });
 
-//           if (questions.length === 0) {
-//             socket.emit("error", {
-//               message: "Không tìm thấy câu hỏi cho chủ đề này",
-//             });
-//             return;
-//           }
+  // Xử lý kết nối mới
+  io.on("connection", (socket: any) => {
+    console.log(`🔌 User ${socket.username} connected (ID: ${socket.id})`);
 
-//           const gameRoom = {
-//             id: roomId,
-//             players: [opponent, player],
-//             questions: questions,
-//             currentQuestion: 0,
-//             scores: {
-//               [opponent.user_id]: 0,
-//               [player.user_id]: 0,
-//             },
-//             status: "waiting",
-//             topic: player.topic,
-//             answers: {},
-//             questionStartTime: null,
-//           };
+    // Tham gia hàng đợi tìm trận
+    socket.on("join_queue", async (_data: any) => {
+      // Kiểm tra user đã ở trong hàng đợi chưa
+      const alreadyInQueue = wattingPlayers.some(
+        (p: any) => p.user_id === socket.user_id
+      );
+      if (alreadyInQueue) {
+        socket.emit("queue_joined", {
+          position:
+            wattingPlayers.findIndex((p: any) => p.user_id === socket.user_id) +
+            1,
+        });
+        console.log(`⏳ ${socket.username} already in queue.`);
+        return;
+      }
 
-//           gameRooms.set(roomId, gameRoom);
+      // Kiểm tra user đã ở trong phòng chưa
+      for (let [roomId, gameRoom] of gameRooms) {
+        const playerInRoom = gameRoom.players.find(
+          (p: any) => p.user_id === socket.user_id
+        );
+        if (playerInRoom) {
+          console.log(`🎮 ${socket.username} already in game room ${roomId}`);
+          // Cập nhật socket ID mới cho player
+          playerInRoom.id = socket.id;
+          socket.join(roomId);
 
-//           // Join socket rooms
-//           const opponentSocket = io.sockets.sockets.get(opponent.id);
-//           if (opponentSocket) {
-//             opponentSocket.join(roomId);
-//           }
-//           socket.join(roomId);
+          // Gửi lại thông tin phòng
+          const opponent = gameRoom.players.find(
+            (p: any) => p.user_id !== socket.user_id
+          );
+          socket.emit("game_found", {
+            roomId,
+            player: {
+              username: playerInRoom.username,
+              user_id: playerInRoom.user_id,
+              profile_picture: playerInRoom.profile_picture,
+            },
+            opponent: opponent
+              ? {
+                  username: opponent.username,
+                  user_id: opponent.user_id,
+                  profile_picture: opponent.profile_picture,
+                }
+              : null,
+            totalQuestions: gameRoom.questions.length,
+          });
+          return;
+        }
+      }
 
-//           console.log(`🎮 Game room created: ${roomId}`);
-//           console.log(`👥 Players: ${opponent.username} vs ${player.username}`);
+      const player = {
+        id: socket.id,
+        user_id: socket.user_id,
+        username: socket.username,
+        profile_picture: socket.profile_picture,
+      };
 
-//           // Thông báo cho cả 2 người chơi
-//           io.to(roomId).emit("game_found", {
-//             roomId,
-//             opponent: {
-//               username: opponent.username,
-//               user_id: opponent.user_id,
-//             },
-//             player: {
-//               username: player.username,
-//               user_id: player.user_id,
-//             },
-//             totalQuestions: questions.length,
-//             topic: player.topic,
-//           });
-//         } catch (error) {
-//           console.error("❌ Error creating game room:", error);
-//           socket.emit("error", { message: "Lỗi khi tạo phòng đấu" });
-//         }
-//       } else {
-//         // Không tìm thấy đối thủ, thêm vào hàng đợi
-//         wattingPlayers.push(player);
-//         socket.emit("queue_joined", {
-//           position: wattingPlayers.length,
-//           topic: player.topic,
-//         });
-//         console.log(
-//           `⏳ ${socket.username} waiting in queue. Position: ${wattingPlayers.length}`
-//         );
-//       }
-//     });
-//     // Sẵn sàng bắt đầu game
-//     socket.on("ready_to_start", (data: any) => {
-//       const gameRoom = gameRooms.get(data.roomId);
-//       if (!gameRoom) {
-//         socket.emit("error", { message: "Không tìm thấy phòng đấu" });
-//         return;
-//       }
+      // Tìm đối thủ ngẫu nhiên (loại trừ chính mình)
+      const availableOpponents = wattingPlayers.filter(
+        (p: any) => p.user_id !== socket.user_id
+      );
+      const opponentIndex =
+        availableOpponents.length > 0
+          ? Math.floor(Math.random() * availableOpponents.length)
+          : -1;
 
-//       console.log(`🚀 Starting game in room ${data.roomId}`);
+      if (opponentIndex !== -1) {
+        const opponent = availableOpponents[opponentIndex];
+        // Xóa đối thủ khỏi hàng đợi
+        const realOpponentIndex = wattingPlayers.findIndex(
+          (p: any) => p.user_id === opponent.user_id
+        );
+        wattingPlayers.splice(realOpponentIndex, 1);
 
-//       gameRoom.status = "playing";
-//       gameRoom.questionStartTime = Date.now();
+        // Tạo phòng đấu
+        const roomId = `room_${Date.now()}_${Math.random()
+          .toString(36)
+          .substr(2, 9)}`;
 
-//       // Gửi câu hỏi đầu tiên
-//       io.to(data.roomId).emit("game_started", {
-//         question: gameRoom.questions[0],
-//         questionNumber: 1,
-//         totalQuestions: gameRoom.questions.length,
-//       });
+        try {
+          // Lấy câu hỏi từ database
+          const questions = await gameService.getRandomQuestion();
+          if (questions.length === 0) {
+            socket.emit("error", {
+              message: "Không tìm thấy câu hỏi cho chủ đề này",
+            });
+            return;
+          }
 
-//       // Đặt timer cho câu hỏi (10 giây)
-//       setTimeout(() => {
-//         handleQuestionTimeout(data.roomId);
-//       }, 10000);
-//     });
-//     socket.on("submit_answer", (data: any) => {
-//       const gameRoom = gameRooms.get(data.roomId);
-//       if (!gameRoom || gameRoom.status !== "playing") return;
+          const gameRoom = {
+            id: roomId,
+            players: [opponent, player],
+            questions: questions,
+            currentQuestion: 0,
+            scores: {
+              [opponent.user_id]: 0,
+              [player.user_id]: 0,
+            },
+            status: "waiting",
+            answers: {},
+            questionStartTime: null,
+          };
+          gameRooms.set(roomId, gameRoom);
 
-//       const currentQ = gameRoom.questions[gameRoom.currentQuestion];
-//       const isCorrect = data.answer === currentQ.correct_answer;
-//       const responseTime = Date.now() - gameRoom.questionStartTime;
-//       console.log(
-//         `💡 ${socket.username} answered ${data.answer} (${
-//           isCorrect ? "correct" : "wrong"
-//         }) in ${responseTime}ms`
-//       );
+          // Join socket rooms
+          const opponentSocket = io.sockets.sockets.get(opponent.id);
+          if (opponentSocket) {
+            opponentSocket.join(roomId);
+          }
+          socket.join(roomId);
 
-//       // Tính điểm
-//       let points = 0;
-//       if (isCorrect) {
-//         points = 20; // Điểm cơ bản
-//         if (responseTime < 5000) points += 5; // Bonus trả lời nhanh
-//       }
+          console.log(`🎮 Game room created: ${roomId}`);
+          console.log(`👥 Players: ${opponent.username} vs ${player.username}`);
 
-//       gameRoom.scores[socket.user_id] += points;
-//       gameRoom.answers[socket.user_id] = {
-//         answer: data.answer,
-//         isCorrect,
-//         points,
-//         responseTime,
-//       };
+          // Thông báo cho player (người vừa join)
+          socket.emit("game_found", {
+            roomId,
+            player: {
+              username: player.username,
+              user_id: player.user_id,
+              profile_picture: player.profile_picture,
+            },
+            opponent: {
+              username: opponent.username,
+              user_id: opponent.user_id,
+              profile_picture: opponent.profile_picture,
+            },
+            totalQuestions: questions.length,
+          });
 
-//       // Kiểm tra xem cả 2 đã trả lời chưa
-//       const answeredCount = Object.keys(gameRoom.answers).length;
-//       console.log(`📊 Answered: ${answeredCount}/2 players`);
+          // Thông báo cho opponent
+          if (opponentSocket) {
+            opponentSocket.emit("game_found", {
+              roomId,
+              player: {
+                username: opponent.username,
+                user_id: opponent.user_id,
+                profile_picture: opponent.profile_picture,
+              },
+              opponent: {
+                username: player.username,
+                user_id: player.user_id,
+                profile_picture: player.profile_picture,
+              },
+              totalQuestions: questions.length,
+            });
+          }
+        } catch (error) {
+          console.error("❌ Error creating game room:", error);
+          socket.emit("error", { message: "Lỗi khi tạo phòng đấu" });
+        }
+      } else {
+        // Không tìm thấy đối thủ, thêm vào hàng đợi
+        wattingPlayers.push(player);
+        socket.emit("queue_joined", {
+          position: wattingPlayers.length,
+        });
+        console.log(
+          `⏳ ${socket.username} waiting in queue. Position: ${wattingPlayers.length}`
+        );
+      }
+    });
+
+    // Sẵn sàng bắt đầu game
+    socket.on("ready_to_start", (data: any) => {
+      const gameRoom = gameRooms.get(data.roomId);
+      if (!gameRoom) {
+        socket.emit("error", { message: "Không tìm thấy phòng đấu" });
+        return;
+      }
+
+      // Kiểm tra player có trong phòng không
+      const playerInRoom = gameRoom.players.find(
+        (p: any) => p.user_id === socket.user_id
+      );
+      if (!playerInRoom) {
+        socket.emit("error", { message: "Bạn không ở trong phòng này" });
+        return;
+      }
+
+      console.log(`🚀 Starting game in room ${data.roomId}`);
+      gameRoom.status = "playing";
+      gameRoom.questionStartTime = Date.now();
+
+      // Gửi câu hỏi đầu tiên
+      io.to(data.roomId).emit("game_started", {
+        question: gameRoom.questions[0],
+        questionNumber: 1,
+        totalQuestions: gameRoom.questions.length,
+      });
+    });
+
+    socket.on("submit_answer", (data: any) => {
+      const gameRoom = gameRooms.get(data.roomId);
+      if (!gameRoom || gameRoom.status !== "playing") return;
+
+      // Kiểm tra player có trong phòng không
+      const playerInRoom = gameRoom.players.find(
+        (p: any) => p.user_id === socket.user_id
+      );
+      if (!playerInRoom) return;
+
+      const currentQ = gameRoom.questions[gameRoom.currentQuestion];
+      const isCorrect = data.answer === currentQ.correct_answer;
+      const responseTime = Date.now() - gameRoom.questionStartTime;
+
+      console.log(
+        `💡 ${socket.username} answered ${data.answer} (${
+          isCorrect ? "correct" : "wrong"
+        }) in ${responseTime}ms`
+      );
+
+      // Tính điểm
+      let points = 0;
+      if (isCorrect) {
+        points = 50; // Điểm cơ bản
+        if (responseTime < 5000) points += 30;
+      }
+
+      gameRoom.scores[socket.user_id] += points;
+      gameRoom.answers[socket.user_id] = {
+        username: socket.username,
+        answer: data.answer,
+        isCorrect,
+        points,
+        responseTime,
+      };
+
+      // Kiểm tra xem cả 2 đã trả lời chưa
+      const answeredCount = Object.keys(gameRoom.answers).length;
+      console.log(`📊 Answered: ${answeredCount}/2 players`);
 
       if (answeredCount === 2) {
         handleQuestionComplete(data.roomId);

@@ -8,7 +8,7 @@ import passport from "passport";
 import session from "express-session";
 
 import http from "http";
-import { DefaultEventsMap, Server } from "socket.io";
+import { Server } from "socket.io";
 import { responseFormatter } from "./middleware/responseFormatter.js";
 import homePageRoutes from "./routes/User/homePageRoute.js";
 import profileRoutes from "./routes/User/profileRoute.js";
@@ -22,6 +22,7 @@ import listFlashCardRoute from "./routes/User/listFlashCardRoute.js";
 import AdminVocabularyRoutes from "./routes/Admin/VocabularyRoute.js";
 import AdminTopicRoutes from "./routes/Admin/topicRoute.js";
 import AdminUserRoutes from "./routes/Admin/userRoute.js";
+import battleHandler from "./socketIO/battleHandler.js";
 
 dotenv.config();
 
@@ -91,7 +92,3 @@ battleHandler(io, gameRooms, waitingPlayers);
 server.listen(port, "0.0.0.0", () => {
   console.log(`Example app listening on port ${hostname}/${port}`);
 });
-function battleHandler(io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>, gameRooms: Map<any, any>, waitingPlayers: any[]) {
-  throw new Error("Function not implemented.");
-}
-
