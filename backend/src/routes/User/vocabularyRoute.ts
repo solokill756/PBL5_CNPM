@@ -32,4 +32,15 @@ vocabularyRouter.get(
   "/topicDetails/:topic_id",
   vocabularyController.getTopicVocabularyByID
 );
+
+vocabularyRouter.get(
+  "/flashcard/:topic_id",
+  vocabularyController.getFlashcardOfTopic
+);
+
+vocabularyRouter.get(
+  "/checkTopicHasListFlashcard/:topic_id",
+  vocabularyController.checkTopicHasListFlashcard
+);
+
 export default vocabularyRouter;

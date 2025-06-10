@@ -134,6 +134,32 @@ const getTopicVocabularyByID = async (req: Request, res: Response) => {
   }
 };
 
+const getFlashcardOfTopic = async (req: Request, res: Response) => {
+  try {
+    const user_id = (req as any).user.user_id;
+    const { topic_id } = req.params;
+    const vocabularies = await vocabularyService.getFlashCardOftopic(
+      topic_id,
+      user_id
+    );
+    sendSuccess(res, vocabularies);
+  } catch (error: any) {
+    sendError(res, error.message, 500);
+  }
+};
+
+const checkTopicHasListFlashcard = async (req: Request, res: Response) => {
+  try {
+    const { topic_id } = req.params;
+    const vocabularies = await vocabularyService.checkTopicHasListFlashcard(
+      topic_id
+    );
+    sendSuccess(res, vocabularies);
+  } catch (error) {
+    sendError(res, "Lỗi server", 500);
+  }
+};
+
 export default {
   getSimilarVocabulary,
   getVocabularyByTopic,
@@ -145,4 +171,6 @@ export default {
   checkLevelUser,
   updateVocabularyUser,
   getTopicVocabularyByID,
+  getFlashcardOfTopic,
+  checkTopicHasListFlashcard,
 };

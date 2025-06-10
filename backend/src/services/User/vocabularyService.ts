@@ -402,6 +402,98 @@ const addHistorySearch = async (user_id: string, vocabulary_id: string) => {
   }
 };
 
+const checkTopicHasListFlashcard = async (topic_id: string) => {
+  const topic = await db.vocabularyTopic.findByPk(topic_id);
+  const check = await db.listFlashcard.findOne({
+    where: {
+      title: topic.name,
+    },
+  });
+  if (check) {
+    return true;
+  } else {
+    return false;
+  }
+};
+
+const getFlashCardOftopic = async (topic_id: string, user_id: string) => {
+  try {
+    const list_vocab = await db.vocabulary.findAll({
+      where: {
+        topic_id,
+      },
+    });
+    const topic = await db.vocabularyTopic.findByPk(topic_id);
+    const check = await db.listFlashcard.findOne({
+      where: {
+        title: topic.name,
+      },
+    });
+    if (check) {
+      const flashcards = await db.flashcard.findAll({
+        where: {
+          list_id: check.list_id,
+        },
+      });
+      return {
+        listFlashcard: check,
+        flashcards: flashcards,
+      };
+    } else {
+      const listFlashcard = await db.listFlashcard.create({
+        title: topic.name,
+        description: topic.description,
+        user_id: user_id,
+      });
+      const flashcards = list_vocab.map((item: any) => {
+        return {
+          front_text: item.word,
+          back_text: item.meaning,
+          list_id: listFlashcard.list_id,
+          custom_note: item.example,
+        };
+      });
+      await db.flashcardStudy.create({
+        list_id: listFlashcard.list_id,
+        user_id: user_id,
+        last_accessed: Date.now(),
+      });
+      try {
+        const flashcardPromises = flashcards.map((flashcard: any) => {
+          return db.flashcard
+            .create({
+              ...flashcard,
+            })
+            .catch((_error: any) => {
+              return null; // Trả về null nếu lỗi, không làm fail toàn bộ
+            });
+        });
+
+        const results = await Promise.all(flashcardPromises);
+        const successCount = results.filter((result) => result !== null).length;
+        const failCount = results.length - successCount;
+
+        console.log(
+          `Flashcard creation completed: ${successCount} success, ${failCount} failed`
+        );
+
+        if (failCount > 0) {
+          console.warn(`${failCount} flashcards failed to create`);
+        }
+        return {
+          listFlashcard: listFlashcard,
+          flashcards: flashcards,
+        };
+      } catch (error: any) {
+        console.error("Error in flashcard creation process:", error);
+        throw new Error(`Failed to create flashcards: ${error.message}`);
+      }
+    }
+  } catch (error) {
+    throw error;
+  }
+};
+
 export default {
   getSimilarVocabulary,
   getVocabularyByTopic,
@@ -413,4 +505,6 @@ export default {
   checkLevelUser,
   updateVocabularyUser,
   getTopicVocabularyByID,
+  getFlashCardOftopic,
+  checkTopicHasListFlashcard,
 };
