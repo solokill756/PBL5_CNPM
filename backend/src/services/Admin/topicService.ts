@@ -10,6 +10,7 @@ const addTopic = async (topic: any): Promise<any> => {
 
 const deleteTopic = async (topic_id: string): Promise<boolean> => {
   try {
+    await db.vocabulary.destroy({ where: { topic_id } });
     await db.vocabularyTopic.destroy({ where: { topic_id } });
     return true;
   } catch (error) {
