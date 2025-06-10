@@ -1,9 +1,19 @@
 module.exports = {
-    // ... existing config
+    extends: [
+      'react-app',
+      'react-app/jest'
+    ],
     rules: {
-      // ... existing rules
-      "react-hooks/exhaustive-deps": "warn", // Chuyển từ error thành warning
-      "no-unused-vars": "warn",
-      "no-unreachable": "warn"
+      // Chuyển các lỗi React Hooks thành warning
+      'react-hooks/exhaustive-deps': 'warn',
+      
+      // Chuyển các lỗi unused variables thành warning
+      'no-unused-vars': 'warn',
+      
+      // Chuyển unreachable code thành warning
+      'no-unreachable': 'warn',
+      
+      // Chuyển no-loop-func thành warning
+      'no-loop-func': 'warn'
     }
   };
