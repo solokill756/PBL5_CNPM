@@ -25,6 +25,8 @@ const deleteTopic = async (req: Request, res: Response) => {
       return;
     }
     await topicService.deleteTopic(topicId);
+    // Send deletion notification
+
     sendSuccess(res, {}, "Topic deleted successfully");
   } catch (error) {
     console.error(error);
@@ -40,11 +42,14 @@ const updateTopic = async (req: Request, res: Response) => {
   try {
     const { topicId } = req.params;
     const updateData = req.body;
+   
     if (!topicId || !updateData) {
       sendError(res, "Topic ID and update data are required", 400);
       return;
     }
     const updatedTopic = await topicService.updateTopic(topicId, updateData);
+    // Send update notification
+   
     sendSuccess(res, updatedTopic, "Topic updated successfully");
   } catch (error) {
     if (error instanceof Error) {

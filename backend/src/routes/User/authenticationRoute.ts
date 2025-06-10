@@ -40,7 +40,9 @@ authRoutes.get(
       if (!req.user) {
         res.status(401).json({ message: "Unauthorized" });
       } else {
-        res.redirect("http://localhost:3000/auth-success");
+        res.redirect(
+          "https://wonderful-moss-08f98b21e.6.azurestaticapps.net/auth-success"
+        );
         // res.redirect("http://localhost:9000/api/auth/user");
       }
     } catch (error) {

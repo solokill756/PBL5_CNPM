@@ -3,6 +3,7 @@ import { sendRequestNewVocabularyEmail } from "../../helpers/sendRequestNewVocab
 import db from "../../models";
 import dotenv from "dotenv";
 import achivermentService from "./achivermentService";
+import { io } from "../../server";
 dotenv.config();
 
 const getTopicVocabularyByID = async (topic_id: string) => {
@@ -340,6 +341,31 @@ const checkLevelUser = async (user_id: string, new_points: number) => {
         userTotalPoints -= userLevelThreshold;
         await achivermentService.unlockAchievement(user_id, level);
         userLevelThreshold = level * 500;
+      }
+
+      if (user.current_level < level) {
+        try {
+          const payload = {
+            title: "🎉 Bạn đã lên cấp mới!",
+            message: `Chúc mừng! Bạn vừa đạt cấp độ ${level}. Tiếp tục phát huy nhé!`,
+            created_at: Date.now(),
+            user_id: user_id,
+          };
+
+          io.emit("notification", payload);
+          console.log(
+            `Level up notification sent to user ${user_id}: Level ${level}`
+          );
+
+          // ✅ Lưu notification vào database cho user
+          await db.notification.create(payload);
+          console.log(
+            `Level up notification saved to database for user ${user_id}`
+          );
+        } catch (socketError) {
+          console.error("Error sending level up notification:", socketError);
+          // Không làm fail toàn bộ process nếu notification lỗi
+        }
       }
       await db.user.update(
         {

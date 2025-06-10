@@ -17,6 +17,7 @@ const generateQuizController = async (req: Request, res: Response) => {
 };
 
 const saveResultQuizController = async (req: Request, res: Response) => {
+  const io = req.app.locals.io;
   const { score, number_of_questions, topic_id } = req.body;
   const user_id = (req as any).user.user_id;
   if (!user_id) {
@@ -27,7 +28,8 @@ const saveResultQuizController = async (req: Request, res: Response) => {
       Number(score),
       user_id,
       Number(number_of_questions),
-      topic_id
+      topic_id,
+      io
     );
     sendSuccess(res, result);
   } catch (error) {

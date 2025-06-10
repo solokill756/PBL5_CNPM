@@ -23,6 +23,7 @@ import AdminVocabularyRoutes from "./routes/Admin/VocabularyRoute.js";
 import AdminTopicRoutes from "./routes/Admin/topicRoute.js";
 import AdminUserRoutes from "./routes/Admin/userRoute.js";
 import battleHandler from "./socketIO/battleHandler.js";
+import { setupNotificationSocket } from "./socketIO/Notification.js";
 
 dotenv.config();
 
@@ -56,6 +57,8 @@ const io = new Server(server, {
   },
 });
 
+export { io };
+
 const gameRooms = new Map();
 const waitingPlayers: any[] = [];
 
@@ -88,6 +91,7 @@ app.use("/api/admin/topic", AdminTopicRoutes);
 app.use("/api/admin/user", AdminUserRoutes);
 // import Socket IO logic
 battleHandler(io, gameRooms, waitingPlayers);
+setupNotificationSocket(io);
 
 server.listen(port, "0.0.0.0", () => {
   console.log(`Example app listening on port ${hostname}/${port}`);

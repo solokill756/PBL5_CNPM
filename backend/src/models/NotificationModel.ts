@@ -6,6 +6,7 @@ interface NotificationAttributes {
   message: string;
   is_read: boolean;
   created_at: Date;
+  title: string;
 }
 
 interface NotificationCreationAttributes
@@ -21,6 +22,7 @@ class Notification
   declare user_id: string;
   declare message: string;
   declare is_read: boolean;
+  declare title: string;
   declare created_at: Date;
 }
 
@@ -50,6 +52,10 @@ export default (sequelize: Sequelize) => {
         allowNull: false,
         defaultValue: DataTypes.NOW,
       },
+      title: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
     },
     {
       sequelize,
@@ -58,11 +64,14 @@ export default (sequelize: Sequelize) => {
       indexes: [
         {
           unique: true,
-          fields: ["notification_id"]
-        }
-      ]
+          fields: ["notification_id"],
+        },
+        {
+          unique: true,
+          fields: ["user_id"],
+        },
+      ],
     }
-
   );
 
   return Notification;
