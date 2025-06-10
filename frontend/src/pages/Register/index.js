@@ -67,19 +67,7 @@ function Register() {
         ...prev,
         username: "Vui lòng nhập tên người dùng.",
       }));
-    } else {
-      // const exists = await checkExist('username', username);
-      // if (exists) {
-      //     setApiErrors((prev) => ({ ...prev, usernameExists: true }));
-      //     setError((prev) => ({
-      //         ...prev,
-      //         username: 'Tên người dùng đã tồn tại.',
-      //     }));
-      // } else {
-      //     setApiErrors((prev) => ({ ...prev, usernameExists: false }));
-      //     setError((prev) => ({ ...prev, username: '' }));
-      // }
-    }
+    } 
   };
 
   const handleInputFocus = (field) => {

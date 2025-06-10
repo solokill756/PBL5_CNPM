@@ -1,6 +1,5 @@
 import { useCallback } from "react";
 import { axiosPrivate } from "../api/axios";
-import useAuth from "./useAuth";
 import { useAuthStore } from "@/store/useAuthStore";
 
 const useRefreshToken = () => {

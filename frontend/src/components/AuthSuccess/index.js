@@ -1,7 +1,6 @@
 import { axiosPrivate } from "@/api/axios";
-import AuthContext from "@/context/AuthProvider";
 import { useAuthStore } from "@/store/useAuthStore";
-import React, { useContext, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const AuthSuccess = () => {

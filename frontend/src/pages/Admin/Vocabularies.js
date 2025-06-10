@@ -9,7 +9,6 @@ import {
   IoSave,
   IoBook,
   IoRefresh,
-  IoFilter,
   IoCloudUpload,
   IoPencil,
   IoLibrary,
@@ -350,8 +349,8 @@ const BulkUploadModal = ({ isOpen, onClose, onUpload, topics }) => {
                 onChange={(e) => setCsvData(e.target.value)}
                 rows={10}
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-violet-500 focus:border-transparent font-mono text-sm transition-all duration-200"
-                placeholder="hello, /həˈloʊ/, xin chào, Hello world!, 1, noun
-goodbye, /ɡʊdˈbaɪ/, tạm biệt, Goodbye my friend!, 1, interjection"
+                placeholder="hello, /hə'loʊ/, xin chào, Hello world!, 1, noun
+goodbye, /gʊd'bai/, tạm biệt, Goodbye my friend!, 1, interjection"
               />
             </div>
 

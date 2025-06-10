@@ -399,7 +399,7 @@ const useTopicStore = create((set, get) => ({
       
       // Process topic data with fallbacks
       let currentTopic = get().categories.find(
-        (category) => category.topic_id == topicId
+        (category) => category.topic_id === topicId
       );
 
       // Use API response if available and no cached topic

@@ -23,7 +23,6 @@ const Home = () => {
     init(axiosPrivate);
   }, [init, axiosPrivate, setAxios]);
 
-  // Helper functions để check empty state
   const hasClasses = classes && classes.length > 0;
   const hasFlashcards = flashcards && flashcards.length > 0;
   const hasAnyRecentActivity = hasClasses || hasFlashcards;
