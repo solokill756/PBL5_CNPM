@@ -8,8 +8,7 @@ import passport from "passport";
 import session from "express-session";
 
 import http from "http";
-import { Server } from "socket.io";
-import battleHandler from "./socketIO/battleHandler.js";
+import { DefaultEventsMap, Server } from "socket.io";
 import { responseFormatter } from "./middleware/responseFormatter.js";
 import homePageRoutes from "./routes/User/homePageRoute.js";
 import profileRoutes from "./routes/User/profileRoute.js";
@@ -30,7 +29,10 @@ const app: Application = express();
 const port: number = parseInt(process.env.PORT as string, 10) || 80;
 const hostname: string = process.env.HOST_NAME as string;
 const corOptions: cors.CorsOptions = {
-  origin: "http://localhost:3000", // Chỉ định frontend được phép truy cập
+  origin: [
+    "http://localhost:3000", // Cho development
+    "https://wonderful-moss-08f98b21e.6.azurestaticapps.net", // Cho production trên Azure
+  ],
   credentials: true, // Cho phép gửi cookie/token qua request
 };
 const server = http.createServer(app);
@@ -89,3 +91,7 @@ battleHandler(io, gameRooms, waitingPlayers);
 server.listen(port, "0.0.0.0", () => {
   console.log(`Example app listening on port ${hostname}/${port}`);
 });
+function battleHandler(io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>, gameRooms: Map<any, any>, waitingPlayers: any[]) {
+  throw new Error("Function not implemented.");
+}
+
