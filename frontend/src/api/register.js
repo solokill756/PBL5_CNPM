@@ -4,14 +4,14 @@ import { axiosPrivate } from "./axios";
 export const fetchRegister = async (username, email, password, fullname) => {
   try {
     const response = await axiosPrivate.post("/api/auth/register", {
-      username, 
+      username,
       email,
       password,
       fullname,
     });
     const data = response.data.data;
-
-    return { success: true, email };
+    if (data) return { success: true, email };
+    return { success: false, message: "Lỗi đăng ký" };
   } catch (error) {
     console.error("Error during register:", error);
     return {

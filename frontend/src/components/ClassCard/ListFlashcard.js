@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
 import CourseInClass from './CourseInClass';
 
 const CourseSkeleton = () => {
@@ -101,7 +100,6 @@ const CourseGroup = ({ header, courses, currentUserId, classCreatorId, onDeleteF
 const ListFlashcard = ({ lists, createdBy,currentUserId, classCreatorId, onDeleteFlashcard }) => {
     const [groupedCourses, setGroupedCourses] = useState({});
     const [isLoading, setIsLoading] = useState(true);
-    const { classId } = useParams();
 
     useEffect(() => {
         console.log("Props received:", { lists, createdBy });

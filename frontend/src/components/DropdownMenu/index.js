@@ -2,7 +2,6 @@ import React from 'react';
 import MenuItem from '../MenuItem';
 import { GrAchievement } from "react-icons/gr";
 import { IoSettingsOutline } from "react-icons/io5";
-import { FaRegMoon } from "react-icons/fa";
 import { FiHelpCircle, FiLogOut } from "react-icons/fi";
 import { MdLockPerson } from "react-icons/md";
 import AvatarLeft from '../AvatarLeft';
