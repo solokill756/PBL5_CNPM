@@ -237,13 +237,17 @@ const getAlToFindVocabulary = async (
           ai_suggested: "1",
           language: "Japanese",
         });
-        await db.vocabularyTopic.update({
-          where: {
-            topic_id: findTopic.topic_id,
-            user_id: user_id,
+        await db.vocabularyTopic.update(
+          {
+            mastered_words: db.Sequelize.literal(`mastered_words + 1`),
           },
-          mastered_words: db.Sequelize.literal(`mastered_words + 1`),
-        });
+          {
+            where: {
+              topic_id: findTopic.topic_id,
+              user_id: user_id,
+            },
+          }
+        );
       }
       await addHistorySearch(user_id, result.vocab_id);
     }
@@ -276,13 +280,17 @@ const getAlToFindVocabulary = async (
           ai_suggested: "1",
           language: "Vietnamese",
         });
-        await db.vocabularyTopic.update({
-          where: {
-            topic_id: findTopic.topic_id,
-            user_id: user_id,
+        await db.vocabularyTopic.update(
+          {
+            mastered_words: db.Sequelize.literal(`mastered_words + 1`),
           },
-          mastered_words: db.Sequelize.literal(`mastered_words + 1`),
-        });
+          {
+            where: {
+              topic_id: findTopic.topic_id,
+              user_id: user_id,
+            },
+          }
+        );
       }
       await addHistorySearch(user_id, result.vocab_id);
     }
