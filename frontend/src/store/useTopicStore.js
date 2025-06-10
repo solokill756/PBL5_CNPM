@@ -26,6 +26,8 @@ const useTopicStore = create((set, get) => ({
   completedTopicTests: new Set(),
   completedTopicsThisSession: new Set(),
 
+  flashcardSets: [],
+
   // Thêm session tracking để detect navigation changes
   lastRefreshTime: 0,
   needsRefresh: false,
@@ -34,6 +36,7 @@ const useTopicStore = create((set, get) => ({
     categories: false,
     userLevel: false,
     topicVocabularies: false,
+    flashcardCreate: false,
     initializing: false,
     refreshing: false,
     bookmarkUpdating: new Set(),
@@ -59,23 +62,25 @@ const useTopicStore = create((set, get) => ({
   forceRefreshUserData: async (axios) => {
     try {
       console.log("🔄 Force refreshing user data...");
-      set((state) => ({ 
+      set((state) => ({
         loadingStates: { ...state.loadingStates, refreshing: true },
-        needsRefresh: false 
+        needsRefresh: false,
       }));
 
       // Parallel refresh user level và categories
       const [levelResult, categoriesResult] = await Promise.allSettled([
         axios.post("/api/vocabulary/checkLevelUser", { new_points: 0 }),
-        axios.get("/api/vocabulary/allTopic")
+        axios.get("/api/vocabulary/allTopic"),
       ]);
 
       // Process level data
-      if (levelResult.status === 'fulfilled') {
+      if (levelResult.status === "fulfilled") {
         const levelData = levelResult.value.data.data;
-        
+
         const progressPercent = Math.round(
-          (parseInt(levelData.total_points) / parseInt(levelData.levelThreshold)) * 100
+          (parseInt(levelData.total_points) /
+            parseInt(levelData.levelThreshold)) *
+            100
         );
 
         const updatedUserLevel = {
@@ -94,11 +99,15 @@ const useTopicStore = create((set, get) => ({
         };
 
         set({ userLevel: updatedUserLevel });
-        console.log("✅ User level refreshed:", updatedUserLevel.total_points, "points");
+        console.log(
+          "✅ User level refreshed:",
+          updatedUserLevel.total_points,
+          "points"
+        );
       }
 
       // Process categories data
-      if (categoriesResult.status === 'fulfilled') {
+      if (categoriesResult.status === "fulfilled") {
         const categoriesData = categoriesResult.value.data.data;
         const processedCategories = categoriesData.map((category) => ({
           ...category,
@@ -123,8 +132,8 @@ const useTopicStore = create((set, get) => ({
       console.error("❌ Error force refreshing user data:", error);
       return false;
     } finally {
-      set((state) => ({ 
-        loadingStates: { ...state.loadingStates, refreshing: false } 
+      set((state) => ({
+        loadingStates: { ...state.loadingStates, refreshing: false },
       }));
     }
   },
@@ -177,7 +186,7 @@ const useTopicStore = create((set, get) => ({
   markTopicCompletedThisSession: (topicId) => {
     const sessionCompleted = get().completedTopicsThisSession;
     set({
-      completedTopicsThisSession: new Set([...sessionCompleted, topicId])
+      completedTopicsThisSession: new Set([...sessionCompleted, topicId]),
     });
   },
 
@@ -189,7 +198,7 @@ const useTopicStore = create((set, get) => ({
   hasTopicTestCompleted: (topicId) => {
     const userId = get().userLevel.user_id;
     if (!userId) return false;
-    
+
     try {
       const completed = JSON.parse(
         localStorage.getItem(`topic_tests_completed_${userId}`) || "[]"
@@ -206,16 +215,17 @@ const useTopicStore = create((set, get) => ({
 
     try {
       const completed = JSON.parse(
-        localStorage.getItem(`topic_tests_completed_${userLevel.user_id}`) || "[]"
+        localStorage.getItem(`topic_tests_completed_${userLevel.user_id}`) ||
+          "[]"
       );
-      
+
       if (!completed.includes(topicId)) {
         const newCompleted = [...completed, topicId];
         localStorage.setItem(
           `topic_tests_completed_${userLevel.user_id}`,
           JSON.stringify(newCompleted)
         );
-        
+
         set({ completedTopicTests: new Set(newCompleted) });
       }
     } catch (error) {
@@ -239,7 +249,7 @@ const useTopicStore = create((set, get) => ({
   initializeUserData: async (axios) => {
     try {
       const state = get();
-      
+
       // Avoid duplicate initialization
       if (state.loadingStates.initializing) {
         return;
@@ -254,22 +264,30 @@ const useTopicStore = create((set, get) => ({
 
       // Parallel API calls
       const apiCalls = [];
-      
+
       // Always fetch user level first để có userId
       if (!state.userLevel.user_id) {
         apiCalls.push(
-          axios.post("/api/vocabulary/checkLevelUser", { new_points: 0 })
-            .then(response => ({ type: 'userLevel', data: response.data.data }))
-            .catch(error => ({ type: 'userLevel', error }))
+          axios
+            .post("/api/vocabulary/checkLevelUser", { new_points: 0 })
+            .then((response) => ({
+              type: "userLevel",
+              data: response.data.data,
+            }))
+            .catch((error) => ({ type: "userLevel", error }))
         );
       }
 
       // Fetch categories nếu chưa có
       if (!state.categories.length) {
         apiCalls.push(
-          axios.get("/api/vocabulary/allTopic")
-            .then(response => ({ type: 'categories', data: response.data.data }))
-            .catch(error => ({ type: 'categories', error }))
+          axios
+            .get("/api/vocabulary/allTopic")
+            .then((response) => ({
+              type: "categories",
+              data: response.data.data,
+            }))
+            .catch((error) => ({ type: "categories", error }))
         );
       }
 
@@ -278,29 +296,29 @@ const useTopicStore = create((set, get) => ({
       }
 
       const results = await Promise.allSettled(apiCalls);
-      
+
       let userLevelData = null;
       let categoriesData = null;
       let hasError = false;
 
-      results.forEach(result => {
-        if (result.status === 'fulfilled') {
+      results.forEach((result) => {
+        if (result.status === "fulfilled") {
           const { type, data, error } = result.value;
-          
+
           if (error) {
             console.error(`Error in ${type}:`, error);
             hasError = true;
             return;
           }
 
-          if (type === 'userLevel') {
+          if (type === "userLevel") {
             userLevelData = data;
-          } else if (type === 'categories') {
+          } else if (type === "categories") {
             categoriesData = data;
           }
         } else {
           hasError = true;
-          console.error('API call failed:', result.reason);
+          console.error("API call failed:", result.reason);
         }
       });
 
@@ -313,7 +331,9 @@ const useTopicStore = create((set, get) => ({
         }
 
         const progressPercent = Math.round(
-          (parseInt(userLevelData.total_points) / parseInt(userLevelData.levelThreshold)) * 100
+          (parseInt(userLevelData.total_points) /
+            parseInt(userLevelData.levelThreshold)) *
+            100
         );
 
         const updatedUserLevel = {
@@ -363,18 +383,17 @@ const useTopicStore = create((set, get) => ({
       }
 
       set({ lastRefreshTime: Date.now() });
-
     } catch (error) {
       console.error("Error initializing user data:", error);
       set({ error: "Không thể tải dữ liệu người dùng" });
     } finally {
-      set(state => ({ 
-        loadingStates: { 
-          ...state.loadingStates, 
+      set((state) => ({
+        loadingStates: {
+          ...state.loadingStates,
           initializing: false,
           categories: false,
-          userLevel: false 
-        } 
+          userLevel: false,
+        },
       }));
     }
   },
@@ -387,7 +406,7 @@ const useTopicStore = create((set, get) => ({
       // Parallel fetch vocabularies và topic details
       const [vocabResult, topicResult] = await Promise.allSettled([
         axios.get(`/api/vocabulary/topic/${topicId}`),
-        axios.get(`/api/vocabulary/topicDetails/${topicId}`)
+        axios.get(`/api/vocabulary/topicDetails/${topicId}`),
       ]);
 
       // Process vocabulary data
@@ -396,7 +415,7 @@ const useTopicStore = create((set, get) => ({
       }
 
       const vocabularies = vocabResult.value.data.data;
-      
+
       // Process topic data with fallbacks
       let currentTopic = get().categories.find(
         (category) => category.topic_id === topicId
@@ -472,15 +491,17 @@ const useTopicStore = create((set, get) => ({
   refreshUserLevel: async (axios) => {
     try {
       const oldLevel = get().userLevel.current_level;
-      
+
       // Check level with current points
       const response = await axios.post("/api/vocabulary/checkLevelUser", {
-        new_points: 0
+        new_points: 0,
       });
       const levelData = response.data.data;
 
       const progressPercent = Math.round(
-        (parseInt(levelData.total_points) / parseInt(levelData.levelThreshold)) * 100
+        (parseInt(levelData.total_points) /
+          parseInt(levelData.levelThreshold)) *
+          100
       );
 
       const updatedUserLevel = {
@@ -523,34 +544,38 @@ const useTopicStore = create((set, get) => ({
       const data = response.data.data;
 
       if (Array.isArray(data)) {
-        return data.map(achievement => ({
-          type: 'achievement',
+        return data.map((achievement) => ({
+          type: "achievement",
           achievement_id: achievement.achievement_id,
           title: achievement.title,
           description: achievement.description,
           icon: achievement.icon,
           required_level: achievement.required_level,
         }));
-      } else if (data && typeof data === 'object') {
-        return [{
-          type: "achievement",
-          achievement_id: data.achievement_id,
-          title: data.title,
-          description: data.description,
-          icon: data.icon,
-          required_level: data.required_level,
-        }];
+      } else if (data && typeof data === "object") {
+        return [
+          {
+            type: "achievement",
+            achievement_id: data.achievement_id,
+            title: data.title,
+            description: data.description,
+            icon: data.icon,
+            required_level: data.required_level,
+          },
+        ];
       }
 
       return [];
     } catch (error) {
       console.error("Error fetching next level rewards:", error);
-      return [{
-        type: 'achievement',
-        name: `Level ${nextLevel} Achievement`,
-        description: `Chúc mừng bạn đã đạt Level ${nextLevel}!`,
-        icon: 'https://cdn-icons-png.flaticon.com/512/3064/3064197.png',
-      }];
+      return [
+        {
+          type: "achievement",
+          name: `Level ${nextLevel} Achievement`,
+          description: `Chúc mừng bạn đã đạt Level ${nextLevel}!`,
+          icon: "https://cdn-icons-png.flaticon.com/512/3064/3064197.png",
+        },
+      ];
     }
   },
 
@@ -633,6 +658,30 @@ const useTopicStore = create((set, get) => ({
       throw error;
     } finally {
       get().setVocabLoadingState("bookmarkUpdating", vocabulary_id, false);
+    }
+  },
+
+  createFlashcardSet: async (axios, topic_id) => {
+    try {
+      get().setLoadingState("flashcardCreate", true);
+
+      const response = await axios.get(`/api/vocabulary/flashcard/${topic_id}`);
+
+      const newFlashcardSet = response.data.data;
+
+      set({
+        flashcardSets: [...get().flashcardSets, newFlashcardSet],
+      });
+
+      return newFlashcardSet;
+    } catch (error) {
+      console.error("Error creating flashcard set:", error);
+      set({
+        error: "Không thể tạo bộ flashcard",
+      });
+      throw error;
+    } finally {
+      get().setLoadingState("flashcardCreate", false);
     }
   },
 
