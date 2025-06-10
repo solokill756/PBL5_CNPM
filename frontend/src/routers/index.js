@@ -36,6 +36,7 @@ import AdminUsers from "@/pages/Admin/Users";
 import AdminTopics from "@/pages/Admin/Topics";
 import AdminVocabularies from "@/pages/Admin/Vocabularies";
 import AdminAnalytics from "@/pages/Admin/Analytics";
+import NotificationPage from "@/pages/Notification";
 
 function PrivateRoute({ children }) {
   const accessToken = useAuthStore((state) => state.accessToken);
@@ -95,6 +96,10 @@ const router = createBrowserRouter([
       {
         path: "/library",
         element: <Library />,
+      },
+      {
+        path: "/notification",
+        element: <NotificationPage/>
       },
       {
         path: "/classes",
