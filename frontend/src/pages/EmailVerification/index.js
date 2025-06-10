@@ -2,15 +2,13 @@ import { verifyOTP } from "@/api/verifyOTP";
 import MailImg from "@/assets/images/mail.png";
 import BlueButton from "@/components/BlueButton";
 import InputBox from "@/components/InputBox";
-import AuthContext from "@/context/AuthProvider";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { getOTP } from "@/api/getOTP";
 import { useAuthStore } from "@/store/useAuthStore";
 
 function EmailVerification() {
   const location = useLocation();
-  // const { login } = useContext(AuthContext);
   const queryParams = new URLSearchParams(location.search);
   const navigate = useNavigate();
 
@@ -53,7 +51,6 @@ function EmailVerification() {
 
         login({accessToken, refreshToken, user});
         setTokens({ accessToken, refreshToken });
-        navigate("/");
       } else {
         setError(message);
         setDisabled(false);

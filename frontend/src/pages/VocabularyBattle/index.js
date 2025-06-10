@@ -18,7 +18,6 @@ import VocabularyQuestion from "@/components/Battle/VocabularyQuestion";
 import ScoreDisplay from "@/components/Battle/ScoreDisplay";
 import CountdownTimer from "@/components/Battle/CountdownTimer";
 import ResultNotification from "@/components/Battle/ResultNotification";
-import FinalResult from "@/components/Battle/FinalResult";
 import { useNavigate } from "react-router-dom";
 
 const VocabularyBattle = () => {
@@ -41,10 +40,8 @@ const VocabularyBattle = () => {
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [scores, setScores] = useState({});
   const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [gameResults, setGameResults] = useState(null);
   const [questionResults, setQuestionResults] = useState(null);
 
-  // Timer states - OPTIMIZE: Sử dụng ref để tránh re-render
   const timeLeftRef = useRef(10);
   const [timeLeft, setTimeLeft] = useState(10);
   const [showTimer, setShowTimer] = useState(false);
@@ -62,14 +59,11 @@ const VocabularyBattle = () => {
   const initializingRef = useRef(false);
   const questionIdRef = useRef(0); // Track current question to prevent race conditions
 
-  // Stable references
   const stableUser = useMemo(() => user, [user?.id, user?.username]);
 
-  // OPTIMIZE: Debounced timer update để giảm re-render
   const updateTimer = useCallback((newTime) => {
     timeLeftRef.current = newTime;
     
-    // Chỉ update UI mỗi giây, không phải mỗi render
     requestAnimationFrame(() => {
       setTimeLeft(newTime);
     });

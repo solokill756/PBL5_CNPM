@@ -5,10 +5,6 @@ import {
   IoLibrary, 
   IoBook, 
   IoTrendingUp,
-  IoEye,
-  IoAdd,
-  IoArrowUp,
-  IoArrowDown
 } from 'react-icons/io5';
 import useAdminStore from '@/store/useAdminStore';
 import useAxiosPrivate from '@/hooks/useAxiosPrivate';
@@ -17,8 +13,6 @@ const Dashboard = () => {
   const axios = useAxiosPrivate();
   const { 
     users, 
-    topics, 
-    vocabularies, 
     loading,
     fetchDashboardData 
   } = useAdminStore();
@@ -30,19 +24,11 @@ const Dashboard = () => {
     activeUsers: 0,
   });
 
-  // Debug logs
-  console.log('Dashboard component rendering');
-  console.log('Dashboard - users:', users);
-  console.log('Dashboard - loading:', loading);
-
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
-        console.log('Dashboard: Starting to load data...');
         const data = await fetchDashboardData(axios);
-        console.log('Dashboard: Data loaded:', data);
         
-        // Calculate stats
         const totalUsers = data.users.length;
         const activeUsers = data.users.filter(user => !user.is_blocked).length;
         const totalTopics = data.topics.length;

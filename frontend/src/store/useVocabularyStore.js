@@ -28,7 +28,6 @@ const useVocabularyStore = create((set, get) => ({
       isSearchModalOpen: false,
     }),
 
-  setTranslationType: (type) => set({ translationType: type }),
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error }),
   setCategories: (categories) => set({ categories }),

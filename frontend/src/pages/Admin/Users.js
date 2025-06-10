@@ -10,7 +10,6 @@ import {
   IoMail,
   IoCalendar,
   IoShield,
-  IoRefresh,
   IoBan
 } from 'react-icons/io5';
 import useAdminStore from '@/store/useAdminStore';

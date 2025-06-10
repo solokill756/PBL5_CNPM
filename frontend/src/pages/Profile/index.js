@@ -1,9 +1,8 @@
 import React from "react";
 import DefaultHeader from "@/layouts/DefaultHeader";
 import Card from "@/components/Card/PersonalCard";
-import InterfaceCard from "@/components/Card/InterfaceCard";
-import Privacy from "@/components/Card/Privacy";
 import NotificationCard from "@/components/Card/NotificationCard";
+import Privacy from "@/components/Card/Privacy";
 
 const Profile = () => {
   return (
