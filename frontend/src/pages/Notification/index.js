@@ -1,5 +1,5 @@
 import { IoIosDoneAll } from "react-icons/io";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { io } from "socket.io-client";
 
@@ -8,18 +8,18 @@ export default function Notification() {
   const [connected, setConnected] = useState(false);
   const [connectionError, setConnectionError] = useState("");
   const { accessToken } = useAuthStore();
+  const user_id = useAuthStore((state) => state.user?.id);
+  const socketRef = useRef(null);
 
   useEffect(() => {
-    let socket;
-
     const connect = () => {
       try {
-        if (!accessToken) {
-          setConnectionError("Không có token xác thực");
+        if (!accessToken || !user_id) {
+          setConnectionError("Thiếu token xác thực hoặc ID người dùng");
           return;
         }
 
-        socket = io("https://backendserver-app.azurewebsites.net", {
+        socketRef.current = io("https://backendserver-app.azurewebsites.net", {
           auth: { token: accessToken },
           reconnection: true,
           reconnectionAttempts: 5,
@@ -27,33 +27,50 @@ export default function Notification() {
           reconnectionDelayMax: 30000,
         });
 
-        socket.on("connect", () => {
+        socketRef.current.on("connect", () => {
           console.log("Đã kết nối Socket.IO");
           setConnected(true);
           setConnectionError("");
+          socketRef.current.emit("register", user_id);
+          console.log("Sent register with user_id:", user_id);
         });
 
-        socket.on("message", (data) => {
-          console.log("Nhận tin:", data);
-          try {
-            setNotifications((prev) => [...prev, data.notification || data]);
-          } catch (err) {
-            console.error("Lỗi xử lý tin:", err);
+        socketRef.current.on("notification", (data) => {
+          console.log("Received notification data:", data);
+          
+          if (data.notifications) {
+            console.log("Setting notifications:", data.notifications);
+            setNotifications(data.notifications);
+          }
+          
+          if (data.newNotification) {
+            console.log("Adding new notification:", data.newNotification);
+            setNotifications((prev) => {
+              if (prev.some((n) => n.notification_id === data.newNotification.notification_id)) {
+                return prev;
+              }
+              return [data.newNotification, ...prev];
+            });
           }
         });
 
-        socket.on("connect_error", (error) => {
+        socketRef.current.on("connect_error", (error) => {
           console.error("Lỗi kết nối Socket.IO:", error);
           setConnected(false);
           setConnectionError("Lỗi kết nối: " + (error.message || "Không thể kết nối tới server"));
         });
 
-        socket.on("disconnect", (reason) => {
+        socketRef.current.on("disconnect", (reason) => {
           console.log("Socket.IO đã ngắt kết nối:", reason);
           setConnected(false);
           if (reason !== "io client disconnect") {
             setConnectionError("Mất kết nối: " + reason);
           }
+        });
+
+        socketRef.current.on("error", (error) => {
+          console.error("Socket error:", error);
+          setConnectionError("Lỗi socket: " + error.message);
         });
       } catch (error) {
         console.error("Lỗi khởi tạo Socket.IO:", error);
@@ -61,14 +78,36 @@ export default function Notification() {
       }
     };
 
-    connect();
-    return () => {
-      if (socket) socket.disconnect();
-    };
-  }, [accessToken]);
+    if (accessToken && user_id) {
+      connect();
+    }
 
-  const markAsRead = (index) => {
-    setNotifications((prev) => prev.filter((_, i) => i !== index));
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+  }, [accessToken, user_id]);
+
+  const markAsRead = (notification) => {
+    if (!socketRef.current || !user_id) {
+      setConnectionError("Thiếu kết nối socket hoặc ID người dùng");
+      return;
+    }
+    
+    try {
+      socketRef.current.emit("mark_as_read", {
+        notification_id: notification.notification_id,
+        user_id: user_id
+      });
+      
+      setNotifications(prev => 
+        prev.filter(n => n.notification_id !== notification.notification_id)
+      );
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      setConnectionError("Lỗi khi đánh dấu thông báo là đã đọc");
+    }
   };
 
   return (
@@ -94,23 +133,34 @@ export default function Notification() {
           {notifications.length === 0 ? (
             <div className="text-center py-8 text-gray-500">Không có thông báo nào</div>
           ) : (
-            notifications.map((notification, index) => (
+            notifications.map((notification) => (
               <div
-                key={index}
-                className="bg-gray-50 p-4 rounded-xl border border-gray-200 text-gray-800 text-lg font-medium leading-relaxed hover:bg-gray-100 transition duration-200"
+                key={notification.notification_id}
+                className="bg-gray-50 p-4 rounded-xl border border-gray-200 hover:bg-gray-100 transition duration-200"
               >
                 <div className="flex items-center justify-between">
-                  <span className="flex-1 pr-4">{notification}</span>
-                  <div className="relative group">
+                  <div className="flex-1 pr-4">
+                    {notification.title && (
+                      <h3 className="font-semibold text-gray-900 mb-1">{notification.title}</h3>
+                    )}
+                    <p className="text-gray-800">{notification.message}</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {new Date(notification.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => markAsRead(notification)}
+                    className="relative group"
+                    aria-label="Đánh dấu đã đọc"
+                  >
                     <IoIosDoneAll
                       size={30}
-                      className="text-green-600 hover:text-green-800 cursor-pointer transition-colors duration-200"
-                      onClick={() => markAsRead(index)}
+                      className="text-green-600 hover:text-green-800 transition-colors"
                     />
-                    <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-sm px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
-                      Đánh dấu là đã đọc
-                    </div>
-                  </div>
+                    <span className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-sm px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                      Đánh dấu đã đọc
+                    </span>
+                  </button>
                 </div>
               </div>
             ))
