@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useAuthStore } from '@/store/useAuthStore';
 import { useParams } from 'react-router-dom';
 import CourseInClass from './CourseInClass';
 

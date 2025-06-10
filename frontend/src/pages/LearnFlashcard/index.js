@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import LearnProgressBar from "@/components/LearnProgressBar";
 import { useParams, useNavigate } from "react-router-dom";
 import ModeHeader from "@/components/ModeHeader";

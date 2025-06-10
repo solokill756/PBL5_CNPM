@@ -8,8 +8,8 @@ import { useFlashcardStore } from "@/store/useflashcardStore";
 
 function QuizResult() {
   const { flashcardId } = useParams();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  // const [loading, setLoading] = useState(false);
+  // const [error, setError] = useState(null);
   const axios = useAxiosPrivate();
 
   const {
@@ -25,13 +25,13 @@ function QuizResult() {
     const fetchData = async () => {
       if (!isDataLoaded || lastLoadedId !== flashcardId) {
         try {
-          setLoading(true);
+          // setLoading(true);
           setAxios(axios);
           await fetchFlashcardList(axios, flashcardId);
         } catch (error) {
-          setError(error);
+          // setError(error);
         } finally {
-          setLoading(false);
+          // setLoading(false);
         }
       }
     };

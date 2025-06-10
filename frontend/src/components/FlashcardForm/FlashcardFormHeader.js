@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { useAddFlashcardStore } from '@/store/useAddFlashcardStore';
 import useAxiosPrivate from '@/hooks/useAxiosPrivate';
-import ToggleSwitch from '../ToggleSwitch';
 import { useToast, TOAST_TYPES } from '@/context/ToastContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -87,7 +86,6 @@ const FlashcardFormHeader = () => {
     saveFlashcardSet,
     flashcards,
     resetForm,
-    successMessage
   } = useAddFlashcardStore()
 
   const { addToast } = useToast();

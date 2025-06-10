@@ -117,7 +117,6 @@ const VocabularySearch = () => {
   const handleKeyDown = async (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      const results = await handleSearch(searchTerm);
       closeSearchModal();
     }
   };

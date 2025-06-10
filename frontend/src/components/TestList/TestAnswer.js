@@ -1,11 +1,9 @@
 import React from "react";
 import { useTestStore } from "@/store/useTestStore";
 import { CheckCircle, XCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 const TestResultPage = () => {
-  const { questions, answers, result } = useTestStore();
-  const navigate = useNavigate();
+  const { questions, answers } = useTestStore();
 
   return (
     <div className="container mx-auto px-4 py-10 max-w-4xl">

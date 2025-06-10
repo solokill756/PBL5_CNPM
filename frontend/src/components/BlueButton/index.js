@@ -6,7 +6,7 @@ function BlueButton({ name, size, icon, path, loading, isActive, ...props }) {
         <Link to={path || '#'}>
             <button
                 {...props}
-                className={`${isActive ? 'bg-red-800 text-white': 'bg-inherit text-red-800'} ${loading == true ? 'opacity-60 cursor-auto' : ''} text-sm flex-row flex justify-center items-center rounded-lg font-semibold ${size}`}
+                className={`${isActive ? 'bg-red-800 text-white': 'bg-inherit text-red-800'} ${loading === true ? 'opacity-60 cursor-auto' : ''} text-sm flex-row flex justify-center items-center rounded-lg font-semibold ${size}`}
                 disabled={loading} 
             >
                 {loading ? (

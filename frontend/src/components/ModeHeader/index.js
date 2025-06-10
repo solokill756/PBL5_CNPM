@@ -5,7 +5,7 @@ import { RiHeartAddLine } from "react-icons/ri";
 import { MdOutlineQuiz } from "react-icons/md";
 import { Link } from "react-router-dom";
 import RoundButton from "../RoundButton";
-import { IoClose, IoSettingsOutline } from "react-icons/io5";
+import { IoSettingsOutline } from "react-icons/io5";
 import { AiOutlineClose } from "react-icons/ai";
 
 const ModeHeader = ({

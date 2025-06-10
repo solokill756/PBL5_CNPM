@@ -14,8 +14,6 @@ const studiedDates = [
   '2025-04-18',
 ]
 
-const isSameDay = (date1, date2) =>
-  date1.toISOString().split('T')[0] === date2.toISOString().split('T')[0]
 
 const StreakCalendar = () => {
   const [value, setValue] = useState(new Date())
@@ -30,7 +28,7 @@ const StreakCalendar = () => {
           const formatted = date.toISOString().split('T')[0]
           return view === 'month' && studiedDates.includes(formatted) ? (
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-lg">
-              <img src='https://assets.quizlet.com/_next/static/media/streak-flame.8f6423ac.svg'></img>
+              <img alt='streak-flame' src='https://assets.quizlet.com/_next/static/media/streak-flame.8f6423ac.svg'></img>
             </div>
           ) : null
         }}

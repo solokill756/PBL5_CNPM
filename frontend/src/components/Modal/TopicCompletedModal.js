@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IoClose, IoTrophy, IoSchool, IoArrowForward } from 'react-icons/io5';
+import { IoClose, IoTrophy, IoSchool } from 'react-icons/io5';
 import { TbBrain } from 'react-icons/tb';
 
 const TopicCompletedModal = ({ topicResults, onClose, onAction }) => {

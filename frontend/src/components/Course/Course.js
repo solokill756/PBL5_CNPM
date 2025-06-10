@@ -1,7 +1,5 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MdOutlineDelete } from "react-icons/md";
-import { removeFlashcard } from '@/api/removeFlashcard';
 
 const Course = ({vocabulary, author, avatar, lesson, listId}) => {
     const navigate = useNavigate();
@@ -21,7 +19,7 @@ const Course = ({vocabulary, author, avatar, lesson, listId}) => {
                         <span className='text-sm font-semibold text-gray-800 mr-2'>{vocabulary} thuật ngữ </span>
                         <span className='text-sm font-semibold text-gray-300 mr-2'>|</span>
                         <div className='w-5 mr-2'>
-                            <img className='rounded-full ' src={avatar} ></img>
+                            <img className='rounded-full' alt='avatar' src={avatar} ></img>
                         </div>
                         <span className='text-sm font-semibold text-gray-800'>{author}</span>
                     </div>

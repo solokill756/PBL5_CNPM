@@ -1,11 +1,9 @@
 import React, { useRef, useState, useEffect } from "react";
 import { IoMdAdd } from "react-icons/io";
-import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 
 function ProfileImage({ src, onAvatarUploaded }) {
   const inputFileRef = useRef(null);
   const [selectedAvatar, setSelectedAvatar] = useState(src || "");
-  const axiosPrivate = useAxiosPrivate();
 
   useEffect(() => {
     if (src && src.trim() !== "") {

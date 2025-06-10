@@ -1,4 +1,3 @@
-import { setTokens } from "@/helper/tokenService";
 import { axiosPrivate } from "./axios";
 
 export const verifyOTP = async (otp, email) => {

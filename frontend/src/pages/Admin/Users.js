@@ -166,7 +166,6 @@ const Users = () => {
   const {
     users,
     loading,
-    filters,
     fetchUsers,
     blockUser,
     unblockUser,

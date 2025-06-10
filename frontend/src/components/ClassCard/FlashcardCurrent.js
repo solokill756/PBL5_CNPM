@@ -203,7 +203,7 @@ const FlashcardInCurrent = ({
         };
 
         fetchData();
-    }, [axiosPrivate]);
+    }, [axiosPrivate, user?.id]);
 
     if (isLoading) {
         return (

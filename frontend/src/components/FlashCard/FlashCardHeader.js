@@ -6,7 +6,7 @@ import { IoArrowBack } from "react-icons/io5";
 import RoundButton from "../RoundButton";
 import { FaRegCopy } from "react-icons/fa6";
 import { useFlashcardStore } from "@/store/useflashcardStore";
-import { useParams, useNavigate, href } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Skeleton from "react-loading-skeleton";
 
 const FlashCardHeader = ({ title, rating, ratingCount, onSave, onShare, onMore, onStar, loading = false }) => {

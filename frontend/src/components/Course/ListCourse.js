@@ -146,7 +146,7 @@ const ListCourse = () => {
         };
 
         fetchData();
-    }, [axiosPrivate]);
+    }, [axiosPrivate, user?.id]);
 
     if (isLoading) {
         return (

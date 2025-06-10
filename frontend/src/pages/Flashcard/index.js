@@ -19,7 +19,7 @@ export default function FlashCard({ mode = "" }) {
   const { flashcardId } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  // const [error, setError] = useState(null);
   const axios = useAxiosPrivate();
   const prevModeRef = useRef(null);
 
@@ -103,7 +103,7 @@ export default function FlashCard({ mode = "" }) {
 
       {mode !== "detail" && <FlashCardOptionList flashcardId={flashcardId} />}
 
-      <FlashCardArea mode={mode} loading={loading} error={error} />
+      <FlashCardArea mode={mode} loading={loading} />
 
       <FeedbackModal />
       <ShareModal />

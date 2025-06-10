@@ -1,4 +1,4 @@
-import axios, { axiosPrivate } from "./axios";
+import { axiosPrivate } from "./axios";
 
 export const checkExist = async (email) => {
   try {

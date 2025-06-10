@@ -1,7 +1,6 @@
 import React from 'react';
 import { BsPeople } from 'react-icons/bs';
 import { SlGraduation } from "react-icons/sl";
-import { useNavigate } from 'react-router-dom';
 import { MdOutlineDeleteOutline } from "react-icons/md";
 
 const CourseInfoComponent = ({studentCount, listCount, class_name, class_id, canDelete = false, onDelete} ) => {

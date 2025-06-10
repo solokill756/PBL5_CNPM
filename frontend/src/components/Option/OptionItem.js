@@ -1,4 +1,4 @@
-import { NavLink, useParams } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 const tabs = [
   { label: "Học phần", to: "library" }, 
@@ -7,7 +7,6 @@ const tabs = [
 ];
 
 function OptionItem() {
-  const { username } = useParams();
 
   return (
     <div className="flex border-gray-200 space-x-10 ">

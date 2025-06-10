@@ -48,7 +48,7 @@ const QuestionNavigator = ({
 const QuizPage = ({ timeLeft, isTimeUp }) => {
   const { questions, fetchQuestions, loading, error } = useQuizStore();
   const [currentAnswer, setCurrentAnswer] = useState({});
-  const [isOpen, setOpen] = useState(false);
+  // const [isOpen, setOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [shuffledQuestions, setShuffledQuestions] = useState([]);
@@ -71,7 +71,7 @@ const QuizPage = ({ timeLeft, isTimeUp }) => {
 
   useEffect(() => {
     if (location.state?.retryWrongOnly && wrongQuestions.length > 0) {
-      setOpen(false);
+      // setOpen(false);
       setQuestions(wrongQuestions);
     } else if (flashcardId) {
       fetchQuestions(flashcardId, "1", 10, axiosPrivate);
@@ -174,7 +174,7 @@ const QuizPage = ({ timeLeft, isTimeUp }) => {
       (_, index) => !currentAnswer[index]
     );
     if (unansweredIndex !== -1) {
-      setOpen(true);
+      // setOpen(true);
       questionRefs.current[unansweredIndex]?.scrollIntoView({
         behavior: "smooth",
         block: "center",
@@ -185,7 +185,7 @@ const QuizPage = ({ timeLeft, isTimeUp }) => {
     }
   };
 
-  const onClose = () => setOpen(false);
+  // const onClose = () => setOpen(false);
 
   if (loading) return <div className="text-center">Đang tải câu hỏi...</div>;
   if (error) return <div className="text-center text-red-600">{error}</div>;

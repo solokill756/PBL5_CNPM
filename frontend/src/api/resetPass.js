@@ -1,4 +1,4 @@
-import axios, { axiosPrivate } from "./axios";
+import { axiosPrivate } from "./axios";
 
 export const resetPass = async (email) => {
   try {

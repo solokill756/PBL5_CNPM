@@ -9,8 +9,8 @@ import { useQuizStore } from "@/store/useQuizStore";
 function TestAgain() {
   const { flashcardId } = useParams();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  // const [loading, setLoading] = useState(false);
+  // const [error, setError] = useState(null);
   
   // Timer states
   const [timeLeft, setTimeLeft] = useState(0);
@@ -37,13 +37,13 @@ function TestAgain() {
     const fetchData = async () => {
       if (!isDataLoaded || lastLoadedId !== flashcardId) {
         try {
-          setLoading(true);
+          // setLoading(true);
           setAxios(axios);
           await fetchFlashcardList(axios, flashcardId);
         } catch (error) {
-          setError(error);
+          // setError(error);
         } finally {
-          setLoading(false);
+          // setLoading(false);
         }
       }
     };

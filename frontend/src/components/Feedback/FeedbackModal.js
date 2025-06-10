@@ -50,7 +50,7 @@ export default function FeedbackModal() {
     if (isModalOpen && modalType === "star") {
       fetchRated();
     }
-  }, [flashcardId, isModalOpen, modalType]);
+  }, [flashcardId, isModalOpen, modalType, axiosPrivate, setRating, setIsRated]);
 
   if (modalType !== "star") return null;
 

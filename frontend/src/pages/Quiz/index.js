@@ -11,8 +11,8 @@ function Quiz() {
   const { flashcardId } = useParams();
   const [open, setOpen] = useState(true);
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  // const [loading, setLoading] = useState(false);
+  // const [error, setError] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [isTimeUp, setIsTimeUp] = useState(false);
   const [quizStarted, setQuizStarted] = useState(false);
@@ -33,15 +33,15 @@ function Quiz() {
     const fetchData = async () => {
       if (!isDataLoaded || lastLoadedId !== flashcardId) {
         try {
-          setLoading(true);
+          // setLoading(true);
           setAxios(axios);
 
           await fetchFlashcardList(axios, flashcardId);
 
         } catch (error) {
-          setError(error);
+          // setError(error);
         } finally {
-          setLoading(false);
+          // setLoading(false);
         }
       }
     };

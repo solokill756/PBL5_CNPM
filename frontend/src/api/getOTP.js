@@ -1,9 +1,9 @@
-import axios, { axiosPrivate } from "./axios";
+import { axiosPrivate } from "./axios";
 
 export const getOTP = async (email) => {
   try {
     // Sử dụng `params` để truyền email như query parameter
-    const response = await axios.post(
+    const response = await axiosPrivate.post(
       "/api/auth/sendOTP",
       {
         email,

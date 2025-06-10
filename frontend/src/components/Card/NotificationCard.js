@@ -49,7 +49,7 @@ const NotificationCard = () => {
             }
         };
         fetchData();
-    }, []);
+    }, [axiosPrivate]);
 
     const handleToggleReminder = async (value) => {
         try {

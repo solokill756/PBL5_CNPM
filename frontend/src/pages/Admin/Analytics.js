@@ -57,7 +57,7 @@ const StatCard = ({ icon: Icon, title, value, change, changeType, color, subtitl
 
 const Analytics = () => {
   const axios = useAxiosPrivate();
-  const { users, topics, vocabularies, loading, fetchDashboardData } = useAdminStore();
+  const { loading, fetchDashboardData } = useAdminStore();
 
   const [analytics, setAnalytics] = useState({
     totalUsers: 0,

@@ -16,10 +16,7 @@ const SearchResult = () => {
     getHistorySearch,
     addHistorySearch,
     searchTerm,
-    setSearchResults,
     updateResults,
-    setVocabularySets,
-    translationType,
     isSearchModalOpen: isOpen,
     setSelectedWord,
     closeSearchModal,
@@ -119,10 +116,6 @@ const SearchResult = () => {
     setIsAILoading(true);
     try {
       const aiData = await fetchAIExplain(axios, searchTerm);
-      const normalizedAIResult = normalizeVocabularyData({
-        ...aiData,
-        ai_suggested: true,
-      });
 
       // Update both search results and vocabulary sets
       // updateResults([normalizedAIResult]);

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useContext } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import AvatarDisplay from '../AvatarDisplay';
 import DropdownMenu from '../DropdownMenu';
 import { fetchLogout } from '@/api/logout';
@@ -14,10 +14,6 @@ const UserMenu = () => {
   const logout = useAuthStore(state => state.logout);
   const profile_picture = useAuthStore((state) => state.user?.profile_picture);
   const avatarURL = profile_picture ? `${profile_picture}?t=${new Date().getTime()}` : null;
-
-  const username = useAuthStore((state) => state.user?.username);
-
-  
 
   const handleClickOutside = (event) => {
     if (avatarRef.current && !avatarRef.current.contains(event.target)) {

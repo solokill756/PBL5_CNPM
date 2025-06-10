@@ -6,13 +6,7 @@ const CourseInClass = ({vocabulary, author, avatar, lesson, listId, currentUserI
     const navigate = useNavigate();
 
     const canDelete = currentUserId && classCreatorId && currentUserId === classCreatorId;
-    
-    console.log('Delete permission check:', {
-        currentUserId,
-        classCreatorId,
-        canDelete
-    });
-        
+  
     const handleClick = () => {
         navigate(`/flashcard/${listId}`);
     };
@@ -35,7 +29,7 @@ const CourseInClass = ({vocabulary, author, avatar, lesson, listId, currentUserI
                         <span className='text-sm font-semibold text-gray-800 mr-2'>{vocabulary} thuật ngữ </span>
                         <span className='text-sm font-semibold text-gray-300 mr-2'>|</span>
                         <div className='w-5 mr-2'>  
-                            <img className='rounded-full ' src={avatar}></img>
+                            <img className='rounded-full' alt='avatar' src={avatar}></img>
                         </div>
                         <span className='text-sm font-semibold text-gray-800'>{author}</span>
                     </div>

@@ -1,5 +1,4 @@
 import React from "react";
-import { BsFire } from "react-icons/bs";
 import { ReactComponent as StreakIcon } from "@/assets/icons/streak.svg";
 
 const AvatarDisplay = ({ avatar, streak, username, onClick }) => (

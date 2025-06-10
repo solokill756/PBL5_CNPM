@@ -1,5 +1,5 @@
 // src/components/SaveModal.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Modal from "@/components/Modal/Modal";
 import { useFlashcardStore } from "@/store/useflashcardStore";
 import ClassOptionList from "../Class/ClassOptionList";
@@ -17,7 +17,6 @@ export default function SaveModal() {
     isModalOpen, 
     modalType, 
     closeModal, 
-    savedClassesMap, 
     updateSavedClasses 
   } = useFlashcardStore();
   

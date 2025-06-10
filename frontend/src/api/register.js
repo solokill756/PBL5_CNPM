@@ -1,10 +1,10 @@
-import axios, { axiosPrivate } from "./axios";
+import { axiosPrivate } from "./axios";
 
 // src/api/login.js
 export const fetchRegister = async (username, email, password, fullname) => {
   try {
     const response = await axiosPrivate.post("/api/auth/register", {
-      username,
+      username, 
       email,
       password,
       fullname,

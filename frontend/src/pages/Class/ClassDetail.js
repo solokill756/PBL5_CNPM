@@ -38,23 +38,12 @@ const ClassDetail = () => {
   const [classData, setClassData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isOpen, setIsOpen] = useState(false);
   const [isAddFlashcardOpen, setIsAddFlashcardOpen] = useState(false); 
-  const [subjects, setSubjects] = useState([]);
+  // const [subjects, setSubjects] = useState([]);
   const user = useAuthStore(state => state.user);
   const [showNotification, setShowNotification] = useState(false);
   const [notificationType, setNotificationType] = useState('success');
   const [notificationMessage, setNotificationMessage] = useState('');
-
-  const openModal = () => {
-    setIsOpen(true);
-    document.body.style.overflow = 'hidden';
-  };
-
-  const closeModal = () => {
-    setIsOpen(false);
-    document.body.style.overflow = 'auto';
-  };
 
   const openAddFlashcardModal = () => {
     setIsAddFlashcardOpen(true);
@@ -65,13 +54,13 @@ const ClassDetail = () => {
   };
 
   const handleAddSubject = (subjectId) => {
-    setSubjects(prev => 
-      prev.map(subject => 
-        subject.id === subjectId 
-          ? { ...subject, isAdded: !subject.isAdded }
-          : subject
-      )
-    );
+    // setSubjects(prev => 
+    //   prev.map(subject => 
+    //     subject.id === subjectId 
+    //       ? { ...subject, isAdded: !subject.isAdded }
+    //       : subject
+    //   )
+    // );
      closeAddFlashcardModal();
   };
 

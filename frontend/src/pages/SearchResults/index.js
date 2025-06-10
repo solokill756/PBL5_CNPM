@@ -6,7 +6,7 @@ import AuthorList from "@/components/Author/AuthorList";
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import NopeNotice from "@/components/NopeNotice";
 import { getResearch } from "@/api/getResearch";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 
 const SearchResults = () => {
   const axiosPrivate = useAxiosPrivate();

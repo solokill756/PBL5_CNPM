@@ -12,7 +12,7 @@ function Test() {
   const navigate = useNavigate();
   const axios = useAxiosPrivate()
   const { questions, fetchQuestions, loading, error } = useTestStore();
-  const { currentTopic, fetchTopicById } = useTopicStore();
+  const { currentTopic } = useTopicStore();
   const [timeLeft, setTimeLeft] = useState(0);
   const [isTimeUp, setIsTimeUp] = useState(false);
   const [testStarted, setTestStarted] = useState(false);
@@ -24,7 +24,6 @@ function Test() {
       
       try {
 
-        const currentTopicId = currentTopic?.topic_id || currentTopic?.topic_Id;
         await fetchQuestions(axios,topicId);
         setDataInitialized(true);
   

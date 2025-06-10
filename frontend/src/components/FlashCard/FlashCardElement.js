@@ -1,6 +1,6 @@
 import useAxiosPrivate from "@/hooks/useAxiosPrivate";
 import { useFlashcardStore } from "@/store/useflashcardStore";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { FaStar } from "react-icons/fa";
 import { MdLightbulbOutline } from "react-icons/md";
 

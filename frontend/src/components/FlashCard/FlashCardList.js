@@ -3,15 +3,10 @@ import FlashCardItem from "./FlashCardItem";
 import ScrollButton from "../ScrollButton";
 import useScrollable from "@/hooks/useScrollable";
 import fallbackAvatar from "@/assets/images/avatar.jpg";
-import { useNavigate } from "react-router-dom";
-import { useFlashcardDetailStore } from "@/store/useFlashcardDetailStore";
 
 const FlashCardList = ({ flashCards = [], loading }) => {
   const scrollRef = useRef(null);
-  const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
-
-  const { setSelectedCard } = useFlashcardDetailStore();
 
   const { isLeftVisible, isRightVisible, handleScroll } = useScrollable({
     scrollRef,
@@ -20,11 +15,6 @@ const FlashCardList = ({ flashCards = [], loading }) => {
   });
 
   const skeletons = new Array(2).fill(null);
-
-  const handleClick = (card, id) => {
-    setSelectedCard(card);
-    navigate(`/flashcard/${id}`);
-  }
 
   return (
     <div

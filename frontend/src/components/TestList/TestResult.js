@@ -1,10 +1,8 @@
 import React, { useEffect } from "react";
 import { useTestStore } from "@/store/useTestStore";
-import { useParams } from "react-router-dom";
 
 const Result = () => {
   const { result, questions } = useTestStore();
-  const { flashcardId } = useParams();
 
   useEffect(() => {
     window.scrollTo(0, 0);

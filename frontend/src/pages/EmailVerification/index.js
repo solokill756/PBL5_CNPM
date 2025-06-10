@@ -10,7 +10,6 @@ import { useAuthStore } from "@/store/useAuthStore";
 function EmailVerification() {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
-  const navigate = useNavigate();
 
   const [code, setCode] = useState("");
   const [email, setEmail] = useState("");

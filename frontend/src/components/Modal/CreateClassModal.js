@@ -1,5 +1,5 @@
 import React, { useState,useEffect } from 'react';
-import { X, Users, Plus } from 'lucide-react';
+import { X, Users } from 'lucide-react';
 import { CreateClass } from '@/api/createClass'; 
 import useAxiosPrivate from '@/hooks/useAxiosPrivate';
 

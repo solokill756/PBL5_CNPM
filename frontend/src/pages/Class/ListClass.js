@@ -14,7 +14,7 @@ const ListClass = () => {
   const axiosPrivate = useAxiosPrivate();
   const [classData, setClassData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // const [error, setError] = useState(null);
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -35,7 +35,7 @@ const ListClass = () => {
     const loadClassData = async () => {
       try {
         setLoading(true);
-        setError(null);
+        // setError(null);
         
         const data = await fetchRecentClasses(axiosPrivate);
         
@@ -63,7 +63,7 @@ const ListClass = () => {
         
       } catch (err) {
         console.error('Error loading class data:', err);
-        setError(err.message || 'Có lỗi xảy ra khi tải dữ liệu');
+        // setError(err.message || 'Có lỗi xảy ra khi tải dữ liệu');
         setClassData([]);
       } finally {
         setLoading(false);

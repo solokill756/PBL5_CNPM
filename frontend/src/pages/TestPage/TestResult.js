@@ -12,8 +12,8 @@ function TestResult() {
   const { topicId } = useParams(); 
   const navigate = useNavigate();
   const axios = useAxiosPrivate()
-  const { questions, fetchQuestions, loading, error } = useTestStore();
-  const { currentTopic, fetchTopicById } = useTopicStore();
+  const { fetchQuestions } = useTestStore();
+  const { currentTopic } = useTopicStore();
   const [dataInitialized, setDataInitialized] = useState(false);
     useEffect(() => {
       const initializeTest = async () => {
@@ -35,7 +35,7 @@ function TestResult() {
       if (topicId && !dataInitialized) {
         initializeTest();
       }
-    }, [topicId]); 
+    }, [topicId, currentTopic, axios]); 
 
   return (
     <div>

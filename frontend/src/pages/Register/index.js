@@ -78,7 +78,9 @@ function Register() {
     setLoading(true);
     try {
       const user = await fetchRegister(username, email, password, fullname);
-      navigate(`/accounts/emailverification?email=${email}`);
+      if (user) {
+        navigate(`/accounts/emailverification?email=${email}`);
+      }
       try {
         const response = await getOTP(email);
         if (!response) setError("Email chưa được đăng ký!");

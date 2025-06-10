@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { useAddFlashcardStore } from '@/store/useAddFlashcardStore';
 import useAxiosPrivate from '@/hooks/useAxiosPrivate';
@@ -44,7 +44,7 @@ const FlashcardFormItem = ({ flashcard, index }) => {
   const [backFocused, setBackFocused] = useState(false)
 
   const dragControls = useDragControls()
-  const itemRef = useRef<HTMLDivElement>(null)
+  const itemRef = useRef(null)
   const axios = useAxiosPrivate();
 
   const { updateFlashcard, removeFlashcard, duplicateFlashcard, reorderFlashcards, flashcards, addFlashcardAt } =
@@ -94,7 +94,7 @@ const FlashcardFormItem = ({ flashcard, index }) => {
         return () => clearTimeout(timeoutId)
       }
     },
-    [flashcard.id, updateFlashcard, fetchSuggestions],
+    [flashcard.id, updateFlashcard, fetchSuggestions, axios],
   )
 
   const handleSuggestionSelect = useCallback(

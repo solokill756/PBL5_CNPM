@@ -1,11 +1,9 @@
 import React from "react";
 import { useQuizStore } from "@/store/useQuizStore";
 import { CheckCircle, XCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 const QuizResultPage = () => {
-  const { questions, answers, result } = useQuizStore();
-  const navigate = useNavigate();
+  const { questions, answers } = useQuizStore();
 
   return (
     <div className="container mx-auto px-4 py-10 max-w-4xl">

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useMemo } from "react";
 import { FlashcardArray } from "react-quizlet-flashcard";
 import RoundButton from "@/components/RoundButton";
 import FlashcardElement from "@/components/FlashCard/FlashCardElement";
@@ -7,13 +7,11 @@ import { IoMdShuffle } from "react-icons/io";
 import { IoSettingsOutline } from "react-icons/io5";
 import SettingModal from "../Modal/SettingModal";
 import Skeleton from "react-loading-skeleton";
-import { MdFullscreen } from "react-icons/md";
 import { RiFullscreenFill } from "react-icons/ri";
 import { useNavigate } from "react-router-dom";
 
 export default function FlashCardArea({
   mode = "",
-  items = [],
   error = null,
   loading = false,
 }) {
@@ -26,10 +24,8 @@ export default function FlashCardArea({
     showShuffleStatus,
     toggleStar,
     starredMap,
-    currentIndex,
     setCurrentIndex,
     showOnlyStarred,
-    isDataLoaded,
     lastLoadedId,
   } = useFlashcardStore();
   const restartKey = useFlashcardStore((state) => state.restartKey);

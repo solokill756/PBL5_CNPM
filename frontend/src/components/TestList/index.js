@@ -114,12 +114,11 @@ const TestPage = ({ timeLeft, isTimeUp, questionsReady, topicId }) => {
   // Shuffle questions chỉ khi có data và chưa shuffle
   useEffect(() => {
     if (questions.length > 0 && shuffledQuestions.length === 0) {
-      console.log("Shuffling questions:", questions.length);
       const shuffled = shuffleArray(questions);
       setShuffledQuestions(shuffled);
       setCurrentAnswer({});
     }
-  }, [questions.length]);
+  }, [questions.length, shuffledQuestions.length]);
 
   useEffect(() => {
     if (location.state?.retryWrongOnly && wrongQuestions.length > 0) {

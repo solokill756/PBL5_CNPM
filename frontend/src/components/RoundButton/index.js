@@ -19,7 +19,6 @@ const RoundButton = ({
   ...props
 }) => {
   const [active, setActive] = useState(false);
-  const dropdownRef = useRef();
   const buttonRef = useRef();
 
   const toggleDropdown = (e) => {

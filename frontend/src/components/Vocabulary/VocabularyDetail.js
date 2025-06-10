@@ -15,7 +15,7 @@ const VocabularyDetail = () => {
 
     const [isBookmarked, setIsBookmarked] = useState(false);
     const [showAddedToast, setShowAddedToast] = useState(false);
-    const [showRequestToast, setShowRequestToast] = useState(false);
+    // const [showRequestToast, setShowRequestToast] = useState(false);
     const [addToFlashcardLoading, setAddToFlashcardLoading] = useState(false);
     const [requestLoading, setRequestLoading] = useState(false);
     const axios = useAxiosPrivate();
@@ -48,7 +48,7 @@ const VocabularyDetail = () => {
   const handleRequestAddVocabulary = async () => {
     try {
       setRequestLoading(true);
-      setShowRequestToast(true);
+      // setShowRequestToast(true);
       const newVocabulary = await requestNewVocabulary(axios, selectedWord);
       if (newVocabulary) {
         addToast("Yêu cầu thêm từ vựng đã được gửi", TOAST_TYPES.SUCCESS);
@@ -58,7 +58,7 @@ const VocabularyDetail = () => {
       addToast("Có lỗi xảy ra khi gửi yêu cầu", TOAST_TYPES.ERROR);
     } finally {
       setRequestLoading(false);
-      setShowRequestToast(false);
+      // setShowRequestToast(false);
     }
   };
 
