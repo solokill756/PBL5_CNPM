@@ -3,18 +3,16 @@ import { motion } from "framer-motion";
 import { IoArrowBack, IoSchool } from "react-icons/io5";
 import { TbCards } from "react-icons/tb";
 
-// ... existing code ...
-
 const TopicHeader = ({
   topic,
   onBack,
-  onCreateFlashcard,
+  onStudyFlashcard,
   onTakeTest,
   topicProgress,
   learnedCount,
   totalCount,
   isTopicCompleted = false,
-  hasTestTaken = false, // Prop để check test đã làm chưa cho topic này
+  hasTestTaken = false,
 }) => {
   // Logic: phải học hết từ vựng và chưa làm test
   const canTakeTest = isTopicCompleted && !hasTestTaken;
@@ -113,14 +111,15 @@ const TopicHeader = ({
             </div>
           )}
 
+          {/* Nút học qua flashcard - luôn hiển thị */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={onCreateFlashcard}
+            onClick={onStudyFlashcard}
             className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition-colors"
           >
             <TbCards className="w-5 h-5" />
-            Tạo Flashcard
+            Học qua Flashcard
           </motion.button>
         </div>
       </div>
