@@ -2,7 +2,7 @@ import React from "react";
 import VocabItem from "./VocabItem";
 
 const VocabList = ({ vocabs = [], loading }) => {
-  const skeletons = new Array(4).fill(null); // 5 items loading
+  const skeletons = new Array(1).fill(null); // 5 items loading
 
   return (
     <div className="rounded-lg w-full">
