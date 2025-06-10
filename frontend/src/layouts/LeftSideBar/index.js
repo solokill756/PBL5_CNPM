@@ -10,6 +10,7 @@ import { LuLibraryBig } from "react-icons/lu";
 import { TbSwords } from "react-icons/tb";
 import { FaLanguage } from "react-icons/fa6";
 import CreateModal from "@/components/Modal/CreateModal";
+import { PiRankingDuotone } from "react-icons/pi";
 
 function LeftSideBar({ onToggle }) {
   const location = useLocation();
@@ -50,6 +51,7 @@ function LeftSideBar({ onToggle }) {
     { id: "library", title: "Thư viện", icon: <LuLibraryBig className="size-6" />, path: "/library" },
     { id: "vocabulary", title: "Từ vựng", icon: <FaLanguage className="size-6" />, path: "/vocabulary" },
     { id: "battle", title: "Đối kháng", icon: <TbSwords className="size-6" />, path: "/battle" },
+    { id: "ranking", title: "Bảng xếp hạng", icon: <PiRankingDuotone className="size-6" />, path: "/ranking" },
     { id: "notification", title: "Thông báo", icon: <MdOutlineNotificationsActive className="size-6" /> },
   ];
 

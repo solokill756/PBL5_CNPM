@@ -36,6 +36,7 @@ import AdminUsers from "@/pages/Admin/Users";
 import AdminTopics from "@/pages/Admin/Topics";
 import AdminVocabularies from "@/pages/Admin/Vocabularies";
 import AdminAnalytics from "@/pages/Admin/Analytics";
+import Ranking from "@/pages/Ranking";
 
 function PrivateRoute({ children }) {
   const accessToken = useAuthStore((state) => state.accessToken);
@@ -139,6 +140,10 @@ const router = createBrowserRouter([
       {
         path:"/search-results",
         element: <SearchResults />
+      },
+      {
+        path: "/ranking",
+        element: <Ranking />
       }
     ],
   },
