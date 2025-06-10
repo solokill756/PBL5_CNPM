@@ -8,7 +8,6 @@ import { TbCards } from "react-icons/tb";
 import TopicHeader from "@/components/Topic/TopicHeader";
 import VocabularyList from "@/components/Topic/VocabularyList";
 import LevelUpModal from "@/components/Modal/LevelUpModal";
-import FlashcardModal from "@/components/Modal/FlashcardModal";
 import VocabularyDetail from "@/components/Topic/VocabularyDetail";
 import useTopicStore from "@/store/useTopicStore";
 import TopicCompletedModal from "@/components/Modal/TopicCompletedModal";
@@ -31,17 +30,19 @@ const TopicDetail = () => {
     hasTopicTestCompleted,
     initializeUserData,
     getNextLevelRewards,
+    createFlashcardSet,
   } = useTopicStore();
 
   const [selectedVocabulary, setSelectedVocabulary] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [showLevelUpModal, setShowLevelUpModal] = useState(false);
   const [levelUpResults, setLevelUpResults] = useState(null);
-  const [showFlashcardModal, setShowFlashcardModal] = useState(false);
   const [showTopicCompletedModal, setShowTopicCompletedModal] = useState(false);
   const [topicCompletedResults, setTopicCompletedResults] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
+  const [flashcardId, setFlashcardId] = useState(null);
+  
   // Tracking refs
   const previousLearnedCount = useRef(null);
   const topicInitialized = useRef(false);
@@ -60,8 +61,28 @@ const TopicDetail = () => {
       currentTopicIdRef.current = topicId;
       setIsInitialized(false);
       initializationRef.current = false;
+
+      setFlashcardId(null);
     }
   }, [topicId]);
+
+  useEffect(() => {
+    if (topicId && userLevel.user_id && isInitialized && !flashcardId) {
+      createTopicFlashcard();
+    }
+  }, [topicId, userLevel.user_id, isInitialized]);
+
+  const createTopicFlashcard = async () => {
+    try {
+      const flashcard = await createFlashcardSet(axios, topicId);
+      if (flashcard && flashcard.listFlashcard && flashcard.listFlashcard.list_id) {
+        setFlashcardId(flashcard.listFlashcard.list_id);
+      }
+    } catch (error) {
+      console.error("Error creating flashcard set:", error);
+      addToast("Không thể tạo bộ flashcard", TOAST_TYPES.ERROR);
+    }
+  };
 
   // Parallel initialization
   useEffect(() => {
@@ -182,6 +203,15 @@ const TopicDetail = () => {
     }
   };
 
+  const handleStudyFlashcard = async () => {
+    if (flashcardId) {
+      navigate(`/flashcard/${flashcardId}`);
+    } else {
+      addToast("Đang tạo bộ flashcard...", TOAST_TYPES.INFO);
+      createTopicFlashcard();
+    }
+  };
+
   const handleWordLearned = async (vocabId) => {
     const isCurrentlyUpdating = loadingStates.learningUpdating.has(vocabId);
     if (isCurrentlyUpdating) {
@@ -239,10 +269,6 @@ const TopicDetail = () => {
     navigate(`/vocabulary/topic/${topicId}/Test`);
   };
 
-  const handleCreateFlashcards = () => {
-    setShowFlashcardModal(true);
-  };
-
   const handleLevelUpAction = (action) => {
     setShowLevelUpModal(false);
     if (action === "test") {
@@ -279,7 +305,7 @@ const TopicDetail = () => {
           topic={currentTopic}
           onBack={() => navigate("/vocabulary")}
           onTakeTest={handleTakeTest}
-          onCreateFlashcard={handleCreateFlashcards}
+          onStudyFlashcard={handleStudyFlashcard}
           topicProgress={calculateProgress()}
           learnedCount={getLearnedCount()}
           totalCount={topicVocabularies.length}
@@ -332,19 +358,6 @@ const TopicDetail = () => {
             topicResults={topicCompletedResults}
             onClose={() => setShowTopicCompletedModal(false)}
             onAction={handleTopicCompletedAction}
-          />
-        )}
-
-        {showFlashcardModal && (
-          <FlashcardModal
-            isOpen={showFlashcardModal}
-            onClose={() => setShowFlashcardModal(false)}
-            onConfirm={() => {
-              addToast("Đã tạo bộ flashcard thành công", TOAST_TYPES.SUCCESS);
-              setShowFlashcardModal(false);
-            }}
-            topicName={currentTopic?.name}
-            vocabulariesCount={topicVocabularies.length}
           />
         )}
       </AnimatePresence>
