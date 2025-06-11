@@ -27,6 +27,7 @@ import ListClass from "@/pages/Class/ListClass";
 import ClassDetail from "@/pages/Class/ClassDetail";
 import Members from "@/pages/Class/Members";
 import SearchResults from "@/pages/SearchResults";
+import NotificationPage from "@/pages/Notification";
 // Component bảo vệ route yêu cầu xác thực
 
 // Admin imports
@@ -95,6 +96,10 @@ const router = createBrowserRouter([
       {
         path: "/library",
         element: <Library />,
+      },
+      {
+        path:"/notification",
+        element: <NotificationPage/>
       },
       {
         path: "/classes",
